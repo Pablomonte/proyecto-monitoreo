@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <WebServer.h>
 #include <WiFi.h>
-#include <Adafruit_SCD30.h>
 #include <SPIFFS.h>
 #include "endpoints.h"
 #include "globals.h"
@@ -13,22 +12,13 @@ void handleMediciones() {
     float temperature = 99, humidity = 100, co2 = 999999, presion = 99;
     String wifiStatus = "unknown";
     bool rotation = false;
-    
-    #if defined(MODO_SIMULACION)
-        temperature = 22.5 + random(-100, 100) * 0.01;
-        humidity = 50 + random(-500, 500) * 0.01;
-        co2 = 400 + random(0, 200);
-        presion = 850 + random(-100, 100) * 0.01;
-        wifiStatus = "disconnected";
-        rotation = false;
-    #else
-        if (scd30.dataReady() && scd30.read()) {
-            temperature = scd30.temperature;
-            humidity = scd30.relative_humidity;
-            co2 = scd30.CO2;
-            wifiStatus = (WiFi.status() == WL_CONNECTED) ? "connected" : "disconnected";
-        }
-    #endif
+
+    if (sensor && sensor->isActive() && sensor->dataReady() && sensor->read()) {
+        temperature = sensor->getTemperature();
+        humidity = sensor->getHumidity();
+        co2 = sensor->getCO2();
+        wifiStatus = (WiFi.status() == WL_CONNECTED) ? "connected" : "disconnected";
+    }
 
     JsonDocument doc;
     doc["rotation"] = rotation;
@@ -52,25 +42,16 @@ void handleMediciones() {
 }
 
 void handleData() {
-      float temperature = 99, humidity = 100, co2 = 999999, presion = 99;
+    float temperature = 99, humidity = 100, co2 = 999999, presion = 99;
     String wifiStatus = "unknown";
     bool rotation = false;
-    
-    #if defined(MODO_SIMULACION)
-        temperature = 22.5 + random(-100, 100) * 0.01;
-        humidity = 50 + random(-500, 500) * 0.01;
-        co2 = 400 + random(0, 200);
-        presion = 850 + random(-100, 100) * 0.01;
-        wifiStatus = "disconnected";
-        rotation = false;
-    #else
-        if (scd30.dataReady() && scd30.read()) {
-            temperature = scd30.temperature;
-            humidity = scd30.relative_humidity;
-            co2 = scd30.CO2;
-            wifiStatus = (WiFi.status() == WL_CONNECTED) ? "connected" : "disconnected";
-        }
-    #endif
+
+    if (sensor && sensor->isActive() && sensor->dataReady() && sensor->read()) {
+        temperature = sensor->getTemperature();
+        humidity = sensor->getHumidity();
+        co2 = sensor->getCO2();
+        wifiStatus = (WiFi.status() == WL_CONNECTED) ? "connected" : "disconnected";
+    }
   String html = "<!DOCTYPE html><html><head>";
   html += "<meta charset='UTF-8'>";
   html += "<meta http-equiv='refresh' content='10'>"; // refresh every 10 seconds
@@ -81,7 +62,7 @@ void handleData() {
   html += "table{margin:auto; border-collapse:collapse;}";
   html += "td,th{padding:8px 15px; border:1px solid #ccc;}";
   html += "</style></head><body>";
-  html += "<h1>SCD30 Sensor Data</h1>";
+  html += "<h1>" + String(sensor ? sensor->getSensorType() : "Unknown") + " Sensor Data</h1>";
   html += "<table>";
   html += "<tr><th>Temperature (°C)</th><th>Humidity (%)</th><th>CO₂ (ppm)</th><th>wifi</th></tr>";
   html += "<tr>";
@@ -141,66 +122,44 @@ void habldePostConfig() {
   }
 
 void handleSCD30Calibration() {
-  Serial.println("Endpoint /calibrate-scd30 called");
-  
+  Serial.printf("Endpoint /calibrate-scd30 called for sensor: %s\n",
+                sensor ? sensor->getSensorType() : "NULL");
+
   String response = "{";
   int httpStatus = 200;
-  
-  #if defined(MODO_SIMULACION)
-      // En modo simulación, simular la respuesta
-      response += "\"status\":\"simulated\",";
-      response += "\"message\":\"Simulation mode - calibration simulated\",";
-      response += "\"sensor_detected\":false,";
-      response += "\"calibration_performed\":true,";
-      response += "\"target_co2\":400";
-  #else
-          try {
-              // Verificar que el sensor esté disponible
-              if (!scd30.begin()) {
-                  response += "\"status\":\"error\",";
-                  response += "\"message\":\"Failed to communicate with SCD30 sensor\",";
-                  response += "\"sensor_detected\":false,";
-                  response += "\"calibration_performed\":false";
-                  httpStatus = 503;
-              } else {
-                  Serial.println("SCD30 detected, attempting forced recalibration to 400 ppm...");
-                  
-                        
-                  // Forzar recalibración a 400 ppm
-                  bool calibrationSuccess = scd30.forceRecalibrationWithReference(400);
-                  delay(100);
 
-                  
-                  if (calibrationSuccess) {
-                      response += "\"status\":\"success\",";
-                      response += "\"message\":\"SCD30 calibration completed successfully\",";
-                      response += "\"sensor_detected\":true,";
-                      response += "\"calibration_performed\":true,";
-                      response += "\"target_co2\":400,";
-                      response += "\"note\":\"Allow 2-3 minutes for sensor to stabilize after calibration\"";
-                      Serial.println("SCD30 calibration successful!");
-                  } else {
-                      response += "\"status\":\"error\",";
-                      response += "\"message\":\"SCD30 calibration failed - sensor may be busy or in error state\",";
-                      response += "\"sensor_detected\":true,";
-                      response += "\"calibration_performed\":false";
-                      httpStatus = 500; // Internal Server Error
-                      Serial.println("SCD30 calibration failed!");
-                  }
-              }
-          } catch (...) {
-              response += "\"status\":\"error\",";
-              response += "\"message\":\"Exception occurred during calibration\",";
-              response += "\"sensor_detected\":true,";
-              response += "\"calibration_performed\":false";
-              httpStatus = 500;
-              Serial.println("Exception during SCD30 calibration");
-          }
-      
-  #endif
-  
+  if (!sensor || !sensor->isActive()) {
+      response += "\"status\":\"error\",";
+      response += "\"message\":\"No sensor active\",";
+      response += "\"sensor_detected\":false,";
+      response += "\"calibration_performed\":false";
+      httpStatus = 503;
+  } else {
+      // Intentar calibración (solo algunos sensores la soportan)
+      bool calibrationSuccess = sensor->calibrate(400);
+
+      if (calibrationSuccess) {
+          response += "\"status\":\"success\",";
+          response += "\"message\":\"Sensor calibration completed successfully\",";
+          response += "\"sensor_type\":\"" + String(sensor->getSensorType()) + "\",";
+          response += "\"sensor_detected\":true,";
+          response += "\"calibration_performed\":true,";
+          response += "\"target_co2\":400,";
+          response += "\"note\":\"Allow 2-3 minutes for sensor to stabilize after calibration\"";
+          Serial.println("Sensor calibration successful!");
+      } else {
+          response += "\"status\":\"error\",";
+          response += "\"message\":\"Calibration not supported or failed for " + String(sensor->getSensorType()) + "\",";
+          response += "\"sensor_type\":\"" + String(sensor->getSensorType()) + "\",";
+          response += "\"sensor_detected\":true,";
+          response += "\"calibration_performed\":false";
+          httpStatus = 500;
+          Serial.printf("Sensor %s calibration failed or not supported\n", sensor->getSensorType());
+      }
+  }
+
   response += "}";
-  
+
   server.send(httpStatus, "application/json", response);
   Serial.println("Calibration response sent: " + response);
 }

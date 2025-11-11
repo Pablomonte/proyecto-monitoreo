@@ -3,6 +3,6 @@
 
 #include <Arduino.h>
 
-void sendDataGrafana(float temperature, float humidity, float co2);
+void sendDataGrafana(float temperature, float humidity, float co2, const char* sensorType = "Unknown");
 
 #endif // SEND_DATA_GRAFANA_H

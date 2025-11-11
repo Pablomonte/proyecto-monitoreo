@@ -2,11 +2,10 @@
 #include <WebServer.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <Adafruit_SCD30.h>
 #include <time.h>
-#include <WiFiManager.h> 
-#include <HTTPUpdate.h>  
-#include <WiFiClientSecure.h>  
+#include <WiFiManager.h>
+#include <HTTPUpdate.h>
+#include <WiFiClientSecure.h>
 #include <esp_ota_ops.h>
 #include "version.h"
 #include <SPIFFS.h>
@@ -18,37 +17,36 @@
 #include "endpoints.h"
 #include "configFile.h"
 #include "otaUpdater.h"
+#include "sensors/SensorFactory.h"
 
 unsigned long lastUpdateCheck = 0;
 unsigned long lastSendTime = 0;
-bool sensorActivo = false;
 
 #ifndef UNIT_TEST
 
 void setup() {
   Serial.begin(115200);
-  
-  
-  #if defined(MODO_SIMULACION)
-    Serial.print("Dirección IP asignada: ");  
-    Serial.println(WiFi.localIP());   
-  #endif
 
   Serial.println("Conectado a WiFi");
   configTime(0, 0, "pool.ntp.org", "time.nist.gov");
 
-  if (!SPIFFS.begin(true)) { 
+  if (!SPIFFS.begin(true)) {
     Serial.println("Error montando SPIFFS");
   }
 
-  createConfigFile(); 
+  createConfigFile();
 
-  #if !defined(MODO_SIMULACION)
-    sensorActivo = scd30.begin(); 
-    if (!sensorActivo) {  
-      Serial.println("No se pudo inicializar el sensor SCD30!");
+  // Inicializar sensor según build flag
+  sensor = SensorFactory::createSensor();
+  if (sensor) {
+    if (sensor->init()) {
+      Serial.printf("Sensor %s inicializado correctamente\n", sensor->getSensorType());
+    } else {
+      Serial.printf("Error inicializando sensor %s\n", sensor->getSensorType());
     }
-  #endif
+  } else {
+    Serial.println("Error: No se pudo crear el sensor!");
+  }
 
   clientSecure.setInsecure(); 
 
@@ -116,28 +114,24 @@ void loop() {
 
     float temperature = 99, humidity = 100, co2 = 999999;
 
-    #if defined(MODO_SIMULACION)
-      // Datos simulados
-      temperature = 22.5 + random(-100, 100) * 0.01;
-      humidity = 50 + random(-500, 500) * 0.01;
-      co2 = 400 + random(0, 200);      
-      Serial.println("Enviando datos simulados...");
-    #else
-      if (sensorActivo && scd30.dataReady()) { 
-        if (!scd30.read()) {
-          Serial.println("Error leyendo el sensor!");
-          return;
-        }
-        temperature = scd30.temperature;
-        humidity = scd30.relative_humidity;
-        co2 = scd30.CO2;
+    if (sensor && sensor->isActive() && sensor->dataReady()) {
+      if (sensor->read()) {
+        temperature = sensor->getTemperature();
+        humidity = sensor->getHumidity();
+        co2 = sensor->getCO2();
+
+        Serial.printf("[%s] Temp: %.1f°C, Hum: %.1f%%, CO2: %.0fppm\n",
+                     sensor->getSensorType(), temperature, humidity, co2);
       } else {
-        Serial.println("Sensor no listo, esperando..."); 
+        Serial.println("Error leyendo el sensor!");
+        return;
       }
-    #endif
+    } else {
+      Serial.println("Sensor no listo, esperando...");
+    }
 
     Serial.printf("Free heap before sending: %d bytes\n", ESP.getFreeHeap());
-    sendDataGrafana(temperature, humidity, co2);
+    sendDataGrafana(temperature, humidity, co2, sensor ? sensor->getSensorType() : "Unknown");
     Serial.printf("Free heap after sending: %d bytes\n", ESP.getFreeHeap());
   }
   delay(10);

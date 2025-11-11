@@ -9,16 +9,16 @@
 
 
 
-void sendDataGrafana(float temperature, float humidity, float co2) {
+void sendDataGrafana(float temperature, float humidity, float co2, const char* sensorType) {
     if (WiFi.status() == WL_CONNECTED) {
-        HTTPClient localHttp;  
+        HTTPClient localHttp;
 
         localHttp.begin(client, URL);
         localHttp.setTimeout(5000); // Timeout de 5 segundos
         localHttp.addHeader("Content-Type", "text/plain");
         localHttp.addHeader("Authorization", "Basic " + String(TOKEN_GRAFANA));
 
-        String data = create_grafana_message(temperature, humidity, co2);
+        String data = create_grafana_message(temperature, humidity, co2, sensorType);
 
         int httpResponseCode = localHttp.POST(data);
         if (httpResponseCode == 204) {
