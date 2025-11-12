@@ -262,6 +262,52 @@ const char* getConfigPageHTML() {
                 </div>
             </div>
 
+            <!-- ESP-NOW Section -->
+            <div class="section">
+                <h2>ESP-NOW</h2>
+                <div class="form-group">
+                    <input type="checkbox" id="espnow_enabled" name="espnow_enabled">
+                    <label class="checkbox-label" for="espnow_enabled">Habilitar ESP-NOW</label>
+                </div>
+                <div id="espnow_config">
+                    <div class="form-group">
+                        <label for="espnow_force_mode">Modo de Operación</label>
+                        <select id="espnow_force_mode" name="espnow_force_mode">
+                            <option value="">Auto-detectar (recomendado)</option>
+                            <option value="gateway">Forzar Gateway</option>
+                            <option value="sensor">Forzar Sensor</option>
+                        </select>
+                        <small style="color: var(--gray-medium);">Auto-detecta basándose en conectividad WiFi/Grafana</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="grafana_ping_url">URL de Prueba Grafana</label>
+                        <input type="text" id="grafana_ping_url" name="grafana_ping_url" placeholder="http://192.168.1.1/ping">
+                        <small style="color: var(--gray-medium);">URL para verificar conectividad a Grafana</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="espnow_channel">Canal WiFi</label>
+                        <select id="espnow_channel" name="espnow_channel">
+                            <option value="1">1</option>
+                            <option value="6">6</option>
+                            <option value="11">11</option>
+                        </select>
+                        <small style="color: var(--gray-medium);">Canal usado por sensores (gateways usan canal WiFi actual)</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="send_interval_ms">Intervalo de envío (ms)</label>
+                        <input type="number" id="send_interval_ms" name="send_interval_ms" min="5000" max="300000" step="1000" value="30000">
+                        <small style="color: var(--gray-medium);">Tiempo entre envíos de datos (solo sensores)</small>
+                    </div>
+                    <div id="espnow_status" style="margin-top: 15px; padding: 10px; background: #f9f9f9; border-radius: 4px;">
+                        <strong>Estado:</strong> <span id="espnow_status_text">Cargando...</span><br>
+                        <strong>Modo Actual:</strong> <span id="espnow_current_mode">-</span><br>
+                        <strong>MAC Address:</strong> <span id="espnow_mac">-</span><br>
+                        <span id="espnow_paired_status"></span>
+                        <span id="espnow_peer_count"></span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Sensors Section -->
             <div class="section">
                 <h2>Sensores</h2>
@@ -320,6 +366,20 @@ const char* getConfigPageHTML() {
             toggleRS485Config();
             document.getElementById('rs485_enabled').addEventListener('change', toggleRS485Config);
 
+            // ESP-NOW
+            document.getElementById('espnow_enabled').checked = config.espnow_enabled || false;
+            document.getElementById('espnow_force_mode').value = config.espnow_force_mode || '';
+            document.getElementById('grafana_ping_url').value = config.grafana_ping_url || 'http://192.168.1.1/ping';
+            document.getElementById('espnow_channel').value = config.espnow_channel || 1;
+            document.getElementById('send_interval_ms').value = config.send_interval_ms || 30000;
+
+            // Toggle ESP-NOW config visibility
+            toggleESPNowConfig();
+            document.getElementById('espnow_enabled').addEventListener('change', toggleESPNowConfig);
+
+            // Load ESP-NOW status
+            loadESPNowStatus();
+
             // Sensors
             renderSensors(config.sensors || []);
         }
@@ -327,6 +387,41 @@ const char* getConfigPageHTML() {
         function toggleRS485Config() {
             const enabled = document.getElementById('rs485_enabled').checked;
             document.getElementById('rs485_config').style.display = enabled ? 'block' : 'none';
+        }
+
+        function toggleESPNowConfig() {
+            const enabled = document.getElementById('espnow_enabled').checked;
+            document.getElementById('espnow_config').style.display = enabled ? 'block' : 'none';
+        }
+
+        async function loadESPNowStatus() {
+            try {
+                const response = await fetch('/espnow/status');
+                if (!response.ok) {
+                    document.getElementById('espnow_status_text').textContent = 'No disponible';
+                    return;
+                }
+
+                const status = await response.json();
+                document.getElementById('espnow_status_text').textContent = status.enabled ? 'Habilitado' : 'Deshabilitado';
+                document.getElementById('espnow_current_mode').textContent = status.mode || '-';
+                document.getElementById('espnow_mac').textContent = status.mac_address || '-';
+
+                if (status.mode === 'sensor') {
+                    document.getElementById('espnow_paired_status').innerHTML =
+                        '<strong>Emparejado:</strong> ' + (status.paired ? '✓ Sí' : '✗ No') + '<br>';
+                    document.getElementById('espnow_peer_count').innerHTML = '';
+                } else if (status.mode === 'gateway') {
+                    document.getElementById('espnow_paired_status').innerHTML = '';
+                    document.getElementById('espnow_peer_count').innerHTML =
+                        '<strong>Peers conectados:</strong> ' + (status.peer_count || 0);
+                } else {
+                    document.getElementById('espnow_paired_status').innerHTML = '';
+                    document.getElementById('espnow_peer_count').innerHTML = '';
+                }
+            } catch (error) {
+                document.getElementById('espnow_status_text').textContent = 'Error al cargar estado';
+            }
         }
 
         function renderSensors(sensors) {
@@ -435,6 +530,13 @@ const char* getConfigPageHTML() {
             config.rs485_rx = parseInt(document.getElementById('rs485_rx').value);
             config.rs485_tx = parseInt(document.getElementById('rs485_tx').value);
             config.rs485_baud = parseInt(document.getElementById('rs485_baud').value);
+
+            // ESP-NOW
+            config.espnow_enabled = document.getElementById('espnow_enabled').checked;
+            config.espnow_force_mode = document.getElementById('espnow_force_mode').value;
+            config.grafana_ping_url = document.getElementById('grafana_ping_url').value;
+            config.espnow_channel = parseInt(document.getElementById('espnow_channel').value);
+            config.send_interval_ms = parseInt(document.getElementById('send_interval_ms').value);
 
             // Sensors
             if (Array.isArray(config.sensors)) {

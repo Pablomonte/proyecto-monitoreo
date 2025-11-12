@@ -67,6 +67,15 @@ void createConfigFile() {
     config["rs485_tx"] = 17;
     config["rs485_baud"] = 9600;
 
+    // Configuración ESP-NOW (auto-adaptativo)
+    config["espnow_enabled"] = false;
+    config["espnow_force_mode"] = "";  // "" = auto-detect, "gateway" o "sensor" = force mode
+    config["espnow_channel"] = 1;      // WiFi channel (1-13)
+    config["beacon_interval_ms"] = 2000;
+    config["discovery_timeout_ms"] = 15000;
+    config["send_interval_ms"] = 30000;
+    config["grafana_ping_url"] = "http://192.168.1.1/ping";  // URL for connectivity test
+
     if (serializeJsonPretty(config, file) == 0) {
       Serial.println("Error al escribir JSON en archivo.");
     } else {

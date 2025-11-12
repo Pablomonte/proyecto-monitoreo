@@ -9,6 +9,11 @@
 
 #include <ArduinoJson.h>
 
+#ifdef ENABLE_ESPNOW
+  #include "ESPNowManager.h"
+  extern ESPNowManager espnowMgr;
+#endif
+
 void handleMediciones() {
     float temperature = 99, humidity = 100, co2 = 999999, presion = 99;
     String wifiStatus = "unknown";
@@ -179,3 +184,31 @@ void handleRestart() {
   delay(1000);
   ESP.restart();
 }
+
+#ifdef ENABLE_ESPNOW
+void handleESPNowStatus() {
+  JsonDocument doc;
+
+  JsonDocument config = loadConfig();
+  bool espnowEnabled = config["espnow_enabled"] | false;
+  String forcedMode = config["espnow_force_mode"] | "";
+  String actualMode = espnowMgr.getMode();  // Get actual running mode
+
+  doc["enabled"] = espnowEnabled;
+  doc["mode"] = actualMode;  // Show actual mode (after auto-detection)
+  doc["forced_mode"] = forcedMode;  // Show configured forced mode
+  doc["mac_address"] = espnowMgr.getMACAddress();
+
+  if (actualMode == "sensor") {
+    doc["paired"] = espnowMgr.isPaired();
+    doc["peer_count"] = 0;  // Sensors don't track peers
+  } else {
+    doc["paired"] = true;  // Gateway is always "paired"
+    doc["peer_count"] = espnowMgr.getActivePeerCount();
+  }
+
+  String output;
+  serializeJson(doc, output);
+  server.send(200, "application/json", output);
+}
+#endif

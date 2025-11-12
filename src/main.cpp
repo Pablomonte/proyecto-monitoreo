@@ -30,10 +30,62 @@
   RS485Manager rs485;
 #endif
 
+#ifdef ENABLE_ESPNOW
+  #include "ESPNowManager.h"
+  ESPNowManager espnowMgr;
+#endif
+
 unsigned long lastUpdateCheck = 0;
 unsigned long lastSendTime = 0;
 
 #ifndef UNIT_TEST
+
+#ifdef ENABLE_ESPNOW
+// Callback to forward mesh data to Grafana (gateway only)
+void onMeshDataReceived(const uint8_t* senderMAC, float temp, float hum, float co2, uint32_t seq) {
+  // Create unique sensor ID from MAC address
+  char sensorId[32];
+  snprintf(sensorId, sizeof(sensorId), "mesh_%02X%02X%02X",
+           senderMAC[3], senderMAC[4], senderMAC[5]);
+
+  Serial.printf("[MESH→GRAFANA] %s: T=%.1f H=%.1f CO2=%.0f (seq=%lu)\n",
+                sensorId, temp, hum, co2, seq);
+
+  // Forward to Grafana
+  sendDataGrafana(temp, hum, co2, sensorId);
+}
+
+String detectRole() {
+  Serial.println("\n[AUTO] Detectando rol del dispositivo...");
+
+  // 1. Check if WiFi is connected
+  if (!wifiManager.isOnline()) {
+    Serial.println("[AUTO] → Sin conexión WiFi → SENSOR mode");
+    return "sensor";
+  }
+
+  Serial.println("[AUTO] → WiFi conectado, verificando acceso a Grafana...");
+
+  // 2. Test Grafana connectivity
+  JsonDocument config = loadConfig();
+  String grafanaUrl = config["grafana_ping_url"] | "http://192.168.1.1/ping";
+
+  HTTPClient http;
+  http.begin(grafanaUrl);
+  http.setTimeout(3000);  // 3 second timeout
+
+  int httpCode = http.GET();
+  http.end();
+
+  if (httpCode > 0) {
+    Serial.printf("[AUTO] → Grafana accesible (HTTP %d) → GATEWAY mode\n", httpCode);
+    return "gateway";
+  } else {
+    Serial.printf("[AUTO] → Grafana inaccesible (error %d) → SENSOR mode\n", httpCode);
+    return "sensor";
+  }
+}
+#endif
 
 void printBanner() {
   Serial.println("\n\n");
@@ -114,6 +166,10 @@ void setup() {
   server.on("/calibrate-scd30", HTTP_GET, handleSCD30Calibration);
   server.on("/settings", HTTP_GET, handleSettings);
   server.on("/restart", HTTP_POST, handleRestart);
+
+  #ifdef ENABLE_ESPNOW
+    server.on("/espnow/status", HTTP_GET, handleESPNowStatus);
+  #endif
     // Add handler for undefined routes
   server.onNotFound([]() {
       // Redirect all undefined routes to root page
@@ -134,6 +190,73 @@ void setup() {
   wifiManager.init(&server);
   Serial.println("[OK]    ✓ WiFi Manager inicializado");
 
+  #ifdef ENABLE_ESPNOW
+    Serial.println("\n[INFO] Configurando ESP-NOW...");
+    JsonDocument espnowConfigDoc = loadConfig();
+    bool espnowEnabled = espnowConfigDoc["espnow_enabled"] | false;
+
+    if (espnowEnabled) {
+      // Auto-detect role or use forced mode
+      String forcedMode = espnowConfigDoc["espnow_force_mode"] | "";
+      String espnowMode;
+
+      if (forcedMode != "") {
+        Serial.printf("[INFO] Modo forzado: %s\n", forcedMode.c_str());
+        espnowMode = forcedMode;
+      } else {
+        // Auto-detection based on connectivity
+        espnowMode = detectRole();
+      }
+
+      uint8_t espnowChannel = espnowConfigDoc["espnow_channel"] | 1;
+
+      // Validate channel is in valid range (1-13)
+      if (espnowChannel < 1 || espnowChannel > 13) {
+        Serial.printf("[WARN] Canal inválido %d, usando canal 1\n", espnowChannel);
+        espnowChannel = 1;
+      }
+
+      Serial.printf("[INFO] Modo ESP-NOW: %s (canal %d)\n", espnowMode.c_str(), espnowChannel);
+
+      if (espnowMode == "gateway") {
+        // Gateway: use current WiFi channel if connected, otherwise use configured channel
+        if (wifiManager.isOnline()) {
+          uint8_t wifiChannel = WiFi.channel();
+          if (wifiChannel >= 1 && wifiChannel <= 13) {
+            espnowChannel = wifiChannel;
+            Serial.printf("[INFO] Gateway usando canal WiFi: %d\n", espnowChannel);
+          } else {
+            Serial.printf("[WARN] Canal WiFi inválido (%d), usando canal configurado: %d\n", wifiChannel, espnowChannel);
+          }
+        } else {
+          Serial.printf("[INFO] WiFi no conectado, gateway usando canal configurado: %d\n", espnowChannel);
+        }
+      }
+
+      if (espnowMgr.init(espnowMode, espnowChannel)) {
+        Serial.println("[OK]    ✓ ESP-NOW inicializado");
+
+        if (espnowMode == "sensor") {
+          // Sensor mode: attempt discovery
+          Serial.println("[INFO] Modo sensor: buscando gateway...");
+          if (espnowMgr.waitForDiscovery()) {
+            Serial.println("[OK]    ✓ Gateway encontrado y emparejado");
+          } else {
+            Serial.println("[WARN]  ! Gateway no encontrado (reintentará automáticamente)");
+          }
+        } else {
+          // Gateway mode: register mesh data callback and start beacon
+          espnowMgr.setMeshDataCallback(onMeshDataReceived);
+          Serial.println("[INFO] Modo gateway: broadcasting beacon + forwarding mesh data");
+        }
+      } else {
+        Serial.println("[ERROR] ✗ Error inicializando ESP-NOW");
+      }
+    } else {
+      Serial.println("[INFO] ESP-NOW deshabilitado en configuración");
+    }
+  #endif
+
   server.begin();
   Serial.println("[OK]    ✓ Servidor web iniciado en puerto 80");
 
@@ -153,7 +276,7 @@ void loop() {
   static unsigned long lastStatusPrint = 0;
   if (millis() - lastStatusPrint > 30000) {  // Print status every 30 seconds
       lastStatusPrint = millis();
-      
+
       if (wifiManager.isOnline()) {
           Serial.println("WiFi Status: Connected to " + wifiManager.getCurrentSSID());
           Serial.println("IP Address: " + wifiManager.getLocalIP().toString());
@@ -162,6 +285,11 @@ void loop() {
       }
   }
   server.handleClient();
+
+  #ifdef ENABLE_ESPNOW
+    // Update ESP-NOW (beacon broadcast for gateway, retry discovery for sensor)
+    espnowMgr.update();
+  #endif
 
   unsigned long currentMillis = millis();
 
@@ -200,6 +328,13 @@ void loop() {
           #ifdef ENABLE_RS485
             // Enviar por RS485
             rs485.sendSensorData(temperature, humidity, co2, sensorId.c_str());
+          #endif
+
+          #ifdef ENABLE_ESPNOW
+            // Enviar por ESP-NOW (solo si es sensor y está emparejado)
+            if (espnowMgr.getMode() == "sensor" && espnowMgr.isPaired()) {
+              espnowMgr.sendSensorData(temperature, humidity, co2, sensorId.c_str());
+            }
           #endif
         }
       }
