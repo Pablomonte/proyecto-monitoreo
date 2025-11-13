@@ -207,10 +207,16 @@ private:
         // Add random delay to avoid collisions
         delayMicroseconds(random(0, 500));
 
-        esp_now_send(mac_addr, (uint8_t*)&pairReq, sizeof(pairReq));
+        // IMPORTANT: Send as broadcast since gateway is not in peer list yet
+        // Gateway will receive it and extract sender MAC from data payload
+        esp_err_t result = esp_now_send(broadcastAddress, (uint8_t*)&pairReq, sizeof(pairReq));
         pairingState = PAIRING;
 
-        Serial.println("[ESP-NOW] Pairing request sent");
+        if (result == ESP_OK) {
+          Serial.println("[ESP-NOW] Pairing request sent (broadcast)");
+        } else {
+          Serial.printf("[ESP-NOW] Pairing request send failed: %d\n", result);
+        }
       }
     }
   }
@@ -333,7 +339,11 @@ public:
       // Sensor mode: WiFi STA without connection
       WiFi.mode(WIFI_STA);
       WiFi.disconnect();
-      Serial.println("[ESP-NOW] Sensor mode: WiFi STA initialized without connection");
+
+      // CRITICAL: Force WiFi channel for sensor mode
+      // Without this, sensor won't receive gateway beacons on specific channel
+      esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
+      Serial.printf("[ESP-NOW] Sensor mode: WiFi STA forced to channel %d\n", channel);
     }
 
     // Initialize ESP-NOW
