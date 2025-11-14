@@ -170,6 +170,18 @@ void setup() {
   #ifdef ENABLE_ESPNOW
     server.on("/espnow/status", HTTP_GET, handleESPNowStatus);
   #endif
+
+  // Serve favicon from SPIFFS
+  server.on("/favicon.svg", HTTP_GET, []() {
+    File file = SPIFFS.open("/favicon.svg", "r");
+    if (!file) {
+      server.send(404, "text/plain", "Favicon not found");
+      return;
+    }
+    server.streamFile(file, "image/svg+xml");
+    file.close();
+  });
+
     // Add handler for undefined routes
   server.onNotFound([]() {
       // Redirect all undefined routes to root page

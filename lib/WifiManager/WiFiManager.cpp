@@ -577,6 +577,7 @@ void WiFiManager::sendScanResults(int networkCount) {
 String WiFiManager::generateCaptivePortalPage() {
     String html = "<!DOCTYPE html><html><head><title>WiFi Setup</title>";
     html += "<meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1'>";
+    html += "<link rel='icon' type='image/svg+xml' href='/favicon.svg'>";
     html += "<style>";
     html += ":root{--altermundi-green:#55d400;--altermundi-orange:#F39100;--altermundi-blue:#0198fe;--gray-dark:#333;--gray-medium:#666;--gray-light:#f5f5f5;}";
     html += "*{margin:0;padding:0;box-sizing:border-box;}";
