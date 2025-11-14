@@ -312,6 +312,11 @@ const char* getConfigPageHTML() {
             <!-- Sensors Section -->
             <div class="section">
                 <h2>Sensores</h2>
+                <div style="margin-bottom: 15px; display: flex; gap: 8px; flex-wrap: nowrap; align-items: center;">
+                    <button type="button" class="btn" style="background: var(--altermundi-green); padding: 8px 12px; font-size: 13px;" onclick="loadDefaultSensors()">📋 Por Defecto</button>
+                    <button type="button" class="btn btn-secondary" style="background: var(--altermundi-orange); padding: 8px 12px; font-size: 13px;" onclick="forgetWiFi()">📡 Olvidar WiFi</button>
+                    <button type="button" class="btn btn-secondary" style="background: #dc3545; padding: 8px 12px; font-size: 13px;" onclick="clearAllConfig()">🗑️ Limpiar Todo</button>
+                </div>
                 <div id="sensors-list"></div>
             </div>
 
@@ -325,6 +330,14 @@ const char* getConfigPageHTML() {
 
     <script>
         let currentConfig = {};
+
+        // Default sensor configuration
+        const DEFAULT_SENSORS = [
+            { type: "scd30", enabled: true, config: {} },
+            { type: "bme280", enabled: false, config: {} },
+            { type: "capacitive", enabled: false, config: { pin: 34, name: "Soil1" } },
+            { type: "onewire", enabled: false, config: { pin: 4, scan: true } }
+        ];
 
         // Load configuration on page load
         window.addEventListener('DOMContentLoaded', loadConfig);
@@ -429,9 +442,10 @@ const char* getConfigPageHTML() {
             const container = document.getElementById('sensors-list');
             container.innerHTML = '';
 
+            // Use default sensors if none configured
             if (!Array.isArray(sensors) || sensors.length === 0) {
-                container.innerHTML = '<div class="info-text">No hay sensores configurados</div>';
-                return;
+                sensors = DEFAULT_SENSORS;
+                container.innerHTML = '<div class="info-text" style="background: #fff3cd; border-left: 4px solid var(--altermundi-orange); padding: 12px; margin-bottom: 15px;">⚠️ Usando configuración por defecto. Guarda para aplicar.</div>';
             }
 
             sensors.forEach((sensor, index) => {
@@ -582,6 +596,62 @@ const char* getConfigPageHTML() {
                 setTimeout(() => location.reload(), 5000);
             } catch (error) {
                 showMessage('Dispositivo reiniciando', 'warning');
+            }
+        }
+
+        async function loadDefaultSensors() {
+            if (!confirm('¿Cargar configuración de sensores por defecto? (SCD30, BME280, Capacitive, OneWire)')) {
+                return;
+            }
+
+            currentConfig.sensors = DEFAULT_SENSORS;
+            renderSensors(currentConfig.sensors);
+            showMessage('Sensores por defecto cargados. Guarda la configuración para aplicar.', 'success');
+        }
+
+        async function forgetWiFi() {
+            if (!confirm('¿Olvidar red WiFi actual? El dispositivo volverá a modo AP.')) {
+                return;
+            }
+
+            try {
+                currentConfig.ssid = '';
+                currentConfig.passwd = '';
+
+                const response = await fetch('/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentConfig)
+                });
+
+                if (!response.ok) throw new Error('Error al guardar');
+
+                showMessage('WiFi olvidado. Reiniciando en modo AP...', 'success');
+                setTimeout(() => location.href = '/', 3000);
+            } catch (error) {
+                showMessage('Error al olvidar WiFi: ' + error.message, 'error');
+            }
+        }
+
+        async function clearAllConfig() {
+            if (!confirm('⚠️ ¿Limpiar TODA la configuración? Esto borrará todos los ajustes y reiniciará el dispositivo.')) {
+                return;
+            }
+
+            if (!confirm('¿Estás SEGURO? Esta acción no se puede deshacer.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/config/reset', { method: 'POST' });
+
+                if (!response.ok) throw new Error('Error al resetear');
+
+                showMessage('Configuración limpiada. Reiniciando dispositivo...', 'success');
+                setTimeout(() => location.href = '/', 5000);
+            } catch (error) {
+                showMessage('Configuración reseteada. Dispositivo reiniciando...', 'warning');
+                setTimeout(() => location.href = '/', 5000);
             }
         }
     </script>

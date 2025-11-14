@@ -162,6 +162,7 @@ void setup() {
   server.on("/actual", HTTP_GET, handleMediciones);
   server.on("/config", HTTP_GET, handleConfiguracion);
   server.on("/config", HTTP_POST, habldePostConfig);
+  server.on("/config/reset", HTTP_POST, handleConfigReset);
   server.on("/data", HTTP_GET, handleData);
   server.on("/calibrate-scd30", HTTP_GET, handleSCD30Calibration);
   server.on("/settings", HTTP_GET, handleSettings);

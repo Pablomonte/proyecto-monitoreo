@@ -8,6 +8,7 @@ void handleData();
 void handleSCD30Calibration();
 void handleSettings();
 void handleRestart();
+void handleConfigReset();
 
 #ifdef ENABLE_ESPNOW
 void handleESPNowStatus();

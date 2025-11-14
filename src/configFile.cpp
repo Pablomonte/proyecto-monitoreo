@@ -111,6 +111,47 @@ JsonDocument loadConfig() {
   if (error) {
       Serial.print("Error deserializando config.json: ");
       Serial.println(error.c_str());
+      return doc;
+  }
+
+  // Automatic migration: add sensors array if missing
+  if (!doc["sensors"].is<JsonArray>() || doc["sensors"].size() == 0) {
+      Serial.println("[→ INFO] Migrando configuración: agregando sensores por defecto");
+
+      JsonArray sensors = doc["sensors"].to<JsonArray>();
+
+      // Add SCD30 as default (enabled)
+      JsonObject scd30 = sensors.add<JsonObject>();
+      scd30["type"] = "scd30";
+      scd30["enabled"] = true;
+      scd30["config"].to<JsonObject>();
+
+      // Add other sensors (disabled by default)
+      JsonObject bme280 = sensors.add<JsonObject>();
+      bme280["type"] = "bme280";
+      bme280["enabled"] = false;
+      bme280["config"].to<JsonObject>();
+
+      JsonObject cap = sensors.add<JsonObject>();
+      cap["type"] = "capacitive";
+      cap["enabled"] = false;
+      JsonObject capCfg = cap["config"].to<JsonObject>();
+      capCfg["pin"] = 34;
+      capCfg["name"] = "Soil1";
+
+      JsonObject onewire = sensors.add<JsonObject>();
+      onewire["type"] = "onewire";
+      onewire["enabled"] = false;
+      JsonObject onewireCfg = onewire["config"].to<JsonObject>();
+      onewireCfg["pin"] = 4;
+      onewireCfg["scan"] = true;
+
+      // Save migrated config
+      if (updateConfig(doc)) {
+          Serial.println("[✓ OK  ] Configuración migrada exitosamente");
+      } else {
+          Serial.println("[✗ ERR ] Error al guardar configuración migrada");
+      }
   }
 
   return doc;

@@ -4,6 +4,7 @@
 #include <SPIFFS.h>
 #include "endpoints.h"
 #include "globals.h"
+#include "constants.h"
 #include "configFile.h"
 #include "webConfigPage.h"
 
@@ -181,6 +182,35 @@ void handleSettings() {
 
 void handleRestart() {
   server.send(200, "text/plain", "Restarting ESP32...");
+  delay(1000);
+  ESP.restart();
+}
+
+void handleConfigReset() {
+  Serial.println("[→ INFO] Reseteando configuración completa...");
+
+  // Remove existing config file
+  if (SPIFFS.exists(CONFIG_FILE_PATH)) {
+    if (SPIFFS.remove(CONFIG_FILE_PATH)) {
+      Serial.println("[✓ OK  ] Config.json eliminado");
+    } else {
+      Serial.println("[✗ ERR ] Error al eliminar config.json");
+    }
+  }
+
+  // Create new default config
+  createConfigFile();
+
+  // Send response
+  JsonDocument doc;
+  doc["success"] = true;
+  doc["message"] = "Configuration reset to defaults. Restarting...";
+
+  String output;
+  serializeJson(doc, output);
+  server.send(200, "application/json", output);
+
+  Serial.println("[→ INFO] Reiniciando ESP32 con configuración por defecto...");
   delay(1000);
   ESP.restart();
 }
