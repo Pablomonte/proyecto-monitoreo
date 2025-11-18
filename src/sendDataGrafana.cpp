@@ -20,11 +20,15 @@ void sendDataGrafana(float temperature, float humidity, float co2, const char* s
 
         String data = create_grafana_message(temperature, humidity, co2, sensorType);
 
+        // Debug: mostrar datos que se envían
+        Serial.println("Enviando a Grafana:");
+        Serial.println(data);
+
         int httpResponseCode = localHttp.POST(data);
         if (httpResponseCode == 204) {
-            Serial.println("Datos enviados correctamente");
+            Serial.println("✓ Datos enviados correctamente");
         } else {
-            Serial.printf("Error en el envío: %d\n", httpResponseCode);
+            Serial.printf("✗ Error en el envío: %d\n", httpResponseCode);
             Serial.println(localHttp.getString());
         }
 

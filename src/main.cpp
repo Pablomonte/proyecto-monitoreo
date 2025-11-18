@@ -38,21 +38,51 @@
 unsigned long lastUpdateCheck = 0;
 unsigned long lastSendTime = 0;
 
+#ifdef ENABLE_ESPNOW
+// Mesh data buffer structure to avoid HTTP calls from WiFi interrupt context
+struct MeshDataBuffer {
+  uint8_t senderMAC[6];
+  float temp;
+  float hum;
+  float co2;
+  uint32_t seq;
+  bool valid;
+};
+
+const int MESH_BUFFER_SIZE = 10;
+MeshDataBuffer meshBuffer[MESH_BUFFER_SIZE];
+volatile int meshBufferHead = 0;
+volatile int meshBufferTail = 0;
+#endif
+
 #ifndef UNIT_TEST
 
 #ifdef ENABLE_ESPNOW
-// Callback to forward mesh data to Grafana (gateway only)
+// Callback to enqueue mesh data (gateway only)
+// IMPORTANT: Runs in WiFi interrupt context - must not call HTTP/blocking functions
 void onMeshDataReceived(const uint8_t* senderMAC, float temp, float hum, float co2, uint32_t seq) {
-  // Create unique sensor ID from MAC address
-  char sensorId[32];
-  snprintf(sensorId, sizeof(sensorId), "mesh_%02X%02X%02X",
-           senderMAC[3], senderMAC[4], senderMAC[5]);
+  // Calculate next buffer position
+  int nextHead = (meshBufferHead + 1) % MESH_BUFFER_SIZE;
 
-  Serial.printf("[MESH→GRAFANA] %s: T=%.1f H=%.1f CO2=%.0f (seq=%lu)\n",
-                sensorId, temp, hum, co2, seq);
+  // Check if buffer is full
+  if (nextHead == meshBufferTail) {
+    Serial.println("[MESH] ✗ Buffer full, dropping data");
+    return;
+  }
 
-  // Forward to Grafana
-  sendDataGrafana(temp, hum, co2, sensorId);
+  // Store data in buffer
+  memcpy(meshBuffer[meshBufferHead].senderMAC, senderMAC, 6);
+  meshBuffer[meshBufferHead].temp = temp;
+  meshBuffer[meshBufferHead].hum = hum;
+  meshBuffer[meshBufferHead].co2 = co2;
+  meshBuffer[meshBufferHead].seq = seq;
+  meshBuffer[meshBufferHead].valid = true;
+
+  // Update head pointer (atomic for single-writer scenario)
+  meshBufferHead = nextHead;
+
+  Serial.printf("[ESP-NOW] Data buffered from sensor %d (seq=%lu)\n",
+                senderMAC[5], seq);
 }
 
 String detectRole() {
@@ -302,6 +332,29 @@ void loop() {
   #ifdef ENABLE_ESPNOW
     // Update ESP-NOW (beacon broadcast for gateway, retry discovery for sensor)
     espnowMgr.update();
+
+    // Process buffered mesh data (gateway only)
+    // This runs in main loop context, safe for HTTP calls
+    while (meshBufferTail != meshBufferHead) {
+      MeshDataBuffer* data = &meshBuffer[meshBufferTail];
+
+      if (data->valid) {
+        char sensorId[32];
+        snprintf(sensorId, sizeof(sensorId), "mesh_%02X%02X%02X",
+                 data->senderMAC[3], data->senderMAC[4], data->senderMAC[5]);
+
+        Serial.printf("[MESH→GRAFANA] %s: T=%.1f H=%.1f CO2=%.0f (seq=%lu)\n",
+                      sensorId, data->temp, data->hum, data->co2, data->seq);
+
+        // Now safe to make HTTP call from main loop
+        sendDataGrafana(data->temp, data->hum, data->co2, sensorId);
+
+        data->valid = false;  // Mark as processed
+      }
+
+      // Move to next buffer entry
+      meshBufferTail = (meshBufferTail + 1) % MESH_BUFFER_SIZE;
+    }
   #endif
 
   unsigned long currentMillis = millis();

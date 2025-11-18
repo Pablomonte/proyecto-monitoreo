@@ -76,6 +76,12 @@ bool WiFiManager::connect()
     WiFi.disconnect();
     delay(100);
     LOG_TRACE("Attempting to connect to WiFi...with SSID/" + station_cfg.ssid + "/pass/ " + station_cfg.password + "/");
+
+    // Configure DNS servers (Google DNS)
+    IPAddress dns1(8, 8, 8, 8);
+    IPAddress dns2(8, 8, 4, 4);
+    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, dns1, dns2);
+
     WiFi.begin(station_cfg.ssid.c_str(), station_cfg.password.c_str());
 
     return true;
