@@ -42,6 +42,7 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_ENV
 
     - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: ncipollo/release-action@v1
       with:
         artifacts: "binarios/*"
