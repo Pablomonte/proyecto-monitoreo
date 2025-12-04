@@ -10,20 +10,29 @@
  *
  * Protocolo: Modbus RTU sobre RS485
  * Registros:
- *   - 0: Humedad (int16 * 10, ej: 556 = 55.6% RH)
- *   - 1: Temperatura (int16 * 10, ej: 259 = 25.9°C)
+ *   - 1 (0x01): Humedad (int16 * 10, ej: 399 = 39.9% RH)
+ *   - 2 (0x02): Temperatura (int16 * 10, ej: 282 = 28.2°C)
+ *
+ * Soporta multiples sensores en el mismo bus RS485 con diferentes direcciones.
+ * El bus se inicializa una sola vez y se comparte entre todas las instancias.
  *
  * Config:
- *   - address: Dirección Modbus (1-254)
+ *   - address: Direccion Modbus (1-254)
  *   - rxPin: GPIO RX RS485 (default 16)
  *   - txPin: GPIO TX RS485 (default 17)
- *   - dePin: GPIO DE/RE control (optional, -1 if puenteado)
+ *   - dePin: GPIO DE/RE control (default 18, -1 si no usa)
  *   - baudrate: Baudrate RS485 (default 9600)
  */
 class ModbusTHSensor : public ISensor {
 private:
-    ModbusRTU mb;
-    HardwareSerial* serial;
+    // Shared bus resources (static)
+    static ModbusRTU* sharedMb;
+    static HardwareSerial* sharedSerial;
+    static bool busInitialized;
+    static int busRxPin;
+    static int busTxPin;
+    static int busDePin;
+    static uint32_t busBaudrate;
 
     uint8_t modbusAddress;
     int rxPin;
@@ -36,7 +45,7 @@ private:
     bool active;
 
     // Modbus read result callbacks
-    static uint16_t registerBuffer[2];  // Buffer para humedad y temperatura
+    static uint16_t registerBuffer[2];
     static bool readComplete;
 
     static bool readCallback(Modbus::ResultCode event, uint16_t transactionId, void* data) {
@@ -50,11 +59,40 @@ private:
         }
     }
 
+    // Initialize shared bus (only once)
+    static bool initBus(int rx, int tx, int de, uint32_t baud) {
+        if (busInitialized) {
+            // Check if config matches
+            if (rx != busRxPin || tx != busTxPin || de != busDePin || baud != busBaudrate) {
+                Serial.println("[ModbusTH] Warning: Bus config mismatch, using existing config");
+            }
+            return true;
+        }
+
+        Serial.printf("[ModbusTH] Initializing shared bus: RX=%d, TX=%d, DE=%d, baud=%d\n",
+                      rx, tx, de, baud);
+
+        sharedSerial = &Serial2;
+        sharedSerial->begin(baud, SERIAL_8N1, rx, tx);
+
+        sharedMb = new ModbusRTU();
+        sharedMb->begin(sharedSerial, de);
+        sharedMb->master();
+
+        busRxPin = rx;
+        busTxPin = tx;
+        busDePin = de;
+        busBaudrate = baud;
+        busInitialized = true;
+
+        return true;
+    }
+
 public:
     ModbusTHSensor(uint8_t address = 1,
                    int rx = 16,
                    int tx = 17,
-                   int de = -1,
+                   int de = 18,
                    uint32_t baud = 9600)
         : modbusAddress(address),
           rxPin(rx),
@@ -64,25 +102,15 @@ public:
           temperature(-1),
           humidity(-1),
           active(false) {
-
-        serial = &Serial2;
     }
 
     bool init() override {
-        Serial.printf("[ModbusTH] Initializing addr=%d, RX=%d, TX=%d, DE=%d, baud=%d\n",
-                      modbusAddress, rxPin, txPin, dePin, baudrate);
+        Serial.printf("[ModbusTH] Initializing sensor addr=%d\n", modbusAddress);
 
-        // Init serial port
-        serial->begin(baudrate, SERIAL_8N1, rxPin, txPin);
-
-        // Init Modbus RTU
-        mb.begin(serial);
-        mb.master();
-
-        // Configure DE/RE pin if provided
-        if (dePin >= 0) {
-            pinMode(dePin, OUTPUT);
-            digitalWrite(dePin, LOW);  // Receive mode by default
+        // Initialize shared bus
+        if (!initBus(rxPin, txPin, dePin, baudrate)) {
+            Serial.println("[ModbusTH] Failed to initialize bus");
+            return false;
         }
 
         // Test read to verify sensor is accessible
@@ -91,10 +119,10 @@ public:
 
         if (testRead) {
             active = true;
-            Serial.println("[ModbusTH] Initialized successfully");
+            Serial.printf("[ModbusTH] Sensor addr=%d initialized successfully\n", modbusAddress);
         } else {
             active = false;
-            Serial.println("[ModbusTH] Initialization failed - sensor not responding");
+            Serial.printf("[ModbusTH] Sensor addr=%d not responding\n", modbusAddress);
         }
 
         return active;
@@ -114,7 +142,7 @@ public:
             humidity = registerBuffer[0] / 10.0;
             temperature = registerBuffer[1] / 10.0;
 
-            Serial.printf("[ModbusTH] Addr %d: T=%.1f°C, H=%.1f%%\n",
+            Serial.printf("[ModbusTH] Addr %d: T=%.1f C, H=%.1f%%\n",
                          modbusAddress, temperature, humidity);
             return true;
         }
@@ -141,8 +169,6 @@ public:
     }
 
     bool calibrate(float reference) override {
-        // TH-MB-04S supports calibration via registers 80/81
-        // Not implemented yet - requires write to holding registers
         return false;
     }
 
@@ -150,27 +176,33 @@ public:
         return active;
     }
 
+    uint8_t getAddress() const {
+        return modbusAddress;
+    }
+
 private:
     bool readRegisters() {
+        if (!sharedMb) return false;
+
         readComplete = false;
 
-        // Read 2 holding registers starting from address 0
-        // Register 0: Humidity
-        // Register 1: Temperature
-        if (!mb.readHreg(modbusAddress, 0, registerBuffer, 2, readCallback)) {
-            Serial.println("[ModbusTH] Failed to initiate read request");
+        // Read 2 holding registers starting from address 1
+        // Register 1 (0x01): Humidity
+        // Register 2 (0x02): Temperature
+        if (!sharedMb->readHreg(modbusAddress, 1, registerBuffer, 2, readCallback)) {
+            Serial.printf("[ModbusTH] Addr %d: Failed to initiate read\n", modbusAddress);
             return false;
         }
 
         // Wait for response (with timeout)
         unsigned long startTime = millis();
         while (!readComplete && (millis() - startTime < 1000)) {
-            mb.task();  // Process Modbus events
+            sharedMb->task();
             delay(10);
         }
 
         if (!readComplete) {
-            Serial.println("[ModbusTH] Read timeout");
+            Serial.printf("[ModbusTH] Addr %d: Read timeout\n", modbusAddress);
             return false;
         }
 
@@ -179,6 +211,13 @@ private:
 };
 
 // Static member initialization
+ModbusRTU* ModbusTHSensor::sharedMb = nullptr;
+HardwareSerial* ModbusTHSensor::sharedSerial = nullptr;
+bool ModbusTHSensor::busInitialized = false;
+int ModbusTHSensor::busRxPin = -1;
+int ModbusTHSensor::busTxPin = -1;
+int ModbusTHSensor::busDePin = -1;
+uint32_t ModbusTHSensor::busBaudrate = 0;
 uint16_t ModbusTHSensor::registerBuffer[2] = {0, 0};
 bool ModbusTHSensor::readComplete = false;
 

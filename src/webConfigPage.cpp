@@ -249,15 +249,18 @@ const char* getConfigPageHTML() {
                             <label for="rs485_tx">Pin TX</label>
                             <input type="number" id="rs485_tx" name="rs485_tx" min="0" max="39">
                         </div>
+                        <div class="form-group">
+                            <label for="rs485_de">Pin DE/RE</label>
+                            <input type="number" id="rs485_de" name="rs485_de" min="-1" max="39">
+                            <div class="info-text">-1 si no usa control DE/RE</div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="rs485_baud">Baudrate</label>
                         <select id="rs485_baud" name="rs485_baud">
+                            <option value="4800">4800</option>
                             <option value="9600">9600</option>
                             <option value="19200">19200</option>
-                            <option value="38400">38400</option>
-                            <option value="57600">57600</option>
-                            <option value="115200">115200</option>
                         </select>
                     </div>
                 </div>
@@ -336,7 +339,8 @@ const char* getConfigPageHTML() {
             { type: "scd30", enabled: true, config: {} },
             { type: "bme280", enabled: false, config: {} },
             { type: "capacitive", enabled: false, config: { pin: 34, name: "Soil1" } },
-            { type: "onewire", enabled: false, config: { pin: 4, scan: true } }
+            { type: "onewire", enabled: false, config: { pin: 4, scan: true } },
+            { type: "modbus_th", enabled: false, config: { addresses: [1], rx_pin: 16, tx_pin: 17, de_pin: 18, baudrate: 9600 } }
         ];
 
         // Load configuration on page load
@@ -374,6 +378,7 @@ const char* getConfigPageHTML() {
             document.getElementById('rs485_enabled').checked = config.rs485_enabled || false;
             document.getElementById('rs485_rx').value = config.rs485_rx || 16;
             document.getElementById('rs485_tx').value = config.rs485_tx || 17;
+            document.getElementById('rs485_de').value = config.rs485_de !== undefined ? config.rs485_de : 18;
             document.getElementById('rs485_baud').value = config.rs485_baud || 9600;
 
             // Toggle RS485 config visibility
@@ -495,6 +500,47 @@ const char* getConfigPageHTML() {
                         </div>
                     `;
 
+                case 'modbus_th':
+                    // Support both 'addresses' array and legacy 'address' single value
+                    const addrList = config.addresses || (config.address ? [config.address] : [1]);
+                    const addrStr = Array.isArray(addrList) ? addrList.join(', ') : addrList;
+                    return `
+                        <div class="form-group">
+                            <label for="sensor_${index}_addresses">Direcciones Modbus</label>
+                            <input type="text" id="sensor_${index}_addresses"
+                                   value="${addrStr}" placeholder="1, 45, 3">
+                            <div class="info-text">Separar con comas para multiples sensores en el mismo bus</div>
+                        </div>
+                        <div class="inline-group">
+                            <div class="form-group">
+                                <label for="sensor_${index}_baudrate">Baudrate</label>
+                                <select id="sensor_${index}_baudrate">
+                                    <option value="4800" ${config.baudrate == 4800 ? 'selected' : ''}>4800</option>
+                                    <option value="9600" ${config.baudrate == 9600 ? 'selected' : ''}>9600</option>
+                                    <option value="19200" ${config.baudrate == 19200 ? 'selected' : ''}>19200</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="sensor_${index}_de_pin">Pin DE/RE</label>
+                                <input type="number" id="sensor_${index}_de_pin"
+                                       value="${config.de_pin !== undefined ? config.de_pin : 18}" min="-1" max="39">
+                                <div class="info-text">-1 si no usa</div>
+                            </div>
+                        </div>
+                        <div class="inline-group">
+                            <div class="form-group">
+                                <label for="sensor_${index}_rx_pin">Pin RX</label>
+                                <input type="number" id="sensor_${index}_rx_pin"
+                                       value="${config.rx_pin || 16}" min="0" max="39">
+                            </div>
+                            <div class="form-group">
+                                <label for="sensor_${index}_tx_pin">Pin TX</label>
+                                <input type="number" id="sensor_${index}_tx_pin"
+                                       value="${config.tx_pin || 17}" min="0" max="39">
+                            </div>
+                        </div>
+                    `;
+
                 default:
                     return '<div class="info-text">Sin configuración adicional</div>';
             }
@@ -544,6 +590,7 @@ const char* getConfigPageHTML() {
             config.rs485_enabled = document.getElementById('rs485_enabled').checked;
             config.rs485_rx = parseInt(document.getElementById('rs485_rx').value);
             config.rs485_tx = parseInt(document.getElementById('rs485_tx').value);
+            config.rs485_de = parseInt(document.getElementById('rs485_de').value);
             config.rs485_baud = parseInt(document.getElementById('rs485_baud').value);
 
             // ESP-NOW
@@ -571,6 +618,29 @@ const char* getConfigPageHTML() {
                         if (scanCheckbox && sensor.config) {
                             sensor.config.scan = scanCheckbox.checked;
                         }
+                    }
+
+                    if (sensor.type === 'modbus_th') {
+                        if (!sensor.config) sensor.config = {};
+                        const addrInput = document.getElementById(`sensor_${index}_addresses`);
+                        const baudInput = document.getElementById(`sensor_${index}_baudrate`);
+                        const rxInput = document.getElementById(`sensor_${index}_rx_pin`);
+                        const txInput = document.getElementById(`sensor_${index}_tx_pin`);
+                        const deInput = document.getElementById(`sensor_${index}_de_pin`);
+
+                        // Parse comma-separated addresses into array
+                        if (addrInput) {
+                            const addrStr = addrInput.value.trim();
+                            const addrArray = addrStr.split(',')
+                                .map(s => parseInt(s.trim()))
+                                .filter(n => !isNaN(n) && n >= 1 && n <= 254);
+                            sensor.config.addresses = addrArray.length > 0 ? addrArray : [1];
+                            delete sensor.config.address;  // Remove legacy field
+                        }
+                        if (baudInput) sensor.config.baudrate = parseInt(baudInput.value);
+                        if (rxInput) sensor.config.rx_pin = parseInt(rxInput.value);
+                        if (txInput) sensor.config.tx_pin = parseInt(txInput.value);
+                        if (deInput) sensor.config.de_pin = parseInt(deInput.value);
                     }
                 });
             }

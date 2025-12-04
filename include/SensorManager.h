@@ -12,8 +12,11 @@
 #include "sensors/SensorBME280.h"
 #include "sensors/SensorSimulated.h"
 #include "sensors/SensorOneWire.h"
-#include "sensors/ModbusTHSensor.h"
 #include "sensors/HD38Sensor.h"
+
+#ifdef ENABLE_RS485
+  #include "sensors/ModbusTHSensor.h"
+#endif
 
 class SensorManager {
 private:
@@ -87,24 +90,43 @@ public:
                     Serial.printf("OneWire: %d sensors detected on pin %d\n", count, pin);
                 }
 
-            } else if (strcmp(type, "modbus_th") == 0) {
+            }
+#ifdef ENABLE_RS485
+            else if (strcmp(type, "modbus_th") == 0) {
                 // Modbus RTU Temperature/Humidity sensor (TH-MB-04S)
-                uint8_t addr = cfg["address"] | 1;
+                // Supports multiple addresses on the same bus
                 int rx = cfg["rx_pin"] | 16;
                 int tx = cfg["tx_pin"] | 17;
                 int de = cfg["de_pin"] | -1;
                 uint32_t baud = cfg["baudrate"] | 9600;
 
-                ISensor* s = new ModbusTHSensor(addr, rx, tx, de, baud);
-                if (s->init()) {
-                    sensors.push_back(s);
-                    Serial.printf("ModbusTH sensor (addr=%d) added\n", addr);
+                // Check for addresses array or single address
+                std::vector<uint8_t> addrList;
+
+                if (cfg["addresses"].is<JsonArray>()) {
+                    // Multiple addresses: [1, 45, 3]
+                    for (JsonVariant addr : cfg["addresses"].as<JsonArray>()) {
+                        addrList.push_back(addr.as<uint8_t>());
+                    }
                 } else {
-                    delete s;
-                    Serial.printf("ModbusTH sensor (addr=%d) init failed\n", addr);
+                    // Single address (backwards compatible)
+                    addrList.push_back(cfg["address"] | 1);
                 }
 
-            } else if (strcmp(type, "hd38") == 0) {
+                // Create sensor for each address
+                for (uint8_t addr : addrList) {
+                    ISensor* s = new ModbusTHSensor(addr, rx, tx, de, baud);
+                    if (s->init()) {
+                        sensors.push_back(s);
+                        Serial.printf("ModbusTH sensor (addr=%d) added\n", addr);
+                    } else {
+                        delete s;
+                        Serial.printf("ModbusTH sensor (addr=%d) init failed\n", addr);
+                    }
+                }
+            }
+#endif
+            else if (strcmp(type, "hd38") == 0) {
                 // HD-38 Soil Moisture sensor
                 int aPin = cfg["analog_pin"] | 35;
                 int dPin = cfg["digital_pin"] | -1;
