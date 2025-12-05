@@ -187,9 +187,9 @@ private:
         readComplete = false;
 
         // Read 2 holding registers starting from address 1
-        // Register 1 (0x01): Humidity
-        // Register 2 (0x02): Temperature
-        if (!sharedMb->readHreg(modbusAddress, 1, registerBuffer, 2, readCallback)) {
+        // Register 0 (0x00): Humidity
+        // Register 1 (0x01): Temperature
+        if (!sharedMb->readHreg(modbusAddress, 0, registerBuffer, 2, readCallback)) {
             Serial.printf("[ModbusTH] Addr %d: Failed to initiate read\n", modbusAddress);
             return false;
         }

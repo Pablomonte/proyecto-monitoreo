@@ -34,3 +34,16 @@ mbpoll /dev/ttyUSB1 -b 9600 -d 8 -P none -r 0x1 -1 -a 45
 mbpoll /dev/ttyUSB1 -b 9600 -d 8 -P none -r 0x2 -1 -a 45
 -- Polling slave 45...
 [2]: 	284
+
+
+wiring 
+ESP32   Adapter   
+17 tx | DI
+16 rx | RO 
+18 de | DE-RE   
+
+Adapter      sensor
+GND  
+VCC  (5v)
+A      |  D+ 
+B      |  D- 
