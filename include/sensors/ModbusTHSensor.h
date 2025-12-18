@@ -43,6 +43,8 @@ private:
     float temperature = 999;
     float humidity = 99;
     bool active;
+    int readFailureCount;
+    int inactiveCheckCount;
 
     // Modbus read result callbacks
     static uint16_t registerBuffer[2];
@@ -103,7 +105,9 @@ public:
           baudrate(baud),
           temperature(-1),
           humidity(-1),
-          active(false) {
+          active(false),
+          readFailureCount(0),
+          inactiveCheckCount(0) {
     }
 
     bool init() override {
@@ -121,6 +125,7 @@ public:
 
         if (testRead) {
             active = true;
+            readFailureCount = 0;
             Serial.printf("[ModbusTH] Sensor addr=%d initialized successfully\n", modbusAddress);
         } else {
             active = false;
@@ -140,6 +145,7 @@ public:
         bool success = readRegisters();
 
         if (success) {
+            readFailureCount = 0;
             // Registers come multiplied by 10
             humidity = registerBuffer[0] / 10.0;
             temperature = registerBuffer[1] / 10.0;
@@ -148,6 +154,13 @@ public:
                          modbusAddress, temperature, humidity);
             return true;
         }
+        
+        readFailureCount++;
+        if (readFailureCount >= 5) {
+            active = false;
+            Serial.printf("[ModbusTH] Addr %d: Disabled after 5 consecutive read failures\n", modbusAddress);
+        }
+
         // On failure, set invalid values ... do not just keep the lastone 
         humidity = 99;
         temperature = 999;
@@ -195,7 +208,16 @@ public:
     }
 
     bool isActive() override {
-        return active;
+        if (active) {
+            inactiveCheckCount = 0;
+            return true;
+        }
+        inactiveCheckCount++;
+        if (inactiveCheckCount >= 10) {
+            inactiveCheckCount = 0;
+            return init();
+        }
+        return false;
     }
 
     uint8_t getAddress() const {
