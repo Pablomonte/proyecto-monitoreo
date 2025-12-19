@@ -61,6 +61,15 @@ void createConfigFile() {
     onewireCfg["pin"] = 4;
     onewireCfg["scan"] = true;
 
+    // Configuración de Relays
+    JsonArray relays = config["relays"].to<JsonArray>();
+    JsonObject r1 = relays.add<JsonObject>();
+    r1["type"] = "relay_2ch";
+    r1["enabled"] = false;
+    JsonObject r1c = r1["config"].to<JsonObject>();
+    r1c["address"] = 1;
+    r1c["alias"] = "Relay 01";
+
     // Configuración RS485
     config["rs485_enabled"] = false;
     config["rs485_rx"] = 16;
@@ -114,6 +123,8 @@ JsonDocument loadConfig() {
       return doc;
   }
 
+  bool configModified = false;
+
   // Automatic migration: add sensors array if missing
   if (!doc["sensors"].is<JsonArray>() || doc["sensors"].size() == 0) {
       Serial.println("[→ INFO] Migrando configuración: agregando sensores por defecto");
@@ -145,14 +156,26 @@ JsonDocument loadConfig() {
       JsonObject onewireCfg = onewire["config"].to<JsonObject>();
       onewireCfg["pin"] = 4;
       onewireCfg["scan"] = true;
-
-      // Save migrated config
-      if (updateConfig(doc)) {
-          Serial.println("[✓ OK  ] Configuración migrada exitosamente");
-      } else {
-          Serial.println("[✗ ERR ] Error al guardar configuración migrada");
-      }
+      
+      configModified = true;
   }
+
+  // Automatic migration: add relays array if missing
+  if (!doc["relays"].is<JsonArray>()) {
+      Serial.println("[→ INFO] Migrando configuración: agregando relés por defecto");
+      
+      JsonArray relays = doc["relays"].to<JsonArray>();
+      JsonObject r1 = relays.add<JsonObject>();
+      r1["type"] = "relay_2ch";
+      r1["enabled"] = false;
+      JsonObject r1c = r1["config"].to<JsonObject>();
+      r1c["address"] = 1;
+      r1c["alias"] = "Relay 01";
+      
+      configModified = true;
+  }
+
+
 
   return doc;
 }
@@ -180,4 +203,3 @@ bool updateConfig(JsonDocument& newConfig) {
   Serial.println("Configuración actualizada correctamente");
   return true;
 }
-

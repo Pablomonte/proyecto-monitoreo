@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <HardwareSerial.h>
+#include "ModbusManager.h"
 
 class RS485Manager {
 private:
@@ -20,6 +21,17 @@ public:
 
     // Initialize RS485 with optional DE/RE control
     bool init(int rx = 16, int tx = 17, int baud = 9600, int de = -1, int re = -1) {
+        // Check if ModbusManager has already initialized the bus
+        if (ModbusManager::getInstance().isInitialized()) {
+            serial = ModbusManager::getInstance().getSerial();
+            dePin = ModbusManager::getInstance().getDEPin();
+            rePin = dePin; // Assume shared DE/RE pin logic from Modbus config
+            useDERE = (dePin >= 0);
+            
+            Serial.println("[RS485] Reusing ModbusManager serial connection");
+            return true;
+        }
+
         rxPin = rx;
         txPin = tx;
         baudRate = baud;

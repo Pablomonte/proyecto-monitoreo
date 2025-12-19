@@ -329,6 +329,13 @@ const char* getConfigPageHTML() {
                 <div id="sensors-list"></div>
             </div>
 
+            <!-- Relays Section -->
+            <div class="section">
+                <h2>Relés / Actuadores</h2>
+                <div id="relays-list"></div>
+                <button type="button" class="btn btn-secondary" style="margin-top:10px; padding: 6px 12px; font-size: 12px;" onclick="addRelay()">+ Agregar Relé</button>
+            </div>
+
             <div class="message" id="message"></div>
 
             <button type="submit" class="btn">Guardar Configuración</button>
@@ -353,6 +360,10 @@ const char* getConfigPageHTML() {
             { type: "capacitive", enabled: false, config: { pin: 34, name: "Soil1" } },
             { type: "hd38", enabled: false, config: { analog_pin: 35, digital_pin: -1, voltage_divider: true, invert_logic: false, name: "Suelo1" } }
         ];
+
+        const DEFAULT_RELAY_TEMPLATE = { 
+            type: "relay_2ch", enabled: true, config: { address: 1, alias: "Nuevo Relé" } 
+        };
 
         // Load configuration on page load
         window.addEventListener('DOMContentLoaded', loadConfig);
@@ -416,6 +427,9 @@ const char* getConfigPageHTML() {
 
             // Sensors
             renderSensors(config.sensors || []);
+
+            // Relays
+            renderRelays(config.relays || []);
         }
 
         function toggleRS485Config() {
@@ -599,6 +613,55 @@ const char* getConfigPageHTML() {
             }
         }
 
+        function renderRelays(relays) {
+            const container = document.getElementById('relays-list');
+            container.innerHTML = '';
+
+            if (!Array.isArray(relays)) relays = [];
+
+            relays.forEach((relay, index) => {
+                const relayDiv = document.createElement('div');
+                relayDiv.className = 'sensor-item'; // Reuse style
+                relayDiv.style.borderLeftColor = '#0198fe'; // Blue for relays
+                
+                relayDiv.innerHTML = `
+                    <div class="hdr" style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <input type="checkbox" id="relay_${index}_enabled" ${relay.enabled ? 'checked' : ''}>
+                            <label class="checkbox-label" for="relay_${index}_enabled"><strong>Habilitado</strong></label>
+                        </div>
+                        <button type="button" style="background:none; border:none; color:#dc3545; cursor:pointer;" onclick="removeRelay(${index})">🗑️</button>
+                    </div>
+                    <div class="inline-group">
+                        <div class="form-group">
+                            <label>Alias</label>
+                            <input type="text" id="relay_${index}_alias" value="${relay.config.alias || ''}" placeholder="Ej: Ventilador">
+                        </div>
+                        <div class="form-group">
+                            <label>Dirección Modbus</label>
+                            <input type="number" id="relay_${index}_address" value="${relay.config.address || 1}" min="1" max="254">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(relayDiv);
+            });
+        }
+
+        function addRelay() {
+            if(!currentConfig.relays) currentConfig.relays = [];
+            // Clone template
+            const newRelay = JSON.parse(JSON.stringify(DEFAULT_RELAY_TEMPLATE));
+            currentConfig.relays.push(newRelay);
+            renderRelays(currentConfig.relays);
+        }
+
+        function removeRelay(index) {
+            if(confirm('¿Eliminar este relé?')) {
+                currentConfig.relays.splice(index, 1);
+                renderRelays(currentConfig.relays);
+            }
+        }
+
         // Form submission
         document.getElementById('configForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -709,6 +772,28 @@ const char* getConfigPageHTML() {
                         if (digitalPinInput) sensor.config.digital_pin = parseInt(digitalPinInput.value);
                         if (voltageDividerInput) sensor.config.voltage_divider = voltageDividerInput.checked;
                         if (invertLogicInput) sensor.config.invert_logic = invertLogicInput.checked;
+                    }
+                });
+            }
+
+            // Relays
+            config.relays = [];
+            const relayContainer = document.getElementById('relays-list');
+            // Re-read from DOM based on currentConfig length or DOM elements
+            // Better to iterate based on rendered items if we want to support dynamic add/remove properly
+            // But since we updated currentConfig.relays in add/remove, we can iterate that
+            if (currentConfig.relays) {
+                currentConfig.relays.forEach((r, i) => {
+                    const enabled = document.getElementById(`relay_${i}_enabled`);
+                    if(enabled) { // Only if it exists in DOM
+                        config.relays.push({
+                            type: "relay_2ch",
+                            enabled: enabled.checked,
+                            config: {
+                                alias: document.getElementById(`relay_${i}_alias`).value,
+                                address: parseInt(document.getElementById(`relay_${i}_address`).value)
+                            }
+                        });
                     }
                 });
             }

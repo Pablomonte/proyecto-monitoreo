@@ -7,6 +7,7 @@
 #include "constants.h"
 #include "configFile.h"
 #include "webConfigPage.h"
+#include "actuators/RelayManager.h"
 
 #include <ArduinoJson.h>
 
@@ -24,6 +25,8 @@
   #include "ESPNowManager.h"
   extern ESPNowManager espnowMgr;
 #endif
+
+extern RelayManager relayMgr;
 
 void handleMediciones() {
     float temperature = 99, humidity = 100, co2 = 999999, presion = 99;
@@ -109,7 +112,8 @@ void handleData() {
     html += "font-size:.85em;color:#666;box-shadow:0 1px 3px rgba(0,0,0,.08)}";
     html += ".status b{color:#333}";
     html += ".empty{text-align:center;padding:40px;color:#888}";
-    html += "</style></head><body>";
+    html += "</style><script>function toggle(a,c){fetch('/api/relay/toggle?addr='+a+'&ch='+c,{method:'POST'}).then(r=>{if(r.ok)location.reload()})}</script>";
+    html += "</head><body>";
     html += "<h1>📊 Datos de Sensores</h1>";
     html += "<div class='cards'>";
 
@@ -230,6 +234,56 @@ void handleData() {
 #endif
 
     html += "</div>";
+
+    // Relay Section
+    if (!relayMgr.getRelays().empty()) {
+        html += "<h1 style='margin-top:25px'>🔌 Relés / Actuadores</h1>";
+        html += "<div class='cards'>";
+        
+        for (auto* r : relayMgr.getRelays()) {
+            if (!r) continue;
+            
+            bool isActive = r->isActive();
+            if (isActive) {
+                r->syncState(); // Sync with hardware
+                // r->syncInputs(); // Sync inputs - DISABLED until fixed
+            }
+            
+            String cardClass = isActive ? "" : " err";
+            html += "<div class='card" + cardClass + "' style='border-left-color:#0198fe'>";
+            html += "<div class='hdr'>";
+            html += "<span class='type'>Relé Modbus</span>";
+            html += "<span class='id'>Addr: " + String(r->getAddress()) + "</span>";
+            html += "</div>";
+            
+            html += "<div class='vals'>";
+            if (r->getAlias().length() > 0) {
+                 html += "<div class='val' style='grid-column:span 2;background:none;text-align:left;padding:0 5px'><span>" + r->getAlias() + "</span></div>";
+            }
+
+            if (isActive) {
+                for(int i=0; i<2; i++) {
+                    bool state = r->getState(i);
+                    String cls = state ? "ok" : "warn";
+                    String label = state ? "ON" : "OFF";
+                    html += "<div class='val " + cls + "' onclick='toggle(" + String(r->getAddress()) + "," + String(i) + ")' style='cursor:pointer'>";
+                    html += "<span>Canal " + String(i+1) + "</span><b>" + label + "</b></div>";
+                }
+
+                /*// Add Input States - DISABLED until fixed
+                for(int i=0; i<2; i++) {
+                    bool state = r->getInputState(i);
+                    String cls = state ? "ok" : "warn";
+                    String label = state ? "ON" : "OFF";
+                    html += "<div class='val " + cls + "'><span>Input " + String(i+1) + "</span><b>" + label + "</b></div>";
+                }*/
+            } else {
+                html += "<div class='val' style='grid-column:span 2;'><span>Estado</span><b>Inactivo</b></div>";
+            }
+            html += "</div></div>";
+        }
+        html += "</div>";
+    }
 
     if (sensorCount == 0) {
         html += "<div class='empty'>No hay sensores configurados</div>";
@@ -417,3 +471,47 @@ void handleESPNowStatus() {
   server.send(200, "application/json", output);
 }
 #endif
+
+void handleRelayList() {
+    JsonDocument doc;
+    JsonArray arr = doc.to<JsonArray>();
+    
+    for(auto* r : relayMgr.getRelays()) {
+        if(r) {
+            // Sync state before sending to get real status
+            r->syncState();
+            // Parse the JSON string from the relay into the doc
+            // (Optimization: RelayModule2CH could return JsonObject, but string is fine)
+            JsonDocument tempDoc;
+            deserializeJson(tempDoc, r->getStatusJSON());
+            arr.add(tempDoc);
+        }
+    }
+    
+    String output;
+    serializeJson(doc, output);
+    server.send(200, "application/json", output);
+}
+
+void handleRelayToggle() {
+    if(!server.hasArg("addr") || !server.hasArg("ch")) {
+        server.send(400, "text/plain", "Missing addr or ch param");
+        return;
+    }
+    
+    int addr = server.arg("addr").toInt();
+    int ch = server.arg("ch").toInt();
+    
+    for(auto* r : relayMgr.getRelays()) {
+        if(r->getAddress() == addr) {
+            if(r->toggleRelay(ch)) {
+                server.send(200, "text/plain", "OK");
+            } else {
+                server.send(500, "text/plain", "Failed to toggle");
+            }
+            return;
+        }
+    }
+    
+    server.send(404, "text/plain", "Relay not found");
+}

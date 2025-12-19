@@ -17,6 +17,7 @@
 #include "endpoints.h"
 #include "configFile.h"
 #include "otaUpdater.h"
+#include "actuators/RelayManager.h"
 
 #ifdef SENSOR_MULTI
   #include "SensorManager.h"
@@ -36,6 +37,12 @@
   #include "ESPNowManager.h"
   ESPNowManager espnowMgr;
 #endif
+
+RelayManager relayMgr;
+
+// Forward declarations for new endpoints
+void handleRelayList();
+void handleRelayToggle();
 
 unsigned long lastUpdateCheck = 0;
 unsigned long lastSendTime = 0;
@@ -97,7 +104,7 @@ void onMeshDataReceived(const uint8_t* senderMAC, float temp, float hum, float c
                // senderMAC[5], seq);
 }
 
-String detectRole() {
+String detectRole(const JsonDocument& config) {
   Serial.println("\n[→ INFO] Auto-detectando rol del dispositivo...");
 
   // 1. Check if WiFi is connected
@@ -109,7 +116,6 @@ String detectRole() {
   Serial.println("  └─ WiFi conectado, verificando acceso a Grafana...");
 
   // 2. Test Grafana connectivity
-  JsonDocument config = loadConfig();
   String grafanaUrl = config["grafana_ping_url"] | "http://192.168.1.1/ping";
 
   HTTPClient http;
@@ -165,10 +171,17 @@ void setup() {
 
   createConfigFile();
 
+  // Load configuration ONCE for all modules
+  JsonDocument config = loadConfig();
+
+  // Initialize Relays
+  Serial.println("\n[→ INFO] Inicializando Relés...");
+  relayMgr.loadFromConfig(config);
+  Serial.printf("[✓ OK  ] %d relés configurados\n", relayMgr.getRelays().size());
+
   Serial.println("\n[→ INFO] Inicializando sensores...");
   #ifdef SENSOR_MULTI
-    JsonDocument configDoc = loadConfig();
-    sensorMgr.loadFromConfig(configDoc);
+    sensorMgr.loadFromConfig(config);
     int sensorCount = sensorMgr.getSensorCount();
     Serial.printf("[✓ OK  ] Modo multi-sensor: %d sensor%s activo%s\n",
                   sensorCount, sensorCount != 1 ? "es" : "", sensorCount != 1 ? "s" : "");
@@ -195,8 +208,14 @@ void setup() {
 
   #ifdef ENABLE_RS485
     Serial.println("\n[→ INFO] Configurando RS485...");
-    rs485.init(16, 17, 9600);
-    Serial.println("[✓ OK  ] RS485 habilitado (TX: GPIO17, RX: GPIO16, 9600 baud)");
+    
+    // 1. Initialize ModbusManager first (Singleton owner of the bus)
+    ModbusManager::getInstance().begin(config["rs485_rx"], config["rs485_tx"], config["rs485_de"], config["rs485_baud"]);
+
+    // 2. Initialize RS485Manager (will reuse ModbusManager's serial if available)
+    rs485.init(config["rs485_rx"], config["rs485_tx"], config["rs485_baud"], config["rs485_de"], config["rs485_de"]);
+    
+    Serial.println("[✓ OK  ] RS485/Modbus habilitado");
   #endif
 
   clientSecure.setInsecure(); 
@@ -209,6 +228,10 @@ void setup() {
   server.on("/calibrate-scd30", HTTP_GET, handleSCD30Calibration);
   server.on("/settings", HTTP_GET, handleSettings);
   server.on("/restart", HTTP_POST, handleRestart);
+  
+  // Relay endpoints
+  server.on("/api/relays", HTTP_GET, handleRelayList);
+  server.on("/api/relay/toggle", HTTP_POST, handleRelayToggle);
 
   #ifdef ENABLE_ESPNOW
     server.on("/espnow/status", HTTP_GET, handleESPNowStatus);
@@ -245,14 +268,15 @@ void setup() {
   wifiManager.init(&server);
   Serial.println("[✓ OK  ] WiFi Manager inicializado");
 
+
+
   #ifdef ENABLE_ESPNOW
     Serial.println("\n[→ INFO] Configurando ESP-NOW...");
-    JsonDocument espnowConfigDoc = loadConfig();
-    bool espnowEnabled = espnowConfigDoc["espnow_enabled"] | false;
+    bool espnowEnabled = config["espnow_enabled"] | false;
 
     if (espnowEnabled) {
       // Auto-detect role or use forced mode
-      String forcedMode = espnowConfigDoc["espnow_force_mode"] | "";
+      String forcedMode = config["espnow_force_mode"] | "";
       String espnowMode;
 
       if (forcedMode != "") {
@@ -260,10 +284,10 @@ void setup() {
         espnowMode = forcedMode;
       } else {
         // Auto-detection based on connectivity
-        espnowMode = detectRole();
+        espnowMode = detectRole(config);
       }
 
-      uint8_t espnowChannel = espnowConfigDoc["espnow_channel"] | 1;
+      uint8_t espnowChannel = config["espnow_channel"] | 1;
 
       // Validate channel is in valid range (1-13)
       if (espnowChannel < 1 || espnowChannel > 13) {
@@ -449,6 +473,21 @@ void loop() {
         rs485.sendSensorData(temperature, humidity, co2, sensor ? sensor->getSensorType() : "Unknown");
       #endif
     #endif
+
+    // Report Relays to Grafana
+    for (auto* r : relayMgr.getRelays()) {
+        if (r && r->isActive()) {
+            r->syncState();
+            // r->syncInputs(); // DISABLED until fixed
+            
+            String data = r->getGrafanaString();
+            String id = r->getAlias();
+            if (id.length() == 0) id = "relay_" + String(r->getAddress());
+            id.replace(" ", "_");
+            
+            sendDataGrafana(data.c_str(), id.c_str());
+        }
+    }
   }
   delay(10);
 }
