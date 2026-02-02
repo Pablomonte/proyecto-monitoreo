@@ -1,7 +1,7 @@
 #include "webConfigPage.h"
 
-const char* getConfigPageHTML() {
-    return R"rawliteral(
+const char *getConfigPageHTML() {
+  return R"rawliteral(
 <!DOCTYPE html>
 <html>
 <head>
@@ -180,12 +180,31 @@ const char* getConfigPageHTML() {
         .inline-group .form-group {
             flex: 1;
         }
+        .nav {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .nav a {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background: var(--altermundi-blue);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .nav a:hover {
+            background: #017dd1;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Configuración del Sistema</h1>
         <div class="subtitle">AlterMundi - La pata tecnológica de ese otro mundo posible</div>
+        <div class="nav"><a href="/">📡 WiFi</a><a href="/data">📊 Datos</a></div>
         <div id="loading" class="loading">Cargando configuración...</div>
 
         <form id="configForm" style="display:none;">
@@ -202,9 +221,9 @@ const char* getConfigPageHTML() {
                     <div class="info-text">Dejar vacío para mantener contraseña actual</div>
                 </div>
                 <div class="form-group">
-                    <label>Canal WiFi Actual, usar para esp now en todos los dispositivos espnow !!!!!! </label>
+                    <label>Canal WiFi Actual</label>
                     <div id="wifi_channel_status" style="padding: 10px; background: #f0f0f0; border-radius: 6px; color: var(--gray-dark); font-weight: 500;">-</div>
-                    <div class="info-text">El canal en el que opera la red WiFi actual.</div>
+                    <div class="info-text">Usar este canal para todos los dispositivos ESP-NOW</div>
                 </div>
             </div>
 
@@ -260,13 +279,13 @@ const char* getConfigPageHTML() {
                         <small style="color: var(--gray-medium);">URL para verificar conectividad a Grafana</small>
                     </div>
                     <div class="form-group">
-                        <label for="espnow_channel">Canal WiFi !!!! </label>
+                        <label for="espnow_channel">Canal WiFi</label>
                         <select id="espnow_channel" name="espnow_channel">
                             <option value="1">1</option>
                             <option value="6">6</option>
                             <option value="11">11</option>
                         </select>
-                        <small style="color: var(--gray-medium);">Canal usado por gateways y sensores, igual al canal del WiFi del gateway</small>
+                        <small style="color: var(--gray-medium);">Debe coincidir con el canal WiFi del gateway</small>
                     </div>
                     <div class="form-group">
                         <label for="send_interval_ms">Intervalo de envío (ms)</label>
@@ -525,6 +544,20 @@ const char* getConfigPageHTML() {
                             <input type="number" id="sensor_${index}_pin"
                                    value="${config.pin || 34}" min="0" max="39">
                         </div>
+                        <div class="inline-group">
+                            <div class="form-group">
+                                <label for="sensor_${index}_dry">Valor Seco (ADC)</label>
+                                <input type="number" id="sensor_${index}_dry"
+                                       value="${config.dry || 3500}" min="0" max="4095">
+                                <div class="info-text">Lectura del sensor en aire</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="sensor_${index}_wet">Valor Húmedo (ADC)</label>
+                                <input type="number" id="sensor_${index}_wet"
+                                       value="${config.wet || 1500}" min="0" max="4095">
+                                <div class="info-text">Lectura del sensor en agua</div>
+                            </div>
+                        </div>
                     `;
 
                 case 'onewire':
@@ -733,6 +766,14 @@ const char* getConfigPageHTML() {
                         if (scanCheckbox && sensor.config) {
                             sensor.config.scan = scanCheckbox.checked;
                         }
+                    }
+
+                    if (sensor.type === 'capacitive') {
+                        if (!sensor.config) sensor.config = {};
+                        const dryInput = document.getElementById(`sensor_${index}_dry`);
+                        const wetInput = document.getElementById(`sensor_${index}_wet`);
+                        if (dryInput) sensor.config.dry = parseInt(dryInput.value);
+                        if (wetInput) sensor.config.wet = parseInt(wetInput.value);
                     }
 
                     if (sensor.type === 'modbus_th' || sensor.type === 'modbus_soil_7in1') {
