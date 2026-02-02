@@ -13,7 +13,7 @@
   "min_hum": 55,
   "hash": "F024F90C7F98",
   "incubator_name": "moni-F024F90C7F98",
-  "modbus_delay_ms": 20,
+  "modbus_delay_ms": 50,
   "sensors": [
     {
       "type": "scd30",
