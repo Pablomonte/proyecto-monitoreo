@@ -24,8 +24,21 @@ jobs:
     - name: Install PlatformIO
       run: pip install platformio
 
-    - name: Create constants_private.h from example
-      run: cp include/constants_private.h.example include/constants_private.h
+#    - name: Create constants_private.h from example
+#      run: cp include/constants_private.h.example include/constants_private.h
+    - name: Create constants_private.h from secrets
+      run: |
+        cat > include/constants_private.h << 'EOF'
+        #ifndef CONSTANTS_PRIVATE_H
+        #define CONSTANTS_PRIVATE_H
+
+        // Configuración privada - generado automáticamente en CI
+
+        const char* URL = "${{ secrets.GRAFANA_URL }}";
+        const char* TOKEN_GRAFANA = "${{ secrets.GRAFANA_TOKEN }}";
+
+        #endif
+        EOF
 
     - name: Build Firmware
       run: |
