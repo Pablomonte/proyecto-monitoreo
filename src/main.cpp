@@ -117,7 +117,18 @@ void onMeshDataReceived(const uint8_t *senderMAC, float temp, float hum,
   meshBufferHead = nextHead;
 }
 
-String detectRole(const JsonDocument &config) {
+// Extract base URL (scheme://host:port) from full URL
+// Input:  "http://grafana.altermundi.net:8086/write?db=cto"
+// Output: "http://grafana.altermundi.net:8086"
+String extractBaseUrl(const char* fullUrl) {
+  String url(fullUrl);
+  int schemeEnd = url.indexOf("://");
+  if (schemeEnd < 0) return "";
+  int pathStart = url.indexOf('/', schemeEnd + 3);
+  return (pathStart < 0) ? url : url.substring(0, pathStart);
+}
+
+String detectRole(const JsonDocument& config) {
   DBG_INFOLN("\n[INFO] Auto-detecting device role...");
 
   // 1. Check if WiFi is connected
@@ -126,23 +137,39 @@ String detectRole(const JsonDocument &config) {
     return "sensor";
   }
 
-  DBG_INFOLN("  WiFi connected, checking Grafana...");
+  DBG_INFOLN("  WiFi connected, checking InfluxDB...");
 
-  // 2. Test Grafana connectivity
-  String grafanaUrl = config["grafana_ping_url"] | "http://192.168.1.1/ping";
+  // 2. Build ping URL from compile-time constant or config fallback
+  String pingUrl;
 
+  // Try to derive from URL constant (constants_private.h)
+  String baseUrl = extractBaseUrl(URL);
+  if (baseUrl.length() > 0) {
+    pingUrl = baseUrl + "/ping";
+    DBG_VERBOSE("  Derived ping URL: %s\n", pingUrl.c_str());
+  } else {
+    // Fallback to config (backward compatibility)
+    pingUrl = config["grafana_ping_url"] | "";
+    if (pingUrl.length() == 0) {
+      DBG_INFOLN("  No ping URL available -> SENSOR mode (safe default)");
+      return "sensor";
+    }
+    DBG_VERBOSE("  Using config ping URL: %s\n", pingUrl.c_str());
+  }
+
+  // 3. Test connectivity
   HTTPClient http;
-  http.begin(grafanaUrl);
-  http.setTimeout(3000); // 3 second timeout
+  http.begin(pingUrl);
+  http.setTimeout(3000);  // 3 second timeout
 
   int httpCode = http.GET();
   http.end();
 
   if (httpCode > 0) {
-    DBG_INFO("  Grafana OK (HTTP %d) -> GATEWAY mode\n", httpCode);
+    DBG_INFO("  InfluxDB OK (HTTP %d) -> GATEWAY mode\n", httpCode);
     return "gateway";
   } else {
-    DBG_INFO("  Grafana unreachable (%d) -> SENSOR mode\n", httpCode);
+    DBG_INFO("  InfluxDB unreachable (%d) -> SENSOR mode\n", httpCode);
     return "sensor";
   }
 }
@@ -313,6 +340,15 @@ void setup() {
       DBG_INFO("[INFO] Forced mode: %s\n", forcedMode.c_str());
       espnowMode = forcedMode;
     } else {
+      // Wait for WiFi to connect before role detection (max 10s)
+      if (!wifiManager.isOnline()) {
+        DBG_INFOLN("[INFO] Waiting for WiFi connection...");
+        unsigned long wifiWaitStart = millis();
+        while (!wifiManager.isOnline() && millis() - wifiWaitStart < 10000) {
+          wifiManager.update();
+          delay(100);
+        }
+      }
       espnowMode = detectRole(config);
     }
 
