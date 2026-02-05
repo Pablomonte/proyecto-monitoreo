@@ -4,6 +4,7 @@
 #include "constants.h"
 #include "debug.h"
 #include "globals.h"
+#include "version.h"
 #include "webConfigPage.h"
 #include <Arduino.h>
 #include <SPIFFS.h>
@@ -668,4 +669,163 @@ void handleRelayToggle() {
   }
 
   server.send(404, "text/plain", "Relay not found");
+}
+
+void handleHome() {
+  // 1. Detectar estado WiFi
+  bool wifiConnected = (WiFi.status() == WL_CONNECTED);
+
+  // Si WiFi NO conectado → redirigir a portal WiFi
+  if (!wifiConnected) {
+    server.sendHeader("Location", "/wifi-setup", true);
+    server.send(302, "text/plain", "");
+    return;
+  }
+
+  // 2. Obtener datos del sistema
+  JsonDocument config = loadConfig();
+  String deviceName = config["incubator_name"] | "Unknown";
+  String deviceHash = config["hash"] | "N/A";
+  String firmwareVersion = FIRMWARE_VERSION;
+
+  // 3. Obtener datos WiFi
+  String wifiSSID = WiFi.SSID();
+  int wifiRSSI = WiFi.RSSI();
+  String localIP = WiFi.localIP().toString();
+
+  // 4. Contar sensores activos
+  int activeSensors = 0;
+  int totalSensors = 0;
+#ifdef SENSOR_MULTI
+  for (auto *s : getSensorList()) {
+    totalSensors++;
+    if (s && s->isActive()) activeSensors++;
+  }
+#else
+  totalSensors = 1;
+  if (sensor && sensor->isActive()) activeSensors = 1;
+#endif
+
+  // 5. Calcular uptime
+  unsigned long uptimeSec = millis() / 1000;
+  String uptime = String(uptimeSec / 3600) + "h " +
+                  String((uptimeSec % 3600) / 60) + "m";
+
+  // 6. Determinar calidad de señal
+  String signalQuality;
+  String signalClass;
+  if (wifiRSSI > -50) {
+    signalQuality = "excelente";
+    signalClass = "signal-excellent";
+  } else if (wifiRSSI > -60) {
+    signalQuality = "buena";
+    signalClass = "signal-good";
+  } else if (wifiRSSI > -70) {
+    signalQuality = "regular";
+    signalClass = "signal-fair";
+  } else {
+    signalQuality = "débil";
+    signalClass = "signal-weak";
+  }
+
+  // 7. Construir HTML
+  String html = "<!DOCTYPE html><html><head>";
+  html += "<meta charset='UTF-8'>";
+  html += "<meta name='viewport' content='width=device-width,initial-scale=1'>";
+  html += "<title>Monitor - Dashboard</title>";
+  html += "<link rel='icon' type='image/svg+xml' href='/favicon.svg'>";
+
+  // CSS inline (similar a /data y /settings)
+  html += "<style>";
+  html += ":root{";
+  html += "--altermundi-green:#55d400;";
+  html += "--altermundi-orange:#F39100;";
+  html += "--altermundi-blue:#0198fe;";
+  html += "--gray-dark:#333;--gray-medium:#666;--gray-light:#f5f5f5;}";
+  html += "*{margin:0;padding:0;box-sizing:border-box;}";
+  html += "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;";
+  html += "background:linear-gradient(135deg,#f5f5f5 0%,#e8e8e8 100%);";
+  html += "padding:15px;min-height:100vh;}";
+  html += ".container{max-width:600px;margin:0 auto;background:white;";
+  html += "padding:25px;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.1);}";
+  html += "h1{color:var(--gray-dark);margin-bottom:8px;font-size:24px;";
+  html += "border-bottom:3px solid var(--altermundi-green);padding-bottom:10px;}";
+  html += ".subtitle{color:var(--gray-medium);font-size:12px;margin-bottom:20px;text-align:center;}";
+  html += ".info-card{background:#fafafa;border-left:4px solid var(--altermundi-green);";
+  html += "border-radius:8px;padding:15px;margin-bottom:15px;}";
+  html += ".info-card h2{color:var(--altermundi-green);font-size:16px;margin-bottom:10px;font-weight:600;}";
+  html += ".info-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e0e0e0;}";
+  html += ".info-row:last-child{border-bottom:none;}";
+  html += ".info-label{color:var(--gray-medium);font-weight:600;font-size:14px;}";
+  html += ".info-value{color:var(--gray-dark);font-size:14px;text-align:right;word-break:break-all;}";
+  html += ".status-badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;}";
+  html += ".status-online{background:#d4edda;color:#155724;}";
+  html += ".status-offline{background:#f8d7da;color:#721c24;}";
+  html += ".nav-buttons{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}";
+  html += ".btn{flex:1;min-width:140px;padding:12px 16px;border:none;border-radius:6px;";
+  html += "font-size:14px;font-weight:600;cursor:pointer;transition:all 0.3s ease;";
+  html += "text-align:center;text-decoration:none;display:inline-block;}";
+  html += ".btn-primary{background:var(--altermundi-green);color:white;box-shadow:0 2px 4px rgba(85,212,0,0.3);}";
+  html += ".btn-primary:hover{background:#48b800;transform:translateY(-2px);}";
+  html += ".btn-secondary{background:var(--altermundi-blue);color:white;box-shadow:0 2px 4px rgba(1,152,254,0.3);}";
+  html += ".btn-secondary:hover{background:#017dd1;transform:translateY(-2px);}";
+  html += ".btn-warning{background:var(--altermundi-orange);color:white;box-shadow:0 2px 4px rgba(243,145,0,0.3);}";
+  html += ".btn-warning:hover{background:#d47e00;transform:translateY(-2px);}";
+  html += ".signal-excellent{color:#28a745;}";
+  html += ".signal-good{color:#ffc107;}";
+  html += ".signal-fair{color:#fd7e14;}";
+  html += ".signal-weak{color:#dc3545;}";
+  html += "@media (max-width:480px){.nav-buttons{flex-direction:column;}.btn{width:100%;}}";
+  html += "</style></head><body>";
+
+  // Contenido
+  html += "<div class='container'>";
+  html += "<h1>🏠 Monitor AlterMundi</h1>";
+  html += "<div class='subtitle'>La pata tecnológica de ese otro mundo posible</div>";
+
+  // Card Identificación
+  html += "<div class='info-card'>";
+  html += "<h2>📟 Identificación</h2>";
+  html += "<div class='info-row'><span class='info-label'>Dispositivo:</span>";
+  html += "<span class='info-value'>" + deviceName + "</span></div>";
+  html += "<div class='info-row'><span class='info-label'>ID:</span>";
+  html += "<span class='info-value'>" + deviceHash + "</span></div>";
+  html += "<div class='info-row'><span class='info-label'>Firmware:</span>";
+  html += "<span class='info-value'>v" + firmwareVersion + "</span></div>";
+  html += "</div>";
+
+  // Card Conectividad
+  html += "<div class='info-card'>";
+  html += "<h2>📡 Conectividad</h2>";
+  html += "<div class='info-row'><span class='info-label'>Estado:</span>";
+  html += "<span class='info-value'><span class='status-badge status-online'>● Conectado</span></span></div>";
+  html += "<div class='info-row'><span class='info-label'>Red:</span>";
+  html += "<span class='info-value'>" + wifiSSID + "</span></div>";
+  html += "<div class='info-row'><span class='info-label'>Señal:</span>";
+  html += "<span class='info-value " + signalClass + "'>" + String(wifiRSSI) + " dBm (" + signalQuality + ")</span></div>";
+  html += "<div class='info-row'><span class='info-label'>IP Local:</span>";
+  html += "<span class='info-value'>" + localIP + "</span></div>";
+  html += "</div>";
+
+  // Card Sensores
+  html += "<div class='info-card'>";
+  html += "<h2>📊 Sensores</h2>";
+  html += "<div class='info-row'><span class='info-label'>Activos:</span>";
+  html += "<span class='info-value'>" + String(activeSensors) + " de " + String(totalSensors) + "</span></div>";
+  html += "<div class='info-row'><span class='info-label'>Uptime:</span>";
+  html += "<span class='info-value'>" + uptime + "</span></div>";
+  html += "</div>";
+
+  // Navegación
+  html += "<div class='nav-buttons'>";
+  html += "<button class='btn btn-primary' onclick=\"window.location.href='/data'\">📊 Ver Datos</button>";
+  html += "<button class='btn btn-secondary' onclick=\"window.location.href='/settings'\">⚙️ Configuración</button>";
+  html += "</div>";
+  html += "<div class='nav-buttons' style='margin-top:10px'>";
+  html += "<button class='btn btn-warning' onclick=\"if(confirm('¿Reconfigurar WiFi?'))window.location.href='/wifi-setup'\">📡 WiFi Setup</button>";
+  html += "</div>";
+
+  html += "</div></body></html>";
+
+  server.send(200, "text/html", html);
 }

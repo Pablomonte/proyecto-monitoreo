@@ -256,6 +256,7 @@ void setup() {
 
   clientSecure.setInsecure();
 
+  server.on("/", HTTP_GET, handleHome);
   server.on("/actual", HTTP_GET, handleMediciones);
   server.on("/config", HTTP_GET, handleConfiguracion);
   server.on("/config", HTTP_POST, habldePostConfig);

@@ -370,10 +370,10 @@ void WiFiManager::setupWebServer(WebServer *server)
         webServer->send(503, "application/json", json);
     } });
 
-    // Root page - WiFi configuration interface
-    webServer->on("/", [this]()
+    // WiFi setup page - WiFi configuration interface
+    webServer->on("/wifi-setup", [this]()
                   {
-      
+
 
         String html = generateCaptivePortalPage();
         webServer->send(200, "text/html", html);});
@@ -622,6 +622,7 @@ String WiFiManager::generateCaptivePortalPage() {
     html += "<h1>WiFi Configuration</h1>";
     html += "<div class='subtitle'>AlterMundi - La pata tecnológica de ese otro mundo posible</div>";
     html += "<div style='text-align:center;margin-bottom:20px;'>";
+    html += "<button class='btn-secondary' onclick=\"window.location.href='/'\">🏠 Inicio</button>";
     html += "<button class='btn-secondary' onclick=\"window.location.href='/settings'\">⚙️ Configuración Avanzada</button>";
     html += "<button onclick=\"window.location.href='/data'\">📊 Ver Datos</button>";
     html += "</div>";
