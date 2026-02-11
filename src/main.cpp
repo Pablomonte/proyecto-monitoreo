@@ -256,37 +256,57 @@ void setup() {
 
   clientSecure.setInsecure();
 
+  server.on("/", HTTP_GET, handleHome);
   server.on("/actual", HTTP_GET, handleMediciones);
+  server.on("/api/status", HTTP_GET, handleStatus); // New endpoint
   server.on("/config", HTTP_GET, handleConfiguracion);
   server.on("/config", HTTP_POST, habldePostConfig);
   server.on("/config/reset", HTTP_POST, handleConfigReset);
-  server.on("/data", HTTP_GET, handleData);
+  server.on("/data", HTTP_GET, handleData); // Serves data.html
   server.on("/calibrate-scd30", HTTP_GET, handleSCD30Calibration);
-  server.on("/settings", HTTP_GET, handleSettings);
+  server.on("/settings", HTTP_GET, handleSettings); // Serves config.html
   server.on("/restart", HTTP_POST, handleRestart);
 
   // Relay endpoints
   server.on("/api/relays", HTTP_GET, handleRelayList);
   server.on("/api/relay/toggle", HTTP_POST, handleRelayToggle);
 
+  server.on("/style.css", HTTP_GET, handleStyle);
+  server.on("/config.js", HTTP_GET, handleConfigJs);
+  server.on("/favicon.svg", HTTP_GET, handleFavicon);
+
 #ifdef ENABLE_ESPNOW
   server.on("/espnow/status", HTTP_GET, handleESPNowStatus);
 #endif
 
-  // Serve favicon from SPIFFS
-  server.on("/favicon.svg", HTTP_GET, []() {
-    File file = SPIFFS.open("/favicon.svg", "r");
-    if (!file) {
-      server.send(404, "text/plain", "Favicon not found");
+  // Serve static files from SPIFFS (CSS, JS, Favicon)
+  server.onNotFound([]() {
+    String uri = server.uri();
+
+    // First try to find file in /data folder (root of SPIFFS)
+    if (SPIFFS.exists(uri)) {
+      File file = SPIFFS.open(uri, "r");
+      String contentType = "text/plain";
+      if (uri.endsWith(".css"))
+        contentType = "text/css";
+      else if (uri.endsWith(".js"))
+        contentType = "application/javascript";
+      else if (uri.endsWith(".html"))
+        contentType = "text/html";
+      else if (uri.endsWith(".svg"))
+        contentType = "image/svg+xml";
+      else if (uri.endsWith(".png"))
+        contentType = "image/png";
+      else if (uri.endsWith(".ico"))
+        contentType = "image/x-icon";
+
+      server.streamFile(file, contentType);
+      file.close();
       return;
     }
-    server.streamFile(file, "image/svg+xml");
-    file.close();
-  });
 
-  // Add handler for undefined routes
-  server.onNotFound([]() {
-    DBG_VERBOSE("404 redirect: %s\n", server.uri().c_str());
+    // Default 404 behavior: redirect to home
+    DBG_VERBOSE("404 redirect: %s\n", uri.c_str());
     server.sendHeader("Location", "/", true);
     server.send(302, "text/plain", "");
   });
