@@ -45,5 +45,5 @@ ESP32   Adapter
 Adapter      sensor
 GND  
 VCC  (5v)
-A      |  D+ 
-B      |  D- 
+Yellow     |  D+ 
+Blue       |  D- 
