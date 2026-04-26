@@ -172,30 +172,43 @@ public:
       else if (strcmp(type, "hd38") == 0) {
         // HD-38 Soil Moisture sensor
         // Support both 'analog_pins' array and legacy 'analog_pin' single value
+        // Per-pin calibration via dry_values[] / wet_values[] parallel arrays
         bool divider = cfg["voltage_divider"] | true;
         bool invert = cfg["invert_logic"] | false;
 
         std::vector<int> pinList;
 
         if (cfg["analog_pins"].is<JsonArray>()) {
-          // Multiple pins: [35, 34, 32]
           for (JsonVariant pin : cfg["analog_pins"].as<JsonArray>()) {
             pinList.push_back(pin.as<int>());
           }
+        } else if (cfg["pin"].is<int>()) {
+          // Unified interface: same 'pin' field as capacitive
+          pinList.push_back(cfg["pin"].as<int>());
         } else {
-          // Single pin (backwards compatible)
           pinList.push_back(cfg["analog_pin"] | 35);
         }
 
+        // Read optional per-pin calibration arrays
+        bool hasDryArr = cfg["dry_values"].is<JsonArray>();
+        bool hasWetArr = cfg["wet_values"].is<JsonArray>();
+        // Also support single sensor flat dry/wet
+        int flatDry = cfg["dry"] | 4095;
+        int flatWet = cfg["wet"] | 0;
+
         for (size_t i = 0; i < pinList.size(); i++) {
           int aPin = pinList[i];
+          int dry = hasDryArr ? (cfg["dry_values"][i] | flatDry) : flatDry;
+          int wet = hasWetArr ? (cfg["wet_values"][i] | flatWet) : flatWet;
+
           char sensorName[16];
           snprintf(sensorName, sizeof(sensorName), "%d", aPin);
 
-          ISensor *s = new HD38Sensor(aPin, -1, divider, invert, sensorName);
+          HD38Sensor *s = new HD38Sensor(aPin, -1, divider, invert, sensorName);
+          s->setCalibration(dry, wet);
           if (s->init()) {
             sensors.push_back(s);
-            DBG_INFO("HD38 '%s' pin %d added\n", sensorName, aPin);
+            DBG_INFO("HD38 '%s' pin %d dry=%d wet=%d added\n", sensorName, aPin, dry, wet);
           } else {
             delete s;
             DBG_ERROR("HD38 pin %d init failed\n", aPin);

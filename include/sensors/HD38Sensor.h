@@ -27,6 +27,7 @@ private:
     bool useVoltageDivider;
     bool invertLogic;
     float moisture;
+    int rawValue;
     bool digitalState;
     bool active;
     int dryValue;
@@ -38,7 +39,7 @@ public:
                bool invert = false, const char* name = "HD38")
         : SensorBase((uint8_t)(aPin >= 0 ? aPin : 0xFF)),  // analog pin = stable sensorId
           analogPin(aPin), digitalPin(dPin), useVoltageDivider(voltageDivider),
-          invertLogic(invert), moisture(0), digitalState(false),
+          invertLogic(invert), moisture(0),rawValue(0), digitalState(false),
           active(false), dryValue(4095), wetValue(0), sensorName(name) {}
 
     bool init() override {
@@ -48,7 +49,8 @@ public:
 
         if (analogPin >= 0) {
             pinMode(analogPin, INPUT);
-            analogReadResolution(12);
+            analogReadResolution(12);              // 12-bit → 0-4095
+            analogSetAttenuation(ADC_ATTEN_DB_12); // full 0-3.3V range
         }
 
         if (digitalPin >= 0) {
@@ -74,7 +76,7 @@ public:
         if (!active) return false;
 
         if (analogPin >= 0) {
-            int rawValue = analogRead(analogPin);
+            rawValue = analogRead(analogPin);
 
             if (useVoltageDivider) {
                 rawValue = constrain(rawValue, 0, 3100);
@@ -98,6 +100,11 @@ public:
 
         return true;
     }
+
+    int getRawValue() const { return rawValue; }
+    int getDryValue() const { return dryValue; }
+    int getWetValue() const { return wetValue; }
+    int getPin()      const { return analogPin; }
 
     // IMoistureSensor
     float getMoisture() override { return moisture; }

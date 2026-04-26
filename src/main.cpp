@@ -35,6 +35,7 @@ std::vector<ISensor *> &getSensorList() { return sensorMgr.getSensors(); }
 #else
 #include "sensors/ICO2Sensor.h"
 #include "sensors/IHumiditySensor.h"
+#include "sensors/IMoistureSensor.h"
 #include "sensors/ITemperatureSensor.h"
 #include "sensors/SensorFactory.h"
 #endif
@@ -558,12 +559,15 @@ void loop() {
       if (sensor->read()) {
         auto *tempSensor = dynamic_cast<ITemperatureSensor *>(sensor);
         auto *humSensor = dynamic_cast<IHumiditySensor *>(sensor);
+        auto *moistSensor = dynamic_cast<IMoistureSensor *>(sensor);
         auto *co2Sensor = dynamic_cast<ICO2Sensor *>(sensor);
 
         if (tempSensor)
           temperature = tempSensor->getTemperature();
         if (humSensor)
           humidity = humSensor->getHumidity();
+        if (moistSensor)
+          humidity = moistSensor->getMoisture();
         if (co2Sensor)
           co2 = co2Sensor->getCO2();
 
