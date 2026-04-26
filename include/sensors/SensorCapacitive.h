@@ -14,18 +14,21 @@ class SensorCapacitive : public IMoistureSensor {
 private:
     int pin;
     float moisture;
+    int rawValue;
     bool active;
     int dryValue;
     int wetValue;
 
 public:
     SensorCapacitive(int adcPin = CAPACITIVE_PIN, int dry = ADC_MAX, int wet = ADC_MIN)
-        : pin(adcPin), moisture(0), active(false), dryValue(dry), wetValue(wet) {}
+        : pin(adcPin), moisture(0), rawValue(0), active(false), dryValue(dry), wetValue(wet) {}
 
     bool init() override {
         pinMode(pin, INPUT);
+        analogReadResolution(12);              // 12-bit → 0-4095
+        analogSetAttenuation(ADC_ATTEN_DB_12); // full 0-3.3V range
         active = true;
-        DBG_INFO("[Capacitive] pin %d OK\n", pin);
+        DBG_INFO("[Capacitive] pin %d, 12-bit, 3.3V range OK\n", pin);
         return true;
     }
 
@@ -36,13 +39,18 @@ public:
     bool read() override {
         if (!active) return false;
 
-        int rawValue = analogRead(pin);
+        rawValue = analogRead(pin);
         moisture = map(rawValue, dryValue, wetValue, 0, 100);
         moisture = constrain(moisture, 0, 100);
 
         DBG_VERBOSE("[Capacitive] Raw=%d M=%.1f%%\n", rawValue, moisture);
         return true;
     }
+
+    int getRawValue() const { return rawValue; }
+    int getDryValue() const { return dryValue; }
+    int getWetValue() const { return wetValue; }
+    int getPin()      const { return pin; }
 
     // IMoistureSensor
     float getMoisture() override { return moisture; }

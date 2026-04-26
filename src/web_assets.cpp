@@ -885,12 +885,19 @@ const char *config_html = R"=====(<!DOCTYPE html>
             <!-- Sensors Section -->
             <div class="section">
                 <h2>Sensores</h2>
-                <div style="margin-bottom: 15px; display: flex; gap: 8px; flex-wrap: nowrap; align-items: center;">
+            <div style="margin-bottom: 15px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button type="button" class="btn" onclick="loadDefaultSensors()">📋 Por Defecto</button>
                     <button type="button" class="btn btn-secondary" style="background: var(--altermundi-orange);"
                         onclick="forgetWiFi()">📡 Olvidar WiFi</button>
                     <button type="button" class="btn btn-secondary" style="background: #dc3545;"
                         onclick="clearAllConfig()">🗑️ Limpiar Todo</button>
+                    <span style="flex:1"></span>
+                    <select id="newMoistureType" style="padding:8px 10px;border-radius:6px;border:1px solid #ccc;font-size:14px;">
+                        <option value="capacitive">Capacitivo</option>
+                        <option value="hd38">HD38 / Resistivo</option>
+                    </select>
+                    <button type="button" class="btn" style="padding:8px 16px;"
+                        onclick="addMoistureSensor()">+ Sensor Humedad</button>
                 </div>
                 <div id="sensors-list"></div>
             </div>
@@ -1111,6 +1118,9 @@ async function loadESPNowStatus() {
     }
 }
 
+// Kick off raw polling when settings page loads
+window.addEventListener('DOMContentLoaded', () => { startRawPolling(); });
+
 function renderSensors(sensors) {
     const container = document.getElementById('sensors-list');
     container.innerHTML = '';
@@ -1144,27 +1154,8 @@ function renderSensorConfig(sensor, index) {
 
     switch (sensor.type) {
         case 'capacitive':
-            return `
-                <div class="form-group">
-                    <label for="sensor_${index}_pin">Pin ADC</label>
-                    <input type="number" id="sensor_${index}_pin"
-                           value="${config.pin || 34}" min="0" max="39">
-                </div>
-                <div class="inline-group">
-                    <div class="form-group">
-                        <label for="sensor_${index}_dry">Valor Seco (ADC)</label>
-                        <input type="number" id="sensor_${index}_dry"
-                               value="${config.dry || 3500}" min="0" max="4095">
-                        <div class="info-text">Lectura del sensor en aire</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="sensor_${index}_wet">Valor Húmedo (ADC)</label>
-                        <input type="number" id="sensor_${index}_wet"
-                               value="${config.wet || 1500}" min="0" max="4095">
-                        <div class="info-text">Lectura del sensor en agua</div>
-                    </div>
-                </div>
-            `;
+        case 'hd38':
+            return renderMoistureSensorConfig(sensor, index);
 
         case 'onewire':
             return `
@@ -1210,36 +1201,123 @@ function renderSensorConfig(sensor, index) {
                 </div>
             `;
 
-        case 'hd38':
-            // Support both 'analog_pins' array and legacy 'analog_pin' single value
-            const pinListHD38 = config.analog_pins || (config.analog_pin ? [config.analog_pin] : [35]);
-            const pinStrHD38 = Array.isArray(pinListHD38) ? pinListHD38.join(', ') : pinListHD38;
-            return `
-                <div class="form-group">
-                    <label for="sensor_${index}_analog_pins">Pines Analógicos</label>
-                    <input type="text" id="sensor_${index}_analog_pins"
-                           value="${pinStrHD38}" placeholder="35, 34, 32">
-                    <div class="info-text">Separar con comas para múltiples sensores HD38</div>
-                </div>
-                <div class="form-group">
-                    <input type="checkbox" id="sensor_${index}_voltage_divider"
-                           ${config.voltage_divider !== false ? 'checked' : ''}>
-                    <label class="checkbox-label" for="sensor_${index}_voltage_divider">
-                        Usar divisor de voltaje (sensor 5V)
-                    </label>
-                </div>
-                <div class="form-group">
-                    <input type="checkbox" id="sensor_${index}_invert_logic"
-                           ${config.invert_logic ? 'checked' : ''}>
-                    <label class="checkbox-label" for="sensor_${index}_invert_logic">
-                        Invertir lógica digital
-                    </label>
-                </div>
-            `;
-
         default:
             return '<div class="info-text">Sin configuración adicional</div>';
     }
+}
+
+// ── Unified moisture sensor card (capacitive & hd38) ──────────────────────
+function renderMoistureSensorConfig(sensor, index) {
+    const cfg = sensor.config || {};
+    const isHD38 = sensor.type === 'hd38';
+    const defaultPin = isHD38 ? 35 : 34;
+    const defaultDry = cfg.dry !== undefined ? cfg.dry : (isHD38 ? 4095 : 3500);
+    const defaultWet = cfg.wet !== undefined ? cfg.wet : (isHD38 ? 0    : 1500);
+    const label = isHD38 ? 'HD38 / Resistivo' : 'Capacitivo';
+
+    return `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <small style="color:var(--gray-medium)">${label}</small>
+            <button type="button" style="background:none;border:none;color:#dc3545;cursor:pointer;font-size:16px"
+                onclick="removeSensor(${index})">🗑️</button>
+        </div>
+        <div class="inline-group">
+            <div class="form-group">
+                <label for="sensor_${index}_name">Nombre</label>
+                <input type="text" id="sensor_${index}_name"
+                       value="${cfg.name || ''}" placeholder="Ej: Suelo 1" style="width:100%">
+            </div>
+            <div class="form-group">
+                <label for="sensor_${index}_pin">Pin ADC</label>
+                <input type="number" id="sensor_${index}_pin"
+                       value="${cfg.pin !== undefined ? cfg.pin : defaultPin}" min="0" max="39"
+                       style="width:100%">
+            </div>
+        </div>
+        <div style="background:#f0f7ff;border-left:3px solid var(--altermundi-blue);padding:8px 12px;border-radius:4px;margin-bottom:8px;font-size:13px">
+            📡 RAW actual: <strong id="raw_badge_${index}">–</strong>
+            <span style="color:var(--gray-medium)"> (actualiza cada 3s cuando el sensor está activo)</span>
+        </div>
+        <div class="inline-group">
+            <div class="form-group">
+                <label for="sensor_${index}_dry">Valor Seco (raw ADC)</label>
+                <input type="number" id="sensor_${index}_dry"
+                       value="${defaultDry}" min="0" max="4095">
+                <div class="info-text">Lectura en aire / suelo seco</div>
+            </div>
+            <div class="form-group">
+                <label for="sensor_${index}_wet">Valor Húmedo (raw ADC)</label>
+                <input type="number" id="sensor_${index}_wet"
+                       value="${defaultWet}" min="0" max="4095">
+                <div class="info-text">Lectura en agua / suelo saturado</div>
+            </div>
+        </div>
+        ${isHD38 ? `
+        <div class="inline-group" style="margin-top:4px">
+            <div class="form-group">
+                <input type="checkbox" id="sensor_${index}_voltage_divider"
+                       ${cfg.voltage_divider !== false ? 'checked' : ''}>
+                <label class="checkbox-label" for="sensor_${index}_voltage_divider">Divisor de voltaje (5V)</label>
+            </div>
+            <div class="form-group">
+                <input type="checkbox" id="sensor_${index}_invert_logic"
+                       ${cfg.invert_logic ? 'checked' : ''}>
+                <label class="checkbox-label" for="sensor_${index}_invert_logic">Invertir lógica</label>
+            </div>
+        </div>` : ''}
+    `;
+}
+
+function addMoistureSensor() {
+    const type = document.getElementById('newMoistureType').value;
+    if (!currentConfig.sensors) currentConfig.sensors = [];
+    const isHD38 = type === 'hd38';
+    currentConfig.sensors.push({
+        type,
+        enabled: true,
+        config: {
+            pin: isHD38 ? 35 : 34,
+            dry: isHD38 ? 4095 : 3500,
+            wet: isHD38 ? 0    : 1500,
+            name: '',
+            ...(isHD38 ? { voltage_divider: false, invert_logic: false } : {})
+        }
+    });
+    renderSensors(currentConfig.sensors);
+    // Scroll to new sensor
+    const items = document.querySelectorAll('#sensors-list .sensor-item');
+    if (items.length) items[items.length - 1].scrollIntoView({ behavior: 'smooth' });
+}
+
+function removeSensor(index) {
+    if (!confirm('¿Eliminar este sensor?')) return;
+    currentConfig.sensors.splice(index, 1);
+    renderSensors(currentConfig.sensors);
+}
+
+// Poll /actual every 3s and update raw badges for moisture sensors
+let _rawPollTimer = null;
+function startRawPolling() {
+    if (_rawPollTimer) return;
+    _rawPollTimer = setInterval(() => {
+        fetch('/actual').then(r => r.json()).then(data => {
+            if (!data.sensors) return;
+            data.sensors.forEach(s => {
+                if (!s.diagnostics || s.diagnostics.raw === undefined) return;
+                // Match sensor by id (m-adc-<pin>)
+                const pin = s.diagnostics.pin;
+                if (pin === undefined) return;
+                // Find all badges whose input pin matches
+                document.querySelectorAll('#sensors-list .sensor-item').forEach((item, idx) => {
+                    const pinEl = document.getElementById(`sensor_${idx}_pin`);
+                    if (pinEl && parseInt(pinEl.value) === pin) {
+                        const badge = document.getElementById(`raw_badge_${idx}`);
+                        if (badge) badge.textContent = s.diagnostics.raw;
+                    }
+                });
+            });
+        }).catch(() => {});
+    }, 3000);
 }
 
 function renderRelays(relays) {
@@ -1365,27 +1443,16 @@ function buildConfigFromForm() {
                 sensor.enabled = enabledCheckbox.checked;
             }
 
-            const pinInput = document.getElementById(`sensor_${index}_pin`);
-            if (pinInput && sensor.config) {
-                sensor.config.pin = parseInt(pinInput.value);
-            }
-
             if (sensor.type === 'onewire') {
-                const scanCheckbox = document.getElementById(`sensor_${index}_scan`);
-                if (scanCheckbox && sensor.config) {
-                    sensor.config.scan = scanCheckbox.checked;
-                }
-            }
-
-            if (sensor.type === 'capacitive') {
+                const pinEl  = document.getElementById(`sensor_${index}_pin`);
+                const scanEl = document.getElementById(`sensor_${index}_scan`);
                 if (!sensor.config) sensor.config = {};
-                const dryInput = document.getElementById(`sensor_${index}_dry`);
-                const wetInput = document.getElementById(`sensor_${index}_wet`);
-                if (dryInput) sensor.config.dry = parseInt(dryInput.value);
-                if (wetInput) sensor.config.wet = parseInt(wetInput.value);
+                if (pinEl)  sensor.config.pin  = parseInt(pinEl.value);
+                if (scanEl) sensor.config.scan = scanEl.checked;
             }
 
             if (sensor.type === 'modbus_th' || sensor.type === 'modbus_soil_7in1') {
+
                 if (!sensor.config) sensor.config = {};
                 const addrInput = document.getElementById(`sensor_${index}_addresses`);
 
@@ -1406,25 +1473,24 @@ function buildConfigFromForm() {
                 delete sensor.config.baudrate;
             }
 
-            if (sensor.type === 'hd38') {
-                // Support both 'analog_pins' array and legacy 'analog_pin' single value
-                const pinInput = document.getElementById(`sensor_${index}_analog_pins`);
-                if (pinInput) {
-                    const pinStr = pinInput.value.trim();
-                    const pinArray = pinStr.split(',')
-                        .map(s => parseInt(s.trim()))
-                        .filter(n => !isNaN(n));
-                    sensor.config.analog_pins = pinArray.length > 0 ? pinArray : [35];
-                }
-
-                const vdivCheckbox = document.getElementById(`sensor_${index}_voltage_divider`);
-                if (vdivCheckbox) {
-                    sensor.config.voltage_divider = vdivCheckbox.checked;
-                }
-
-                const invCheckbox = document.getElementById(`sensor_${index}_invert_logic`);
-                if (invCheckbox) {
-                    sensor.config.invert_logic = invCheckbox.checked;
+            if (sensor.type === 'capacitive' || sensor.type === 'hd38') {
+                if (!sensor.config) sensor.config = {};
+                const nameInput = document.getElementById(`sensor_${index}_name`);
+                const pinInput  = document.getElementById(`sensor_${index}_pin`);
+                const dryInput  = document.getElementById(`sensor_${index}_dry`);
+                const wetInput  = document.getElementById(`sensor_${index}_wet`);
+                if (nameInput) sensor.config.name = nameInput.value;
+                if (pinInput)  sensor.config.pin  = parseInt(pinInput.value);
+                if (dryInput)  sensor.config.dry  = parseInt(dryInput.value);
+                if (wetInput)  sensor.config.wet  = parseInt(wetInput.value);
+                if (sensor.type === 'hd38') {
+                    const vdiv = document.getElementById(`sensor_${index}_voltage_divider`);
+                    const inv  = document.getElementById(`sensor_${index}_invert_logic`);
+                    if (vdiv) sensor.config.voltage_divider = vdiv.checked;
+                    if (inv)  sensor.config.invert_logic    = inv.checked;
+                    // Remove legacy multi-pin fields when saving via unified UI
+                    delete sensor.config.analog_pin;
+                    delete sensor.config.analog_pins;
                 }
             }
         });

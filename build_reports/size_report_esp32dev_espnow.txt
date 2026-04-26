@@ -2,34 +2,34 @@
 ================================================================================
                         BUILD MEMORY REPORT
 ================================================================================
-Environment: esp32dev_multi_prod
+Environment: esp32dev_espnow
 Git version: 1aa6d3568963832f63910bcdd9b8e54862c7f71f
 MCU:         esp32
-Timestamp:   2026-04-25 16:57:04
+Timestamp:   2026-04-25 13:55:54
 Firmware:    firmware.elf
 Partitions:  min_spiffs.csv
 --------------------------------------------------------------------------------
 
 MEMORY USAGE (matches PlatformIO):
-  Flash: [======              ]  30.7%  (used 1,289,632 / 4,194,304 bytes)
-  RAM:   [====================] 102.1%  (used 334,585 / 327,680 bytes)
+  Flash: [======              ]  31.0%  (used 1,300,932 / 4,194,304 bytes)
+  RAM:   [====================] 106.4%  (used 348,669 / 327,680 bytes)
 
 --------------------------------------------------------------------------------
 FLASH BREAKDOWN:
-  .text (code):           984,080 bytes
-  .data (init vars):      305,552 bytes
+  .text (code):           977,744 bytes
+  .data (init vars):      323,188 bytes
   ─────────────────────────────────
-  Program size:         1,289,632 bytes
+  Program size:         1,300,932 bytes
   App partition:        4,194,304 bytes
-  Free in partition:    2,904,672 bytes
+  Free in partition:    2,893,372 bytes
 
 RAM BREAKDOWN:
-  .data (init vars):      305,552 bytes
-  .bss (zero vars):        29,033 bytes
+  .data (init vars):      323,188 bytes
+  .bss (zero vars):        25,481 bytes
   ─────────────────────────────────
-  Static RAM:             334,585 bytes
+  Static RAM:             348,669 bytes
   Total DRAM:             327,680 bytes
-  Free (static):           -6,905 bytes
+  Free (static):          -20,989 bytes
 
 --------------------------------------------------------------------------------
 FLASH CHIP LAYOUT (4MB total):
@@ -47,91 +47,91 @@ BY FLASH USAGE:
 -----------------------------------------------------------------------------------------------
 #    FILE                                                          TEXT       DATA      FLASH
 -----------------------------------------------------------------------------------------------
-1    src/web_assets.cpp.o                                        78,843         24     78,867
-2    src/main.cpp.o                                              43,678          8     43,686
-3    src/endpoints.cpp.o                                         29,500          4     29,504
-4    lib9da/WifiManager/WiFiManager.cpp.o                        23,821          0     23,821
-5    lib2b4/WebServer/WebServer.cpp.o                            21,519          0     21,519
-6    src/configFile.cpp.o                                        20,246          4     20,250
-7    lib2ca/HTTPClient/HTTPClient.cpp.o                          19,259          0     19,259
-8    lib2b4/WebServer/Parsing.cpp.o                              11,364        132     11,496
-9    lib651/WiFi/WiFiGeneric.cpp.o                               11,046         22     11,068
-10   libc4a/modbus-esp8266/Modbus.cpp.o                          10,438          8     10,446
-11   FrameworkArduino/WString.cpp.o                               7,405          8      7,413
-12   lib065/HTTPUpdate/HTTPUpdate.cpp.o                           6,665          8      6,673
-13   FrameworkArduino/esp32-hal-spi.c.o                           6,451         48      6,499
-14   FrameworkArduino/esp32-hal-uart.c.o                          6,336         96      6,432
-15   lib4b5/DallasTemperature/DallasTemperature.cpp.o             5,783          0      5,783
-16   lib45a/ArduinoOTA/ArduinoOTA.cpp.o                           5,711          8      5,719
-17   lib692/FS/vfs_api.cpp.o                                      5,690          0      5,690
-18   lib651/WiFi/WiFiClient.cpp.o                                 5,391          0      5,391
-19   lib374/Adafruit BME280 Library/Adafruit_BME280.cpp.o         4,955          0      4,955
-20   lib651/WiFi/WiFiSTA.cpp.o                                    4,482          9      4,491
-21   src/otaUpdater.cpp.o                                         4,426          0      4,426
-22   libbcf/WiFiClientSecure/ssl_client.cpp.o                     4,407          4      4,411
-23   FrameworkArduino/esp32-hal-i2c-slave.c.o                     3,809         96      3,905
-24   liba6f/Preferences/Preferences.cpp.o                         3,789         52      3,841
-25   FrameworkArduino/HardwareSerial.cpp.o                        3,826          8      3,834
-26   libd28/Update/Updater.cpp.o                                  3,399          8      3,407
-27   lib9a2/Wire/Wire.cpp.o                                       3,264          8      3,272
-28   libbcf/WiFiClientSecure/WiFiClientSecure.cpp.o               3,105          0      3,105
-29   FrameworkArduino/esp32-hal-rmt.c.o                           2,707        320      3,027
-30   FrameworkArduino/Print.cpp.o                                 2,946          0      2,946
-31   lib61c/OneWire/OneWire.cpp.o                                 2,799          0      2,799
-32   FrameworkArduino/Esp.cpp.o                                   2,792          0      2,792
-33   libb11/Adafruit SCD30/Adafruit_SCD30.cpp.o                   2,762          0      2,762
-34   liba99/ESPmDNS/ESPmDNS.cpp.o                                 2,718          8      2,726
-35   libc4a/modbus-esp8266/ModbusRTU.cpp.o                        2,471          0      2,471
-36   lib692/FS/FS.cpp.o                                           2,463          0      2,463
-37   lib651/WiFi/WiFiUdp.cpp.o                                    2,365          0      2,365
-38   lib8a7/SPI/SPI.cpp.o                                         2,272          8      2,280
-39   lib651/WiFi/WiFiAP.cpp.o                                     2,133          0      2,133
-40   liba66/DNSServer/DNSServer.cpp.o                             2,093          0      2,093
-41   src/sendDataGrafana.cpp.o                                    1,873          0      1,873
-42   libbff/Adafruit BusIO/Adafruit_SPIDevice.cpp.o               1,856          0      1,856
-43   libe55/Adafruit Unified Sensor/Adafruit_Sensor.cpp.o         1,847          0      1,847
-44   FrameworkArduino/Stream.cpp.o                                1,838          0      1,838
-45   src/createGrafanaMessage.cpp.o                               1,721          0      1,721
-46   FrameworkArduino/esp32-hal-timer.c.o                         1,614          8      1,622
-47   lib5c7/SPIFFS/SPIFFS.cpp.o                                   1,464          8      1,472
-48   FrameworkArduino/esp32-hal-i2c.c.o                           1,398          0      1,398
-49   FrameworkArduino/firmware_msc_fat.c.o                        1,342          0      1,342
-50   lib651/WiFi/WiFiMulti.cpp.o                                  1,242          0      1,242
-51   libbff/Adafruit BusIO/Adafruit_BusIO_Register.cpp.o          1,176          0      1,176
-52   FrameworkArduino/esp32-hal-adc.c.o                           1,171          5      1,176
-53   lib651/WiFi/WiFiScan.cpp.o                                   1,162          4      1,166
-54   FrameworkArduino/esp32-hal-gpio.c.o                          1,165          0      1,165
-55   lib651/WiFi/WiFiServer.cpp.o                                 1,153          0      1,153
-56   lib2b4/WebServer/detail/mimetable.cpp.o                      1,104          0      1,104
-57   FrameworkArduino/stdlib_noniso.c.o                           1,092          0      1,092
-58   FrameworkArduino/esp32-hal-cpu.c.o                             917          0        917
-59   FrameworkArduino/esp32-hal-ledc.c.o                            905          9        914
-60   FrameworkArduino/esp32-hal-time.c.o                            868          0        868
-61   FrameworkArduino/esp32-hal-misc.c.o                            849          0        849
-62   FrameworkArduino/cbuf.cpp.o                                    785          0        785
-63   FrameworkArduino/IPv6Address.cpp.o                             704          0        704
-64   FrameworkArduino/MD5Builder.cpp.o                              704          0        704
-65   libbcf/WiFiClientSecure/esp_crt_bundle.c.o                     685          0        685
-66   FrameworkArduino/esp32-hal-touch.c.o                           676          4        680
-67   FrameworkArduino/StreamString.cpp.o                            667          0        667
-68   FrameworkArduino/IPAddress.cpp.o                               634          4        638
-69   libbff/Adafruit BusIO/Adafruit_I2CDevice.cpp.o                 634          0        634
-70   FrameworkArduino/Tone.cpp.o                                    629          0        629
-71   lib651/WiFi/WiFi.cpp.o                                         592          4        596
-72   FrameworkArduino/libb64/cdecode.c.o                            555          0        555
-73   FrameworkArduino/libb64/cencode.c.o                            466          0        466
-74   libd28/Update/HttpsOTAUpdate.cpp.o                             449          0        449
-75   FrameworkArduino/base64.cpp.o                                  381          0        381
-76   FrameworkArduino/esp32-hal-bt.c.o                              331          0        331
-77   FrameworkArduino/FunctionalInterrupt.cpp.o                     310          0        310
-78   FrameworkArduino/esp32-hal-sigmadelta.c.o                      282          0        282
-79   libbff/Adafruit BusIO/Adafruit_GenericDevice.cpp.o             268          0        268
-80   FrameworkArduino/WMath.cpp.o                                   255          1        256
-81   FrameworkArduino/main.cpp.o                                    230          0        230
-82   src/constants.cpp.o                                            187         24        211
-83   FrameworkArduino/wiring_shift.c.o                              196          0        196
-84   FrameworkArduino/wiring_pulse.c.o                              186          0        186
-85   FrameworkArduino/esp32-hal-rgb-led.c.o                         178          0        178
+1    src/web_assets.cpp.o                                        75,557         24     75,581
+2    src/main.cpp.o                                              49,519          8     49,527
+3    src/endpoints.cpp.o                                         29,880         28     29,908
+4    lib9da/WifiManager/WiFiManager.cpp.o                        24,326          0     24,326
+5    lib2b4/WebServer/WebServer.cpp.o                            22,118          0     22,118
+6    src/configFile.cpp.o                                        20,952         28     20,980
+7    lib2ca/HTTPClient/HTTPClient.cpp.o                          20,068          0     20,068
+8    lib651/WiFi/WiFiGeneric.cpp.o                               18,484         22     18,506
+9    lib2b4/WebServer/Parsing.cpp.o                              12,228        132     12,360
+10   libb38/modbus-esp8266/Modbus.cpp.o                          10,438          8     10,446
+11   liba6f/Preferences/Preferences.cpp.o                         9,214         52      9,266
+12   lib692/FS/vfs_api.cpp.o                                      9,010          0      9,010
+13   FrameworkArduino/esp32-hal-uart.c.o                          8,726         96      8,822
+14   lib065/HTTPUpdate/HTTPUpdate.cpp.o                           8,341          8      8,349
+15   lib9a2/Wire/Wire.cpp.o                                       8,284          8      8,292
+16   lib651/WiFi/WiFiClient.cpp.o                                 8,092          0      8,092
+17   FrameworkArduino/WString.cpp.o                               7,753          8      7,761
+18   lib651/WiFi/WiFiSTA.cpp.o                                    7,743          9      7,752
+19   lib45a/ArduinoOTA/ArduinoOTA.cpp.o                           7,128          8      7,136
+20   libbcf/WiFiClientSecure/ssl_client.cpp.o                     6,707          4      6,711
+21   FrameworkArduino/esp32-hal-i2c-slave.c.o                     6,536         96      6,632
+22   FrameworkArduino/esp32-hal-spi.c.o                           6,451         48      6,499
+23   libcc9/DallasTemperature/DallasTemperature.cpp.o             5,783          0      5,783
+24   liba99/ESPmDNS/ESPmDNS.cpp.o                                 5,622          8      5,630
+25   FrameworkArduino/HardwareSerial.cpp.o                        5,471          8      5,479
+26   lib3fb/Adafruit BME280 Library/Adafruit_BME280.cpp.o         4,955          0      4,955
+27   libd28/Update/Updater.cpp.o                                  4,208          8      4,216
+28   src/otaUpdater.cpp.o                                         4,215          0      4,215
+29   FrameworkArduino/esp32-hal-rmt.c.o                           3,833        320      4,153
+30   lib651/WiFi/WiFiUdp.cpp.o                                    4,041          0      4,041
+31   libbcf/WiFiClientSecure/WiFiClientSecure.cpp.o               3,491          0      3,491
+32   lib651/WiFi/WiFiAP.cpp.o                                     3,477          0      3,477
+33   FrameworkArduino/esp32-hal-i2c.c.o                           3,276          0      3,276
+34   FrameworkArduino/Esp.cpp.o                                   3,168          0      3,168
+35   FrameworkArduino/Print.cpp.o                                 2,946          0      2,946
+36   FrameworkArduino/esp32-hal-misc.c.o                          2,802          0      2,802
+37   lib7b7/OneWire/OneWire.cpp.o                                 2,799          0      2,799
+38   FrameworkArduino/esp32-hal-ledc.c.o                          2,764          9      2,773
+39   libf12/Adafruit SCD30/Adafruit_SCD30.cpp.o                   2,762          0      2,762
+40   lib651/WiFi/WiFiMulti.cpp.o                                  2,607          0      2,607
+41   lib8a7/SPI/SPI.cpp.o                                         2,519          8      2,527
+42   libb38/modbus-esp8266/ModbusRTU.cpp.o                        2,471          0      2,471
+43   lib692/FS/FS.cpp.o                                           2,463          0      2,463
+44   FrameworkArduino/esp32-hal-cpu.c.o                           2,447          0      2,447
+45   FrameworkArduino/esp32-hal-adc.c.o                           2,257          5      2,262
+46   liba66/DNSServer/DNSServer.cpp.o                             2,093          0      2,093
+47   FrameworkArduino/esp32-hal-timer.c.o                         2,079          8      2,087
+48   lib5c7/SPIFFS/SPIFFS.cpp.o                                   2,068          8      2,076
+49   src/sendDataGrafana.cpp.o                                    2,043          0      2,043
+50   libbcf/WiFiClientSecure/esp_crt_bundle.c.o                   1,999          0      1,999
+51   libb06/Adafruit BusIO/Adafruit_SPIDevice.cpp.o               1,856          0      1,856
+52   libb9e/Adafruit Unified Sensor/Adafruit_Sensor.cpp.o         1,847          0      1,847
+53   FrameworkArduino/Stream.cpp.o                                1,838          0      1,838
+54   src/createGrafanaMessage.cpp.o                               1,721          0      1,721
+55   FrameworkArduino/esp32-hal-gpio.c.o                          1,694          0      1,694
+56   FrameworkArduino/firmware_msc_fat.c.o                        1,342          0      1,342
+57   FrameworkArduino/esp32-hal-touch.c.o                         1,332          4      1,336
+58   libb06/Adafruit BusIO/Adafruit_BusIO_Register.cpp.o          1,176          0      1,176
+59   lib651/WiFi/WiFiScan.cpp.o                                   1,162          4      1,166
+60   lib651/WiFi/WiFiServer.cpp.o                                 1,153          0      1,153
+61   lib2b4/WebServer/detail/mimetable.cpp.o                      1,104          0      1,104
+62   FrameworkArduino/stdlib_noniso.c.o                           1,092          0      1,092
+63   FrameworkArduino/esp32-hal-bt.c.o                            1,019          0      1,019
+64   FrameworkArduino/Tone.cpp.o                                    979          0        979
+65   FrameworkArduino/esp32-hal-time.c.o                            868          0        868
+66   libd28/Update/HttpsOTAUpdate.cpp.o                             853          0        853
+67   FrameworkArduino/cbuf.cpp.o                                    785          0        785
+68   FrameworkArduino/IPv6Address.cpp.o                             704          0        704
+69   FrameworkArduino/MD5Builder.cpp.o                              704          0        704
+70   FrameworkArduino/StreamString.cpp.o                            667          0        667
+71   FrameworkArduino/IPAddress.cpp.o                               634          4        638
+72   libb06/Adafruit BusIO/Adafruit_I2CDevice.cpp.o                 634          0        634
+73   lib651/WiFi/WiFi.cpp.o                                         592          4        596
+74   FrameworkArduino/libb64/cdecode.c.o                            555          0        555
+75   FrameworkArduino/WMath.cpp.o                                   524          1        525
+76   FrameworkArduino/libb64/cencode.c.o                            466          0        466
+77   FrameworkArduino/esp32-hal-rgb-led.c.o                         453          0        453
+78   FrameworkArduino/base64.cpp.o                                  381          0        381
+79   FrameworkArduino/FunctionalInterrupt.cpp.o                     310          0        310
+80   FrameworkArduino/esp32-hal-sigmadelta.c.o                      282          0        282
+81   libb06/Adafruit BusIO/Adafruit_GenericDevice.cpp.o             268          0        268
+82   FrameworkArduino/main.cpp.o                                    230          0        230
+83   src/constants.cpp.o                                            187         24        211
+84   FrameworkArduino/wiring_shift.c.o                              196          0        196
+85   FrameworkArduino/wiring_pulse.c.o                              186          0        186
 86   src/globals.cpp.o                                              148          8        156
 87   FrameworkArduino/esp32-hal-matrix.c.o                          112          0        112
 88   FrameworkArduino/esp32-hal-dac.c.o                              68          0         68
@@ -142,7 +142,7 @@ BY RAM USAGE:
 -----------------------------------------------------------------------------------------------
 #    FILE                                                          DATA        BSS        RAM
 -----------------------------------------------------------------------------------------------
-1    src/main.cpp.o                                                   8      2,371      2,379
+1    src/main.cpp.o                                                   8      2,370      2,378
 2    lib45a/ArduinoOTA/ArduinoOTA.cpp.o                               8      1,692      1,700
 3    src/globals.cpp.o                                                8        640        648
 4    FrameworkArduino/esp32-hal-gpio.c.o                              0        481        481
@@ -160,40 +160,39 @@ BY RAM USAGE:
 16   FrameworkArduino/esp32-hal-i2c-slave.c.o                        96          0         96
 17   lib065/HTTPUpdate/HTTPUpdate.cpp.o                               8         88         96
 18   FrameworkArduino/esp32-hal-ledc.c.o                              9         56         65
-19   liba6f/Preferences/Preferences.cpp.o                            52          0         52
-20   lib2ca/HTTPClient/HTTPClient.cpp.o                               0         52         52
-21   FrameworkArduino/esp32-hal-spi.c.o                              48          0         48
-22   libc4a/modbus-esp8266/Modbus.cpp.o                               8         40         48
-23   FrameworkArduino/esp32-hal-sigmadelta.c.o                        0         40         40
-24   src/endpoints.cpp.o                                              4         36         40
+19   src/endpoints.cpp.o                                             28         36         64
+20   liba6f/Preferences/Preferences.cpp.o                            52          0         52
+21   lib2ca/HTTPClient/HTTPClient.cpp.o                               0         52         52
+22   libb38/modbus-esp8266/Modbus.cpp.o                               8         40         48
+23   FrameworkArduino/esp32-hal-spi.c.o                              48          0         48
+24   FrameworkArduino/esp32-hal-sigmadelta.c.o                        0         40         40
 25   lib8a7/SPI/SPI.cpp.o                                             8         32         40
 26   lib651/WiFi/WiFiSTA.cpp.o                                        9         21         30
 27   liba99/ESPmDNS/ESPmDNS.cpp.o                                     8         20         28
-28   FrameworkArduino/WString.cpp.o                                   8         17         25
-29   FrameworkArduino/Esp.cpp.o                                       0         25         25
-30   FrameworkArduino/esp32-hal-i2c.c.o                               0         24         24
-31   src/constants.cpp.o                                             24          0         24
-32   src/web_assets.cpp.o                                            24          0         24
-33   lib5c7/SPIFFS/SPIFFS.cpp.o                                       8         12         20
-34   lib651/WiFi/WiFiScan.cpp.o                                       4         11         15
-35   FrameworkArduino/IPAddress.cpp.o                                 4          8         12
-36   FrameworkArduino/Tone.cpp.o                                      0          9          9
-37   FrameworkArduino/esp32-hal-cpu.c.o                               0          9          9
-38   FrameworkArduino/esp32-hal-timer.c.o                             8          0          8
-39   FrameworkArduino/esp32-hal-rgb-led.c.o                           0          5          5
-40   FrameworkArduino/main.cpp.o                                      0          5          5
-41   lib651/WiFi/WiFi.cpp.o                                           4          1          5
-42   lib9da/WifiManager/WiFiManager.cpp.o                             0          4          4
-43   src/configFile.cpp.o                                             4          0          4
+28   src/configFile.cpp.o                                            28          0         28
+29   FrameworkArduino/WString.cpp.o                                   8         17         25
+30   FrameworkArduino/Esp.cpp.o                                       0         25         25
+31   FrameworkArduino/esp32-hal-i2c.c.o                               0         24         24
+32   src/constants.cpp.o                                             24          0         24
+33   src/web_assets.cpp.o                                            24          0         24
+34   lib5c7/SPIFFS/SPIFFS.cpp.o                                       8         12         20
+35   lib651/WiFi/WiFiScan.cpp.o                                       4         11         15
+36   FrameworkArduino/IPAddress.cpp.o                                 4          8         12
+37   FrameworkArduino/Tone.cpp.o                                      0          9          9
+38   FrameworkArduino/esp32-hal-cpu.c.o                               0          9          9
+39   FrameworkArduino/esp32-hal-timer.c.o                             8          0          8
+40   FrameworkArduino/esp32-hal-rgb-led.c.o                           0          5          5
+41   FrameworkArduino/main.cpp.o                                      0          5          5
+42   lib651/WiFi/WiFi.cpp.o                                           4          1          5
+43   lib9da/WifiManager/WiFiManager.cpp.o                             0          4          4
 44   libbcf/WiFiClientSecure/ssl_client.cpp.o                         4          0          4
 45   src/RelayModule2CH.cpp.o                                         0          2          2
 46   FrameworkArduino/WMath.cpp.o                                     1          0          1
-47   src/otaUpdater.cpp.o                                             0          1          1
 
 
 DETAILED ELF SECTIONS:
 --------------------------------------------------------------------------------
-.pio/build/esp32dev_multi_prod/firmware.elf  :
+.pio/build/esp32dev_espnow/firmware.elf  :
 section                                                                                                                                                                                                                           size         addr
 .rtc.text                                                                                                                                                                                                                            0   1074528256
 .rtc.dummy                                                                                                                                                                                                                           0   1073217536
@@ -201,47 +200,47 @@ section                                                                         
 .rtc_noinit                                                                                                                                                                                                                         16   1342177792
 .rtc.force_slow                                                                                                                                                                                                                      0   1342177808
 .iram0.vectors                                                                                                                                                                                                                    1027   1074266112
-.iram0.text                                                                                                                                                                                                                      86179   1074267140
-.dram0.data                                                                                                                                                                                                                      26028   1073470304
+.iram0.text                                                                                                                                                                                                                      86027   1074267140
+.dram0.data                                                                                                                                                                                                                      26112   1073470304
 .ext_ram_noinit                                                                                                                                                                                                                      0   1065353216
-.noinit                                                                                                                                                                                                                              0   1073496332
+.noinit                                                                                                                                                                                                                              0   1073496416
 .ext_ram.bss                                                                                                                                                                                                                         0   1065353216
-.dram0.bss                                                                                                                                                                                                                       29016   1073496336
+.dram0.bss                                                                                                                                                                                                                       25464   1073496416
 .flash.appdesc                                                                                                                                                                                                                     256   1061158944
-.flash.rodata                                                                                                                                                                                                                   279524   1061159200
-.flash.rodata_noload                                                                                                                                                                                                             15986   1061438724
-.flash.text                                                                                                                                                                                                                     874459   1074593824
-.phyiram.0                                                                                                                                                                                                                          43   1075468284
-.phyiram.1                                                                                                                                                                                                                         125   1075468328
-.phyiram.2                                                                                                                                                                                                                         542   1075468456
-.phyiram.3                                                                                                                                                                                                                         178   1075469000
-.phyiram.6                                                                                                                                                                                                                         222   1075469180
-.phyiram.4                                                                                                                                                                                                                         234   1075469404
-.phyiram.7                                                                                                                                                                                                                         228   1075469640
-.phyiram.8                                                                                                                                                                                                                         547   1075469868
-.phyiram.9                                                                                                                                                                                                                         387   1075470416
-.phyiram.10                                                                                                                                                                                                                        142   1075470804
-.phyiram.13                                                                                                                                                                                                                        392   1075470948
-.phyiram.15                                                                                                                                                                                                                        186   1075471340
-.phyiram.14                                                                                                                                                                                                                        239   1075471528
-.phyiram.16                                                                                                                                                                                                                        459   1075471768
-.phyiram.18                                                                                                                                                                                                                        114   1075472228
-.phyiram.12                                                                                                                                                                                                                        120   1075472344
-.phyiram.17                                                                                                                                                                                                                        238   1075472464
-.phyiram.24                                                                                                                                                                                                                         74   1075472704
-.phyiram.25                                                                                                                                                                                                                         49   1075472780
-.phyiram.26                                                                                                                                                                                                                        259   1075472832
-.phyiram.27                                                                                                                                                                                                                        135   1075473092
-.phyiram.22                                                                                                                                                                                                                         97   1075473228
-.phyiram.20                                                                                                                                                                                                                        270   1075473328
-.phyiram.21                                                                                                                                                                                                                        158   1075473600
-.phyiram.19                                                                                                                                                                                                                        735   1075473760
-.iram0.text_end                                                                                                                                                                                                                      1   1074353319
-.iram0.data                                                                                                                                                                                                                          0   1074353320
-.iram0.bss                                                                                                                                                                                                                           0   1074353320
-.dram0.heap_start                                                                                                                                                                                                                    0   1073525352
-.xt.prop                                                                                                                                                                                                                        667416            0
-.xt.lit                                                                                                                                                                                                                          20360            0
+.flash.rodata                                                                                                                                                                                                                   297076   1061159200
+.flash.rodata_noload                                                                                                                                                                                                             15986   1061456276
+.flash.text                                                                                                                                                                                                                     868275   1074593824
+.phyiram.0                                                                                                                                                                                                                          43   1075462100
+.phyiram.1                                                                                                                                                                                                                         125   1075462144
+.phyiram.2                                                                                                                                                                                                                         542   1075462272
+.phyiram.3                                                                                                                                                                                                                         178   1075462816
+.phyiram.6                                                                                                                                                                                                                         222   1075462996
+.phyiram.4                                                                                                                                                                                                                         234   1075463220
+.phyiram.7                                                                                                                                                                                                                         228   1075463456
+.phyiram.8                                                                                                                                                                                                                         547   1075463684
+.phyiram.9                                                                                                                                                                                                                         387   1075464232
+.phyiram.10                                                                                                                                                                                                                        142   1075464620
+.phyiram.13                                                                                                                                                                                                                        392   1075464764
+.phyiram.15                                                                                                                                                                                                                        186   1075465156
+.phyiram.14                                                                                                                                                                                                                        239   1075465344
+.phyiram.16                                                                                                                                                                                                                        459   1075465584
+.phyiram.18                                                                                                                                                                                                                        114   1075466044
+.phyiram.12                                                                                                                                                                                                                        120   1075466160
+.phyiram.17                                                                                                                                                                                                                        238   1075466280
+.phyiram.24                                                                                                                                                                                                                         74   1075466520
+.phyiram.25                                                                                                                                                                                                                         49   1075466596
+.phyiram.26                                                                                                                                                                                                                        259   1075466648
+.phyiram.27                                                                                                                                                                                                                        135   1075466908
+.phyiram.22                                                                                                                                                                                                                         97   1075467044
+.phyiram.20                                                                                                                                                                                                                        270   1075467144
+.phyiram.21                                                                                                                                                                                                                        158   1075467416
+.phyiram.19                                                                                                                                                                                                                        735   1075467576
+.iram0.text_end                                                                                                                                                                                                                      1   1074353167
+.iram0.data                                                                                                                                                                                                                          0   1074353168
+.iram0.bss                                                                                                                                                                                                                           0   1074353168
+.dram0.heap_start                                                                                                                                                                                                                    0   1073521880
+.xt.prop                                                                                                                                                                                                                        655068            0
+.xt.lit                                                                                                                                                                                                                          20608            0
 .xtensa.info                                                                                                                                                                                                                        56            0
 .comment                                                                                                                                                                                                                           282            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail16DefaultAllocator10reallocateEPvj                                                                                                                                                           0            0
@@ -384,7 +383,7 @@ section                                                                         
 .xt.prop._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderIN2fs4FileEvEEE12parseVariantINS1_14AllowAllFilterEEENS0_20DeserializationError4CodeERNS1_11VariantDataET_NS0_21DeserializationOption12NestingLimitE        252            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail11deserializeINS1_16JsonDeserializerERNS0_12JsonDocumentERN2fs4FileEJELi0EEENS0_20DeserializationErrorEOT0_OT1_DpT2_                                                                       96            0
 .xt.prop._ZN2fs4FileD5Ev                                                                                                                                                                                                            12            0
-.xt.prop._ZNK11ArduinoJson8V741PB226detail7pgm_ptrIdEixEi$isra$71                                                                                                                                                                   36            0
+.xt.prop._ZNK11ArduinoJson8V741PB226detail7pgm_ptrIdEixEi$isra$72                                                                                                                                                                   36            0
 .xt.prop._ZNK6String6lengthEv                                                                                                                                                                                                       72            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail10StringNode7destroyEPS2_PNS0_9AllocatorE                                                                                                                                                  36            0
 .xt.prop._ZN11ArduinoJson8V741PB2210JsonStringC2EPKcb                                                                                                                                                                               36            0
@@ -406,6 +405,7 @@ section                                                                         
 .xt.prop._ZZN11ArduinoJson8V741PB226detail11FloatTraitsIfLj4EE25positiveBinaryPowersOfTenEvE7factors                                                                                                                                12            0
 .xt.prop._ZZN11ArduinoJson8V741PB226detail11FloatTraitsIdLj8EE25negativeBinaryPowersOfTenEvE7factors                                                                                                                                12            0
 .xt.prop._ZZN11ArduinoJson8V741PB226detail11FloatTraitsIdLj8EE25positiveBinaryPowersOfTenEvE7factors                                                                                                                                12            0
+.xt.prop._ZZNK11ArduinoJson8V741PB2220DeserializationError5c_strEvE8messages                                                                                                                                                        12            0
 .xt.prop._ZZN11ArduinoJson8V741PB226detail16DefaultAllocator8instanceEvE9allocator                                                                                                                                                  12            0
 .xt.lit._ZN14RelayModule2CH14modbusCallbackEN6Modbus10ResultCodeEtPv                                                                                                                                                                 8            0
 .xt.lit._ZNSt14_Function_base13_Base_managerIPFbN6Modbus10ResultCodeEtPvEE10_M_managerERSt9_Any_dataRKS7_St18_Manager_operation                                                                                                      8            0
@@ -455,7 +455,7 @@ section                                                                         
 .xt.prop._ZN11ArduinoJson8V741PB226detail14CollectionData5clearEPNS1_15ResourceManagerE                                                                                                                                             60            0
 .xt.prop._ZNK11ArduinoJson8V741PB226detail11VariantData6acceptINS1_14VisitorAdapterINS1_17JsonVariantCopierEEEEENT_11result_typeERS7_PKNS1_15ResourceManagerE                                                                      432            0
 .xt.prop._ZNSt8functionIFbN6Modbus10ResultCodeEtPvEEC5ERKS4_                                                                                                                                                                        12            0
-.xt.prop._ZN14RelayModule2CH9syncStateEv                                                                                                                                                                                           192            0
+.xt.prop._ZN14RelayModule2CH9syncStateEv                                                                                                                                                                                           180            0
 .xt.prop._ZN14RelayModule2CH8setRelayEhb                                                                                                                                                                                           204            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail10StringPool3addINS1_9RamStringEEEPNS1_10StringNodeET_PNS0_9AllocatorE                                                                                                                    108            0
 .xt.prop._ZN11ArduinoJson8V741PB229ConverterIPKcvE6toJsonES3_NS0_11JsonVariantE                                                                                                                                                     36            0
@@ -480,13 +480,13 @@ section                                                                         
 .xt.prop._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderI6StringvEEE11parseObjectINS1_14AllowAllFilterEEENS0_20DeserializationError4CodeERNS1_10ObjectDataET_NS0_21DeserializationOption12NestingLimitE             240            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderI6StringvEEE12parseVariantINS1_14AllowAllFilterEEENS0_20DeserializationError4CodeERNS1_11VariantDataET_NS0_21DeserializationOption12NestingLimitE           252            0
 .xt.prop._ZNSt17_Function_handlerIFbN6Modbus10ResultCodeEtPvEPS3_E9_M_invokeERKSt9_Any_dataOS1_OtOS2_                                                                                                                               36            0
-.xt.prop._ZNK11ArduinoJson8V741PB226detail7pgm_ptrIdEixEi$isra$91                                                                                                                                                                   36            0
+.xt.prop._ZNK11ArduinoJson8V741PB226detail7pgm_ptrIdEixEi$isra$87                                                                                                                                                                   36            0
 .xt.prop._ZNSt14_Function_baseD2Ev                                                                                                                                                                                                  36            0
 .xt.prop._ZN11ArduinoJson8V741PB2212JsonDocumentC2EPNS0_9AllocatorE                                                                                                                                                                 36            0
-.xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS0_11JsonVariantEE5doSetINS0_9ConverterIxvEExEEbRKT0_NS1_17integral_constantIbLb1EEE$isra$165                                                                           84            0
-.xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS0_11JsonVariantEE5doSetINS0_9ConverterIyvEEyEEbRKT0_NS1_17integral_constantIbLb1EEE$isra$175                                                                           72            0
+.xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS0_11JsonVariantEE5doSetINS0_9ConverterIxvEExEEbRKT0_NS1_17integral_constantIbLb1EEE$isra$162                                                                           84            0
+.xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS0_11JsonVariantEE5doSetINS0_9ConverterIyvEEyEEbRKT0_NS1_17integral_constantIbLb1EEE$isra$172                                                                           72            0
 .xt.prop._ZNSt8functionIFbN6Modbus10ResultCodeEtPvEEC2ERKS4_                                                                                                                                                                        60            0
-.xt.prop._ZN11ArduinoJson8V741PB226detail14VisitorAdapterINS1_17JsonVariantCopierEE5visitINS0_10JsonStringEEEbRKT_$isra$111                                                                                                         36            0
+.xt.prop._ZN11ArduinoJson8V741PB226detail14VisitorAdapterINS1_17JsonVariantCopierEE5visitINS0_10JsonStringEEEbRKT_$isra$108                                                                                                         36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderI6StringvEEE7currentEv                                                                                                                                       36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderI6StringvEEE22canBeInNonQuotedStringEc                                                                                                                       48            0
 .xt.prop._ZTIFbN6Modbus10ResultCodeEtPvE                                                                                                                                                                                            12            0
@@ -498,7 +498,6 @@ section                                                                         
 .xt.prop._ZTI11ISoilSensor                                                                                                                                                                                                          12            0
 .xt.prop._ZTI18ITemperatureSensor                                                                                                                                                                                                   12            0
 .xt.prop._ZTI16SensorCapacitive                                                                                                                                                                                                     12            0
-.xt.prop._ZTI10HD38Sensor                                                                                                                                                                                                           12            0
 .xt.prop._ZTIPFbN6Modbus10ResultCodeEtPvE                                                                                                                                                                                           12            0
 .xt.prop._ZGVZN13ModbusManager11getInstanceEvE8instance                                                                                                                                                                             12            0
 .xt.prop._ZZN13ModbusManager11getInstanceEvE8instance                                                                                                                                                                               12            0
@@ -519,8 +518,9 @@ section                                                                         
 .xt.lit._ZNSt14_Function_base13_Base_managerIPFvvEE10_M_managerERSt9_Any_dataRKS4_St18_Manager_operation                                                                                                                             8            0
 .xt.lit._ZN16ModbusSensorBaseILh2EE12readCallbackEN6Modbus10ResultCodeEtPv                                                                                                                                                           8            0
 .xt.lit._ZN16ModbusSensorBaseILh7EE12readCallbackEN6Modbus10ResultCodeEtPv                                                                                                                                                           8            0
+.xt.lit._ZN15SensorSimulated4initEv                                                                                                                                                                                                  8            0
 .xt.lit._ZN3UriD5Ev                                                                                                                                                                                                                  8            0
-.xt.lit._ZN16SensorCapacitive4initEv                                                                                                                                                                                                 0            0
+.xt.lit._ZN16SensorCapacitive4initEv                                                                                                                                                                                                 8            0
 .xt.lit._ZN15SensorSimulated21getMeasurementsStringEv                                                                                                                                                                                8            0
 .xt.lit._ZN11SensorSCD3021getMeasurementsStringEv                                                                                                                                                                                    8            0
 .xt.lit._ZN11SensorSCD3011getSensorIDEv                                                                                                                                                                                              8            0
@@ -529,29 +529,30 @@ section                                                                         
 .xt.lit._ZN12SensorBME28011getSensorIDEv                                                                                                                                                                                             8            0
 .xt.lit._ZN16SensorCapacitive21getMeasurementsStringEv                                                                                                                                                                               8            0
 .xt.lit._ZN16SensorCapacitive11getSensorIDEv                                                                                                                                                                                         8            0
+.xt.lit._ZN10HD38Sensor21getMeasurementsStringEv                                                                                                                                                                                     8            0
+.xt.lit._ZN10HD38Sensor11getSensorIDEv                                                                                                                                                                                               8            0
 .xt.lit._ZN14ModbusTHSensor21getMeasurementsStringEv                                                                                                                                                                                 8            0
 .xt.lit._ZN14ModbusTHSensor11getSensorIDEv                                                                                                                                                                                           8            0
 .xt.lit._ZN14ModbusTHSensor13getSensorTypeEv                                                                                                                                                                                         8            0
 .xt.lit._ZN20ModbusSoil7in1Sensor21getMeasurementsStringEv                                                                                                                                                                           8            0
 .xt.lit._ZN20ModbusSoil7in1Sensor11getSensorIDEv                                                                                                                                                                                     8            0
 .xt.lit._ZN20ModbusSoil7in1Sensor13getSensorTypeEv                                                                                                                                                                                   8            0
-.xt.lit._ZN10HD38Sensor21getMeasurementsStringEv                                                                                                                                                                                     8            0
-.xt.lit._ZN10HD38Sensor11getSensorIDEv                                                                                                                                                                                               8            0
 .xt.lit._ZN10HD38Sensor13getSensorTypeEv                                                                                                                                                                                             8            0
 .xt.lit._ZNK3Uri5cloneEv                                                                                                                                                                                                             8            0
 .xt.lit._ZN11SensorSCD304initEv                                                                                                                                                                                                      8            0
-.xt.lit._ZN13SensorOneWire4initEv                                                                                                                                                                                                    0            0
-.xt.lit._ZN12SensorBME2804initEv                                                                                                                                                                                                     0            0
+.xt.lit._ZN13SensorOneWire4initEv                                                                                                                                                                                                    8            0
+.xt.lit._ZN12SensorBME2804initEv                                                                                                                                                                                                     8            0
+.xt.lit._ZN10HD38Sensor4initEv                                                                                                                                                                                                       8            0
 .xt.lit._ZN11SensorSCD309calibrateEf                                                                                                                                                                                                 0            0
 .xt.lit._ZN11SensorSCD309dataReadyEv                                                                                                                                                                                                 0            0
 .xt.lit._ZN13SensorOneWire4readEv                                                                                                                                                                                                    8            0
-.xt.lit._ZN10HD38Sensor4initEv                                                                                                                                                                                                       0            0
 .xt.lit._ZN3Uri9canHandleERK6StringRSt6vectorIS0_SaIS0_EE                                                                                                                                                                            0            0
 .xt.lit._ZN15SensorSimulated4readEv                                                                                                                                                                                                  8            0
-.xt.lit._ZN11SensorSCD304readEv                                                                                                                                                                                                      0            0
+.xt.lit._ZN11SensorSCD304readEv                                                                                                                                                                                                      8            0
 .xt.lit._ZN16SensorCapacitive4readEv                                                                                                                                                                                                 8            0
 .xt.lit._ZN10HD38Sensor4readEv                                                                                                                                                                                                       8            0
 .xt.lit._ZN12SensorBME2804readEv                                                                                                                                                                                                     8            0
+.xt.lit._ZN13ESPNowManager16onDataSentStaticEPKh21esp_now_send_status_t                                                                                                                                                              8            0
 .xt.lit._ZN13SensorOneWire11getSensorIDEv                                                                                                                                                                                            8            0
 .xt.lit._ZNK6String8endsWithEPKc                                                                                                                                                                                                     0            0
 .xt.lit._ZN13ModbusManager5beginEiiij                                                                                                                                                                                                8            0
@@ -579,12 +580,15 @@ section                                                                         
 .xt.lit._ZN16ModbusSensorBaseILh2EED5Ev                                                                                                                                                                                              8            0
 .xt.lit._ZN13SensorManager7readAllEv                                                                                                                                                                                                 0            0
 .xt.lit._ZN12RS485Manager14sendSensorDataEfffPKc                                                                                                                                                                                     8            0
+.xt.lit._ZN13ESPNowManager13addPeerToListEPKh                                                                                                                                                                                        8            0
+.xt.lit._ZN13ESPNowManager20handleBeaconReceivedEPKhS1_i                                                                                                                                                                             8            0
 .xt.lit._ZN13ESPNowManager25handlePairRequestReceivedEPKhS1_i                                                                                                                                                                        8            0
 .xt.lit._ZN13ESPNowManager18handleDataReceivedEPKhS1_i                                                                                                                                                                               8            0
 .xt.lit._ZN13ESPNowManager10onDataRecvEPKhS1_i                                                                                                                                                                                       8            0
-.xt.lit._ZN13ESPNowManager16onDataRecvStaticEPKhS1_i                                                                                                                                                                                 8            0
+.xt.lit._ZN13ESPNowManager16onDataRecvStaticEPKhS1_i                                                                                                                                                                                 0            0
+.xt.lit._ZN13ESPNowManager4initERK6Stringh                                                                                                                                                                                           8            0
 .xt.lit._ZN13ESPNowManager15broadcastBeaconEv                                                                                                                                                                                        8            0
-.xt.lit._ZN13ESPNowManager16waitForDiscoveryEv                                                                                                                                                                                       0            0
+.xt.lit._ZN13ESPNowManager16waitForDiscoveryEv                                                                                                                                                                                       8            0
 .xt.lit._ZN13ESPNowManager6updateEv                                                                                                                                                                                                  0            0
 .xt.lit._ZNK11ArduinoJson8V741PB229JsonArray5beginEv                                                                                                                                                                                 0            0
 .xt.lit._ZN11ArduinoJson8V741PB2217JsonArrayIteratorppEv                                                                                                                                                                             0            0
@@ -594,13 +598,13 @@ section                                                                         
 .xt.lit._ZN16ModbusSensorBaseILh7EEC5Eh                                                                                                                                                                                              0            0
 .xt.lit._ZN14ModbusTHSensorC5Eh                                                                                                                                                                                                      8            0
 .xt.lit._ZN16ModbusSensorBaseILh2EEC5Eh                                                                                                                                                                                              0            0
-.xt.lit._ZN14RelayModule2CH10syncInputsEv                                                                                                                                                                                            0            0
+.xt.lit._ZN14RelayModule2CH10syncInputsEv                                                                                                                                                                                            8            0
 .xt.lit._ZNSt12_Vector_baseIhSaIhEED5Ev                                                                                                                                                                                              8            0
 .xt.lit._ZNSt6vectorIhSaIhEE12emplace_backIJhEEERhDpOT_                                                                                                                                                                              8            0
-.xt.lit._ZN11ArduinoJson8V741PB229ConverterIivE9checkJsonENS0_16JsonVariantConstE                                                                                                                                                    8            0
 .xt.lit._ZNSt6vectorIP17DallasTemperatureSaIS1_EE17_M_realloc_insertIJRKS1_EEEvN9__gnu_cxx17__normal_iteratorIPS1_S3_EEDpOT_                                                                                                         8            0
-.xt.lit._ZNK11ArduinoJson8V741PB2215JsonObjectConstixIA7_cLi0EEENS0_16JsonVariantConstERKT_                                                                                                                                          0            0
 .xt.lit._ZNK11ArduinoJson8V741PB226detail11VariantData9getMemberINS1_9RamStringEEEPS2_T_PKNS1_15ResourceManagerE                                                                                                                     0            0
+.xt.lit._ZNK11ArduinoJson8V741PB2215JsonObjectConstixIA7_cLi0EEENS0_16JsonVariantConstERKT_                                                                                                                                          0            0
+.xt.lit._ZN11ArduinoJson8V741PB229ConverterIivE9checkJsonENS0_16JsonVariantConstE                                                                                                                                                    8            0
 .xt.lit._ZNSt6vectorIP14RelayModule2CHSaIS1_EE17_M_realloc_insertIJS1_EEEvN9__gnu_cxx17__normal_iteratorIPS1_S3_EEDpOT_                                                                                                              0            0
 .xt.lit._ZNKSt6vectorIP7ISensorSaIS1_EE12_M_check_lenEjPKc                                                                                                                                                                           0            0
 .xt.lit._ZNSt6vectorIiSaIiEE17_M_realloc_insertIJiEEEvN9__gnu_cxx17__normal_iteratorIPiS1_EEDpOT_                                                                                                                                    0            0
@@ -608,18 +612,14 @@ section                                                                         
 .xt.lit._ZN11ArduinoJson8V741PB226detail11parseNumberIhEET_PKc                                                                                                                                                                       8            0
 .xt.lit._ZNK11ArduinoJson8V741PB226detail11VariantData10asIntegralIhEET_PKNS1_15ResourceManagerE                                                                                                                                     0            0
 .xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS0_11JsonVariantEE2asIhEET_v                                                                                                                                              0            0
-.xt.lit._ZN11ArduinoJson8V741PB229ConverterIivE8fromJsonENS0_16JsonVariantConstE                                                                                                                                                     0            0
 .xt.lit._ZN12RelayManager14loadFromConfigERN11ArduinoJson8V741PB2212JsonDocumentE                                                                                                                                                    8            0
-.xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE2asIiEET_v                                                                                                            0            0
+.xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE2asINS0_9JsonArrayEEET_v                                                                                              0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detailorIiLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                      0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detailorIbLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                      0            0
-.xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE2asINS0_9JsonArrayEEET_v                                                                                              0            0
-.xt.lit._ZN11ArduinoJson8V741PB226detail15VariantAttorney7getDataIKNS1_12ElementProxyINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEEEEEDTcldtfp_7getDataEERT_                                                                 0            0
-.xt.lit._ZN11ArduinoJson8V741PB226detailorIiLi0EEET_RKNS1_12ElementProxyINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEEERKS3_                                                                                                 0            0
 .xt.lit._ZNSt11__copy_moveILb1ELb1ESt26random_access_iterator_tagE8__copy_mIP7ISensorEEPT_PKS5_S8_S6_                                                                                                                                0            0
-.xt.lit._ZNSt6vectorIP7ISensorSaIS1_EE9push_backERKS1_                                                                                                                                                                               8            0
+.xt.lit._ZNSt6vectorIP7ISensorSaIS1_EE12emplace_backIJS1_EEERS1_DpOT_                                                                                                                                                                8            0
+.xt.lit._ZNSt6vectorIP7ISensorSaIS1_EE9push_backERKS1_                                                                                                                                                                               0            0
 .xt.lit._ZN13SensorManager11scanOneWireEi                                                                                                                                                                                            8            0
-.xt.lit._ZNSt6vectorIP7ISensorSaIS1_EE12emplace_backIJS1_EEERS1_DpOT_                                                                                                                                                                0            0
 .xt.lit._ZN13SensorManager14loadFromConfigERN11ArduinoJson8V741PB2212JsonDocumentE                                                                                                                                                   8            0
 .xt.lit._ZN14ModbusTHSensorD5Ev                                                                                                                                                                                                      0            0
 .xt.lit._ZN20ModbusSoil7in1SensorD5Ev                                                                                                                                                                                                0            0
@@ -631,8 +631,8 @@ section                                                                         
 .xt.lit._ZN10HD38SensorD5Ev                                                                                                                                                                                                          0            0
 .xt.lit._ZN9ModbusAPII17ModbusRTUTemplateE8readHregIhEEtT_tPttSt8functionIFbN6Modbus10ResultCodeEtPvEEh                                                                                                                              0            0
 .xt.lit._ZN16ModbusSensorBaseILh2EE13readRegistersEv                                                                                                                                                                                 8            0
-.xt.lit._ZN16ModbusSensorBaseILh2EE4initEv                                                                                                                                                                                           0            0
-.xt.lit._ZN16ModbusSensorBaseILh2EE4readEv                                                                                                                                                                                           0            0
+.xt.lit._ZN16ModbusSensorBaseILh2EE4initEv                                                                                                                                                                                           8            0
+.xt.lit._ZN16ModbusSensorBaseILh2EE4readEv                                                                                                                                                                                           8            0
 .xt.lit._ZN16ModbusSensorBaseILh7EE13readRegistersEv                                                                                                                                                                                 8            0
 .xt.lit._ZN16ModbusSensorBaseILh7EE4initEv                                                                                                                                                                                           0            0
 .xt.lit._ZN16ModbusSensorBaseILh7EE4readEv                                                                                                                                                                                           0            0
@@ -653,8 +653,9 @@ section                                                                         
 .xt.prop._ZNSt14_Function_base13_Base_managerIPFvvEE10_M_managerERSt9_Any_dataRKS4_St18_Manager_operation                                                                                                                           96            0
 .xt.prop._ZN16ModbusSensorBaseILh2EE12readCallbackEN6Modbus10ResultCodeEtPv                                                                                                                                                         48            0
 .xt.prop._ZN16ModbusSensorBaseILh7EE12readCallbackEN6Modbus10ResultCodeEtPv                                                                                                                                                         48            0
+.xt.prop._ZN15SensorSimulated4initEv                                                                                                                                                                                                72            0
 .xt.prop._ZN3UriD5Ev                                                                                                                                                                                                                12            0
-.xt.prop._ZN16SensorCapacitive4initEv                                                                                                                                                                                               60            0
+.xt.prop._ZN16SensorCapacitive4initEv                                                                                                                                                                                               72            0
 .xt.prop._ZN15SensorSimulated21getMeasurementsStringEv                                                                                                                                                                              72            0
 .xt.prop._ZN11SensorSCD3021getMeasurementsStringEv                                                                                                                                                                                  72            0
 .xt.prop._ZN11SensorSCD3011getSensorIDEv                                                                                                                                                                                            72            0
@@ -663,32 +664,33 @@ section                                                                         
 .xt.prop._ZN12SensorBME28011getSensorIDEv                                                                                                                                                                                           72            0
 .xt.prop._ZN16SensorCapacitive21getMeasurementsStringEv                                                                                                                                                                             72            0
 .xt.prop._ZN16SensorCapacitive11getSensorIDEv                                                                                                                                                                                       72            0
+.xt.prop._ZN10HD38Sensor21getMeasurementsStringEv                                                                                                                                                                                   72            0
+.xt.prop._ZN10HD38Sensor11getSensorIDEv                                                                                                                                                                                             72            0
 .xt.prop._ZN14ModbusTHSensor21getMeasurementsStringEv                                                                                                                                                                               72            0
 .xt.prop._ZN14ModbusTHSensor11getSensorIDEv                                                                                                                                                                                         72            0
 .xt.prop._ZN14ModbusTHSensor13getSensorTypeEv                                                                                                                                                                                       72            0
 .xt.prop._ZN20ModbusSoil7in1Sensor21getMeasurementsStringEv                                                                                                                                                                         72            0
 .xt.prop._ZN20ModbusSoil7in1Sensor11getSensorIDEv                                                                                                                                                                                   72            0
 .xt.prop._ZN20ModbusSoil7in1Sensor13getSensorTypeEv                                                                                                                                                                                 72            0
-.xt.prop._ZN10HD38Sensor21getMeasurementsStringEv                                                                                                                                                                                   72            0
-.xt.prop._ZN10HD38Sensor11getSensorIDEv                                                                                                                                                                                             72            0
 .xt.prop._ZN10HD38Sensor13getSensorTypeEv                                                                                                                                                                                           72            0
 .xt.prop._ZNK3Uri5cloneEv                                                                                                                                                                                                           96            0
-.xt.prop._ZN11SensorSCD304initEv                                                                                                                                                                                                    72            0
-.xt.prop._ZN13SensorOneWire4initEv                                                                                                                                                                                                  72            0
-.xt.prop._ZN12SensorBME2804initEv                                                                                                                                                                                                   96            0
+.xt.prop._ZN11SensorSCD304initEv                                                                                                                                                                                                    84            0
+.xt.prop._ZN13SensorOneWire4initEv                                                                                                                                                                                                  84            0
+.xt.prop._ZN12SensorBME2804initEv                                                                                                                                                                                                  108            0
+.xt.prop._ZN10HD38Sensor4initEv                                                                                                                                                                                                    120            0
 .xt.prop._ZN11SensorSCD309calibrateEf                                                                                                                                                                                               72            0
 .xt.prop._ZN11SensorSCD309dataReadyEv                                                                                                                                                                                               72            0
 .xt.prop._ZN13SensorOneWire4readEv                                                                                                                                                                                                 108            0
-.xt.prop._ZN10HD38Sensor4initEv                                                                                                                                                                                                     96            0
 .xt.prop._ZN3Uri9canHandleERK6StringRSt6vectorIS0_SaIS0_EE                                                                                                                                                                          36            0
 .xt.prop._ZN15SensorSimulated4readEv                                                                                                                                                                                                72            0
 .xt.prop._ZN11SensorSCD304readEv                                                                                                                                                                                                    96            0
 .xt.prop._ZN16SensorCapacitive4readEv                                                                                                                                                                                               96            0
 .xt.prop._ZN10HD38Sensor4readEv                                                                                                                                                                                                    108            0
 .xt.prop._ZN12SensorBME2804readEv                                                                                                                                                                                                   72            0
+.xt.prop._ZN13ESPNowManager16onDataSentStaticEPKh21esp_now_send_status_t                                                                                                                                                            48            0
 .xt.prop._ZN13SensorOneWire11getSensorIDEv                                                                                                                                                                                         120            0
 .xt.prop._ZNK6String8endsWithEPKc                                                                                                                                                                                                   60            0
-.xt.prop._ZN13ModbusManager5beginEiiij                                                                                                                                                                                              48            0
+.xt.prop._ZN13ModbusManager5beginEiiij                                                                                                                                                                                              84            0
 .xt.prop._ZN14RelayModule2CH16getGrafanaStringEv                                                                                                                                                                                   252            0
 .xt.prop._ZN3UriC5EPKc                                                                                                                                                                                                               0            0
 .xt.prop._ZN15IMoistureSensorC5Ev                                                                                                                                                                                                   12            0
@@ -713,12 +715,15 @@ section                                                                         
 .xt.prop._ZN16ModbusSensorBaseILh2EED5Ev                                                                                                                                                                                            12            0
 .xt.prop._ZN13SensorManager7readAllEv                                                                                                                                                                                              108            0
 .xt.prop._ZN12RS485Manager14sendSensorDataEfffPKc                                                                                                                                                                                  372            0
-.xt.prop._ZN13ESPNowManager25handlePairRequestReceivedEPKhS1_i                                                                                                                                                                     156            0
+.xt.prop._ZN13ESPNowManager13addPeerToListEPKh                                                                                                                                                                                     120            0
+.xt.prop._ZN13ESPNowManager20handleBeaconReceivedEPKhS1_i                                                                                                                                                                           72            0
+.xt.prop._ZN13ESPNowManager25handlePairRequestReceivedEPKhS1_i                                                                                                                                                                     108            0
 .xt.prop._ZN13ESPNowManager18handleDataReceivedEPKhS1_i                                                                                                                                                                             84            0
-.xt.prop._ZN13ESPNowManager10onDataRecvEPKhS1_i                                                                                                                                                                                    144            0
-.xt.prop._ZN13ESPNowManager16onDataRecvStaticEPKhS1_i                                                                                                                                                                               60            0
+.xt.prop._ZN13ESPNowManager10onDataRecvEPKhS1_i                                                                                                                                                                                    180            0
+.xt.prop._ZN13ESPNowManager16onDataRecvStaticEPKhS1_i                                                                                                                                                                               48            0
+.xt.prop._ZN13ESPNowManager4initERK6Stringh                                                                                                                                                                                         96            0
 .xt.prop._ZN13ESPNowManager15broadcastBeaconEv                                                                                                                                                                                     192            0
-.xt.prop._ZN13ESPNowManager16waitForDiscoveryEv                                                                                                                                                                                     96            0
+.xt.prop._ZN13ESPNowManager16waitForDiscoveryEv                                                                                                                                                                                    144            0
 .xt.prop._ZN13ESPNowManager6updateEv                                                                                                                                                                                                36            0
 .xt.prop._ZNK11ArduinoJson8V741PB229JsonArray5beginEv                                                                                                                                                                               60            0
 .xt.prop._ZN11ArduinoJson8V741PB2217JsonArrayIteratorppEv                                                                                                                                                                           36            0
@@ -728,13 +733,13 @@ section                                                                         
 .xt.prop._ZN16ModbusSensorBaseILh7EEC5Eh                                                                                                                                                                                             0            0
 .xt.prop._ZN14ModbusTHSensorC5Eh                                                                                                                                                                                                    12            0
 .xt.prop._ZN16ModbusSensorBaseILh2EEC5Eh                                                                                                                                                                                             0            0
-.xt.prop._ZN14RelayModule2CH10syncInputsEv                                                                                                                                                                                         180            0
+.xt.prop._ZN14RelayModule2CH10syncInputsEv                                                                                                                                                                                         216            0
 .xt.prop._ZNSt12_Vector_baseIhSaIhEED5Ev                                                                                                                                                                                            12            0
 .xt.prop._ZNSt6vectorIhSaIhEE12emplace_backIJhEEERhDpOT_                                                                                                                                                                            96            0
-.xt.prop._ZN11ArduinoJson8V741PB229ConverterIivE9checkJsonENS0_16JsonVariantConstE                                                                                                                                                 180            0
 .xt.prop._ZNSt6vectorIP17DallasTemperatureSaIS1_EE17_M_realloc_insertIJRKS1_EEEvN9__gnu_cxx17__normal_iteratorIPS1_S3_EEDpOT_                                                                                                       84            0
-.xt.prop._ZNK11ArduinoJson8V741PB2215JsonObjectConstixIA7_cLi0EEENS0_16JsonVariantConstERKT_                                                                                                                                        36            0
 .xt.prop._ZNK11ArduinoJson8V741PB226detail11VariantData9getMemberINS1_9RamStringEEEPS2_T_PKNS1_15ResourceManagerE                                                                                                                   36            0
+.xt.prop._ZNK11ArduinoJson8V741PB2215JsonObjectConstixIA7_cLi0EEENS0_16JsonVariantConstERKT_                                                                                                                                        36            0
+.xt.prop._ZN11ArduinoJson8V741PB229ConverterIivE9checkJsonENS0_16JsonVariantConstE                                                                                                                                                 180            0
 .xt.prop._ZNSt6vectorIP14RelayModule2CHSaIS1_EE17_M_realloc_insertIJS1_EEEvN9__gnu_cxx17__normal_iteratorIPS1_S3_EEDpOT_                                                                                                            72            0
 .xt.prop._ZNKSt6vectorIP7ISensorSaIS1_EE12_M_check_lenEjPKc                                                                                                                                                                         72            0
 .xt.prop._ZNSt6vectorIiSaIiEE17_M_realloc_insertIJiEEEvN9__gnu_cxx17__normal_iteratorIPiS1_EEDpOT_                                                                                                                                  72            0
@@ -742,18 +747,14 @@ section                                                                         
 .xt.prop._ZN11ArduinoJson8V741PB226detail11parseNumberIhEET_PKc                                                                                                                                                                    132            0
 .xt.prop._ZNK11ArduinoJson8V741PB226detail11VariantData10asIntegralIhEET_PKNS1_15ResourceManagerE                                                                                                                                  240            0
 .xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS0_11JsonVariantEE2asIhEET_v                                                                                                                                            36            0
-.xt.prop._ZN11ArduinoJson8V741PB229ConverterIivE8fromJsonENS0_16JsonVariantConstE                                                                                                                                                   48            0
-.xt.prop._ZN12RelayManager14loadFromConfigERN11ArduinoJson8V741PB2212JsonDocumentE                                                                                                                                                 252            0
-.xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE2asIiEET_v                                                                                                          36            0
+.xt.prop._ZN12RelayManager14loadFromConfigERN11ArduinoJson8V741PB2212JsonDocumentE                                                                                                                                                 288            0
+.xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE2asINS0_9JsonArrayEEET_v                                                                                            36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detailorIiLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                    60            0
 .xt.prop._ZN11ArduinoJson8V741PB226detailorIbLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                    60            0
-.xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE2asINS0_9JsonArrayEEET_v                                                                                            36            0
-.xt.prop._ZN11ArduinoJson8V741PB226detail15VariantAttorney7getDataIKNS1_12ElementProxyINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEEEEEDTcldtfp_7getDataEERT_                                                               60            0
-.xt.prop._ZN11ArduinoJson8V741PB226detailorIiLi0EEET_RKNS1_12ElementProxyINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEEERKS3_                                                                                               60            0
 .xt.prop._ZNSt11__copy_moveILb1ELb1ESt26random_access_iterator_tagE8__copy_mIP7ISensorEEPT_PKS5_S8_S6_                                                                                                                              48            0
-.xt.prop._ZNSt6vectorIP7ISensorSaIS1_EE9push_backERKS1_                                                                                                                                                                            108            0
+.xt.prop._ZNSt6vectorIP7ISensorSaIS1_EE12emplace_backIJS1_EEERS1_DpOT_                                                                                                                                                             108            0
+.xt.prop._ZNSt6vectorIP7ISensorSaIS1_EE9push_backERKS1_                                                                                                                                                                             96            0
 .xt.prop._ZN13SensorManager11scanOneWireEi                                                                                                                                                                                         192            0
-.xt.prop._ZNSt6vectorIP7ISensorSaIS1_EE12emplace_backIJS1_EEERS1_DpOT_                                                                                                                                                              96            0
 .xt.prop._ZN13SensorManager14loadFromConfigERN11ArduinoJson8V741PB2212JsonDocumentE                                                                                                                                                696            0
 .xt.prop._ZN14ModbusTHSensorD5Ev                                                                                                                                                                                                     0            0
 .xt.prop._ZN20ModbusSoil7in1SensorD5Ev                                                                                                                                                                                               0            0
@@ -767,11 +768,11 @@ section                                                                         
 .xt.prop._ZN16ModbusSensorBaseILh7EE8isActiveEv                                                                                                                                                                                     96            0
 .xt.prop._ZN9ModbusAPII17ModbusRTUTemplateE8readHregIhEEtT_tPttSt8functionIFbN6Modbus10ResultCodeEtPvEEh                                                                                                                            60            0
 .xt.prop._ZN16ModbusSensorBaseILh2EE13readRegistersEv                                                                                                                                                                              192            0
-.xt.prop._ZN16ModbusSensorBaseILh2EE4initEv                                                                                                                                                                                         84            0
-.xt.prop._ZN16ModbusSensorBaseILh2EE4readEv                                                                                                                                                                                         96            0
+.xt.prop._ZN16ModbusSensorBaseILh2EE4initEv                                                                                                                                                                                        120            0
+.xt.prop._ZN16ModbusSensorBaseILh2EE4readEv                                                                                                                                                                                        120            0
 .xt.prop._ZN16ModbusSensorBaseILh7EE13readRegistersEv                                                                                                                                                                              192            0
-.xt.prop._ZN16ModbusSensorBaseILh7EE4initEv                                                                                                                                                                                         84            0
-.xt.prop._ZN16ModbusSensorBaseILh7EE4readEv                                                                                                                                                                                         96            0
+.xt.prop._ZN16ModbusSensorBaseILh7EE4initEv                                                                                                                                                                                        108            0
+.xt.prop._ZN16ModbusSensorBaseILh7EE4readEv                                                                                                                                                                                        108            0
 .xt.prop._ZN17ModbusRTUTemplate11eventSourceEv                                                                                                                                                                                      36            0
 .xt.prop._ZN3Uri12initPathArgsERSt6vectorI6StringSaIS1_EE                                                                                                                                                                           36            0
 .xt.prop._ZN7ISensor9calibrateEf                                                                                                                                                                                                    36            0
@@ -793,7 +794,6 @@ section                                                                         
 .xt.prop._ZN11SensorSCD3011getHumidityEv                                                                                                                                                                                            60            0
 .xt.prop._ZN11SensorSCD306getCO2Ev                                                                                                                                                                                                  60            0
 .xt.prop._ZN11SensorSCD308isActiveEv                                                                                                                                                                                                60            0
-.xt.prop._ZN15SensorSimulated4initEv                                                                                                                                                                                                60            0
 .xt.prop._ZN15SensorSimulated9dataReadyEv                                                                                                                                                                                           60            0
 .xt.prop._ZN15SensorSimulated14getTemperatureEv                                                                                                                                                                                     36            0
 .xt.prop._ZN15SensorSimulated11getHumidityEv                                                                                                                                                                                        60            0
@@ -808,7 +808,6 @@ section                                                                         
 .xt.prop._ZN20ModbusSoil7in1Sensor12getPotassiumEv                                                                                                                                                                                  60            0
 .xt.prop._ZN14ModbusTHSensor14getTemperatureEv                                                                                                                                                                                      60            0
 .xt.prop._ZN14ModbusTHSensor11getHumidityEv                                                                                                                                                                                         60            0
-.xt.prop._ZN13ESPNowManager16onDataSentStaticEPKh21esp_now_send_status_t                                                                                                                                                            36            0
 .xt.prop._ZNSt17_Function_handlerIFvvEPS0_E9_M_invokeERKSt9_Any_data                                                                                                                                                                36            0
 .xt.prop._ZN16ModbusSensorBaseILh2EE9dataReadyEv                                                                                                                                                                                    60            0
 .xt.prop._ZN16ModbusSensorBaseILh7EE9dataReadyEv                                                                                                                                                                                    60            0
@@ -921,6 +920,7 @@ section                                                                         
 .xt.prop._ZTI9ModbusAPII17ModbusRTUTemplateE                                                                                                                                                                                        12            0
 .xt.prop._ZTI9ModbusRTU                                                                                                                                                                                                             12            0
 .xt.prop._ZTI3Uri                                                                                                                                                                                                                   12            0
+.xt.prop._ZTI10HD38Sensor                                                                                                                                                                                                           12            0
 .xt.prop._ZTI12SensorBME280                                                                                                                                                                                                         12            0
 .xt.prop._ZTI13SensorOneWire                                                                                                                                                                                                        12            0
 .xt.prop._ZTI11SensorSCD30                                                                                                                                                                                                          12            0
@@ -1051,7 +1051,7 @@ section                                                                         
 .xt.lit._ZNSt15_Sp_counted_ptrIP18WiFiClientRxBufferLN9__gnu_cxx12_Lock_policyE2EE10_M_disposeEv                                                                                                                                     0            0
 .xt.lit._ZNSt15_Sp_counted_ptrIP22WiFiClientSocketHandleLN9__gnu_cxx12_Lock_policyE2EE10_M_disposeEv                                                                                                                                 8            0
 .xt.lit._ZN18WiFiClientRxBuffer11r_availableEv                                                                                                                                                                                       8            0
-.xt.lit._ZN18WiFiClientRxBuffer10fillBufferEv                                                                                                                                                                                        0            0
+.xt.lit._ZN18WiFiClientRxBuffer10fillBufferEv                                                                                                                                                                                        8            0
 .xt.lit._ZN18WiFiClientRxBuffer4readEPhj                                                                                                                                                                                             0            0
 .xt.lit._ZNSt12__shared_ptrI22WiFiClientSocketHandleLN9__gnu_cxx12_Lock_policyE2EE5resetIS0_EENSt9enable_ifIXsrSt21__sp_is_constructibleIS0_T_E5valueEvE4typeEPS7_                                                                   8            0
 .xt.lit._ZNSt12__shared_ptrI18WiFiClientRxBufferLN9__gnu_cxx12_Lock_policyE2EE5resetIS0_EENSt9enable_ifIXsrSt21__sp_is_constructibleIS0_T_E5valueEvE4typeEPS7_                                                                       8            0
@@ -1062,7 +1062,7 @@ section                                                                         
 .xt.prop._ZNSt15_Sp_counted_ptrIP18WiFiClientRxBufferLN9__gnu_cxx12_Lock_policyE2EE10_M_disposeEv                                                                                                                                   48            0
 .xt.prop._ZNSt15_Sp_counted_ptrIP22WiFiClientSocketHandleLN9__gnu_cxx12_Lock_policyE2EE10_M_disposeEv                                                                                                                               60            0
 .xt.prop._ZN18WiFiClientRxBuffer11r_availableEv                                                                                                                                                                                     84            0
-.xt.prop._ZN18WiFiClientRxBuffer10fillBufferEv                                                                                                                                                                                     120            0
+.xt.prop._ZN18WiFiClientRxBuffer10fillBufferEv                                                                                                                                                                                     144            0
 .xt.prop._ZN18WiFiClientRxBuffer4readEPhj                                                                                                                                                                                          180            0
 .xt.prop._ZNSt12__shared_ptrI22WiFiClientSocketHandleLN9__gnu_cxx12_Lock_policyE2EE5resetIS0_EENSt9enable_ifIXsrSt21__sp_is_constructibleIS0_T_E5valueEvE4typeEPS7_                                                                 96            0
 .xt.prop._ZNSt12__shared_ptrI18WiFiClientRxBufferLN9__gnu_cxx12_Lock_policyE2EE5resetIS0_EENSt9enable_ifIXsrSt21__sp_is_constructibleIS0_T_E5valueEvE4typeEPS7_                                                                     96            0
@@ -1097,7 +1097,7 @@ section                                                                         
 .xt.prop._ZN15WiFiEventCbListC2Ev                                                                                                                                                                                                   36            0
 .xt.prop._ZNSt8functionIFv18arduino_event_id_t20arduino_event_info_tEEC2ERKS3_                                                                                                                                                      60            0
 .xt.prop._ZN15WiFiEventCbListC2ERKS_                                                                                                                                                                                                36            0
-.xt.prop._ZSt34__uninitialized_move_if_noexcept_aIP15WiFiEventCbListS1_SaIS0_EET0_T_S4_S3_RT1_$isra$29                                                                                                                              60            0
+.xt.prop._ZSt34__uninitialized_move_if_noexcept_aIP15WiFiEventCbListS1_SaIS0_EET0_T_S4_S3_RT1_$isra$30                                                                                                                              60            0
 .xt.prop._ZN16WiFiClientSecure5flushEv                                                                                                                                                                                              36            0
 .xt.prop._ZN16WiFiClientSecurecvbEv                                                                                                                                                                                                 36            0
 .xt.prop._ZTI16WiFiClientSecure                                                                                                                                                                                                     12            0
@@ -1225,12 +1225,6 @@ section                                                                         
 .xt.prop._ZNK6String7isEmptyEv                                                                                                                                                                                                      72            0
 .xt.prop._ZTIFv18arduino_event_id_t20arduino_event_info_tE                                                                                                                                                                          12            0
 .xt.prop._ZTIPFv18arduino_event_id_t20arduino_event_info_tE                                                                                                                                                                         12            0
-.xt.lit._ZN10MD5Builder3addEPKc                                                                                                                                                                                                      0            0
-.xt.lit._ZNKSt8functionIFv11ota_error_tEEclES0_                                                                                                                                                                                      0            0
-.xt.lit._ZNKSt8functionIFvjjEEclEjj                                                                                                                                                                                                  0            0
-.xt.prop._ZN10MD5Builder3addEPKc                                                                                                                                                                                                    36            0
-.xt.prop._ZNKSt8functionIFv11ota_error_tEEclES0_                                                                                                                                                                                    48            0
-.xt.prop._ZNKSt8functionIFvjjEEclEjj                                                                                                                                                                                                48            0
 .xt.lit._ZNSt10unique_ptrIA_hSt14default_deleteIS0_EED5Ev                                                                                                                                                                            0            0
 .xt.prop._ZNSt10unique_ptrIA_hSt14default_deleteIS0_EED5Ev                                                                                                                                                                           0            0
 .xt.prop._ZNSt10unique_ptrIA_hSt14default_deleteIS0_EED2Ev                                                                                                                                                                          36            0
@@ -1352,7 +1346,7 @@ section                                                                         
 .xt.lit._ZNSs4_Rep10_M_disposeERKSaIcE                                                                                                                                                                                               0            0
 .xt.lit._ZNSsD5Ev                                                                                                                                                                                                                    0            0
 .xt.lit._ZNSs12_S_constructIPKcEEPcT_S3_RKSaIcESt20forward_iterator_tag                                                                                                                                                              8            0
-.xt.lit._ZNSsC5EPKcRKSaIcE                                                                                                                                                                                                           0            0
+.xt.lit._ZNSsC5EPKcRKSaIcE                                                                                                                                                                                                           8            0
 .xt.prop._ZNSs7_M_copyEPcPKcj                                                                                                                                                                                                       60            0
 .xt.prop._ZNSs13_S_copy_charsEPcPKcS1_                                                                                                                                                                                              36            0
 .xt.prop._ZNSs4_Rep26_M_set_length_and_sharableEj                                                                                                                                                                                   48            0
@@ -1361,7 +1355,7 @@ section                                                                         
 .xt.prop._ZNSs4_Rep10_M_disposeERKSaIcE                                                                                                                                                                                             48            0
 .xt.prop._ZNSsD5Ev                                                                                                                                                                                                                   0            0
 .xt.prop._ZNSs12_S_constructIPKcEEPcT_S3_RKSaIcESt20forward_iterator_tag                                                                                                                                                            84            0
-.xt.prop._ZNSsC5EPKcRKSaIcE                                                                                                                                                                                                          0            0
+.xt.prop._ZNSsC5EPKcRKSaIcE                                                                                                                                                                                                         12            0
 .xt.prop._ZNSsD2Ev                                                                                                                                                                                                                  36            0
 .xt.prop._ZNSsC2EPKcRKSaIcE                                                                                                                                                                                                         36            0
 .xt.prop._ZNSs4_Rep20_S_empty_rep_storageE                                                                                                                                                                                          12            0
@@ -1395,17 +1389,19 @@ section                                                                         
 .xt.prop._ZTI6Server                                                                                                                                                                                                                12            0
 .xt.prop._ZTI10WiFiServer                                                                                                                                                                                                           12            0
 .xt.prop._ZTV10WiFiServer                                                                                                                                                                                                           12            0
+.xt.lit._ZNKSt8functionIFvjjEEclEjj                                                                                                                                                                                                  0            0
+.xt.prop._ZNKSt8functionIFvjjEEclEjj                                                                                                                                                                                                48            0
 .xt.prop._ZTI3UDP                                                                                                                                                                                                                   12            0
 .xt.prop._ZTI7WiFiUDP                                                                                                                                                                                                               12            0
 .xt.prop._ZTV7WiFiUDP                                                                                                                                                                                                               12            0
-.debug_info                                                                                                                                                                                                                   10849407            0
-.debug_abbrev                                                                                                                                                                                                                   727439            0
-.debug_aranges                                                                                                                                                                                                                   79032            0
-.debug_line                                                                                                                                                                                                                    3745767            0
-.debug_str                                                                                                                                                                                                                     1082290            0
-.debug_frame                                                                                                                                                                                                                    209972            0
-.debug_loc                                                                                                                                                                                                                     1853549            0
-.debug_ranges                                                                                                                                                                                                                   261496            0
-Total                                                                                                                                                                                                                         20858639
+.debug_info                                                                                                                                                                                                                   10611651            0
+.debug_abbrev                                                                                                                                                                                                                   717152            0
+.debug_aranges                                                                                                                                                                                                                   77304            0
+.debug_line                                                                                                                                                                                                                    3660309            0
+.debug_str                                                                                                                                                                                                                     1062851            0
+.debug_frame                                                                                                                                                                                                                    205016            0
+.debug_loc                                                                                                                                                                                                                     1815094            0
+.debug_ranges                                                                                                                                                                                                                   253016            0
+Total                                                                                                                                                                                                                         20448208
 
 
