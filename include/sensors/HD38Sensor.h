@@ -11,12 +11,13 @@
  *
  * Features:
  *   - LM393 comparator IC
- *   - Analog output: 0-5V (requires 2:1 divider for ESP32 3.3V ADC)
+ *   - Supply voltage: 3.3-12V
+ *   - Analog output: 0-Vin (requires 2:1 divider for ESP32 when used with 5V esp32 ADC only reads 3.3V)
  *   - Digital output: 0/5V with adjustable threshold via potentiometer
  *
  * Wiring (analog with voltage divider):
- *   Sensor AOUT -> Divider (10k+10k) -> ESP32 ADC pin
- *   Sensor VCC  -> 5V
+ *   Sensor AOUT -> ESP32 ADC pin
+ *   Sensor VCC  -> 3.3V
  *   Sensor GND  -> GND
  */
 class HD38Sensor : public IMoistureSensor {
