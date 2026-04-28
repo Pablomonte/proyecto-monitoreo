@@ -14,6 +14,8 @@
 #include "sensors/ISensor.h"
 #include "sensors/ISoilSensor.h"
 #include "sensors/ITemperatureSensor.h"
+#include "sensors/SensorCapacitive.h"
+#include "sensors/HD38Sensor.h"
 #include <Arduino.h>
 #include <HTTPClient.h>
 #include <SPIFFS.h>
@@ -108,6 +110,8 @@ void handleMediciones() {
     auto *humSensor = dynamic_cast<IHumiditySensor *>(s);
     auto *co2Sensor = dynamic_cast<ICO2Sensor *>(s);
     auto *moistSensor = dynamic_cast<IMoistureSensor *>(s);
+    auto *capSensor = dynamic_cast<SensorCapacitive *>(s);
+    auto *hd38Sensor = dynamic_cast<HD38Sensor *>(s);
     auto *presSensor = dynamic_cast<IPressureSensor *>(s);
     auto *soilSensor = dynamic_cast<ISoilSensor *>(s);
 
@@ -146,6 +150,24 @@ void handleMediciones() {
       r["unit"] = "%";
       r["status"] = "ok";
     }
+    if (capSensor) {
+      JsonObject diag = sensorObj["diagnostics"].to<JsonObject>();
+      diag["raw"] = capSensor->getRawValue();
+      diag["pin"] = capSensor->getPin();
+
+      JsonObject cal = sensorObj["calibration"].to<JsonObject>();
+      cal["dry"] = capSensor->getDryValue();
+      cal["wet"] = capSensor->getWetValue();
+    }
+    if (hd38Sensor) {
+      JsonObject diag = sensorObj["diagnostics"].to<JsonObject>();
+      diag["raw"] = hd38Sensor->getRawValue();
+      diag["pin"] = hd38Sensor->getPin();
+
+      JsonObject cal = sensorObj["calibration"].to<JsonObject>();
+      cal["dry"] = hd38Sensor->getDryValue();
+      cal["wet"] = hd38Sensor->getWetValue();
+    }
     if (presSensor) {
       JsonObject r = readings.add<JsonObject>();
       r["label"] = "Presión";
@@ -180,6 +202,9 @@ void handleMediciones() {
 
     auto *tempSensor = dynamic_cast<ITemperatureSensor *>(sensor);
     auto *humSensor = dynamic_cast<IHumiditySensor *>(sensor);
+    auto *moistSensor = dynamic_cast<IMoistureSensor *>(sensor);
+    auto *capSensor = dynamic_cast<SensorCapacitive *>(sensor);
+    auto *hd38Sensor = dynamic_cast<HD38Sensor *>(sensor);
     auto *co2Sensor = dynamic_cast<ICO2Sensor *>(sensor);
 
     if (tempSensor) {
@@ -196,12 +221,37 @@ void handleMediciones() {
       r["unit"] = "%";
       r["status"] = "ok";
     }
+    if (moistSensor) {
+      JsonObject r = readings.add<JsonObject>();
+      r["label"] = "Humedad";
+      r["value"] = String(moistSensor->getMoisture(), 1);
+      r["unit"] = "%";
+      r["status"] = "ok";
+    }
     if (co2Sensor) {
       JsonObject r = readings.add<JsonObject>();
       r["label"] = "CO2";
       r["value"] = String(co2Sensor->getCO2(), 0);
       r["unit"] = "ppm";
       r["status"] = "ok";
+    }
+    if (capSensor) {
+      JsonObject diag = sensorObj["diagnostics"].to<JsonObject>();
+      diag["raw"] = capSensor->getRawValue();
+      diag["pin"] = capSensor->getPin();
+
+      JsonObject cal = sensorObj["calibration"].to<JsonObject>();
+      cal["dry"] = capSensor->getDryValue();
+      cal["wet"] = capSensor->getWetValue();
+    }
+    if (hd38Sensor) {
+      JsonObject diag = sensorObj["diagnostics"].to<JsonObject>();
+      diag["raw"] = hd38Sensor->getRawValue();
+      diag["pin"] = hd38Sensor->getPin();
+
+      JsonObject cal = sensorObj["calibration"].to<JsonObject>();
+      cal["dry"] = hd38Sensor->getDryValue();
+      cal["wet"] = hd38Sensor->getWetValue();
     }
   }
 #endif

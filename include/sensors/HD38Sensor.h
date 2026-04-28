@@ -11,12 +11,13 @@
  *
  * Features:
  *   - LM393 comparator IC
- *   - Analog output: 0-5V (requires 2:1 divider for ESP32 3.3V ADC)
- *   - Digital output: 0/5V with adjustable threshold via potentiometer
+ *   - Supply voltage: 3.3-12V
+ *   - Analog output: 0-Vin (requires 2:1 divider for ESP32 when used with 5V esp32 ADC only reads 3.3V)
+ *   - Digital output: 0/3.3 V with adjustable threshold via potentiometer
  *
  * Wiring (analog with voltage divider):
- *   Sensor AOUT -> Divider (10k+10k) -> ESP32 ADC pin
- *   Sensor VCC  -> 5V
+ *   Sensor AOUT -> ESP32 ADC pin
+ *   Sensor VCC  -> 3.3V
  *   Sensor GND  -> GND
  */
 class HD38Sensor : public IMoistureSensor {
@@ -26,6 +27,7 @@ private:
     bool useVoltageDivider;
     bool invertLogic;
     float moisture;
+    int rawValue;
     bool digitalState;
     bool active;
     int dryValue;
@@ -43,6 +45,7 @@ public:
           useVoltageDivider(voltageDivider),
           invertLogic(invert),
           moisture(0),
+          rawValue(0),
           digitalState(false),
           active(false),
           dryValue(4095),
@@ -56,7 +59,8 @@ public:
 
         if (analogPin >= 0) {
             pinMode(analogPin, INPUT);
-            analogReadResolution(12);
+            analogReadResolution(12);              // 12-bit → 0-4095
+            analogSetAttenuation(ADC_ATTENDB_MAX); // full 0-3.3V range
         }
 
         if (digitalPin >= 0) {
@@ -82,7 +86,7 @@ public:
         if (!active) return false;
 
         if (analogPin >= 0) {
-            int rawValue = analogRead(analogPin);
+            rawValue = analogRead(analogPin);
 
             if (useVoltageDivider) {
                 rawValue = constrain(rawValue, 0, 3100);
@@ -106,6 +110,11 @@ public:
 
         return true;
     }
+
+    int getRawValue() const { return rawValue; }
+    int getDryValue() const { return dryValue; }
+    int getWetValue() const { return wetValue; }
+    int getPin()      const { return analogPin; }
 
     // IMoistureSensor
     float getMoisture() override { return moisture; }
@@ -136,13 +145,6 @@ public:
         dryValue = dry;
         wetValue = wet;
         DBG_INFO("[HD38] Cal: dry=%d wet=%d\n", dry, wet);
-    }
-
-    int getRawValue() {
-        if (analogPin >= 0) {
-            return analogRead(analogPin);
-        }
-        return -1;
     }
 };
 
