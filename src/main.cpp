@@ -170,6 +170,8 @@ void setup() {
     DBG_INFOLN("[OK] SPIFFS mounted");
   }
 
+  secrets.begin();
+
   createConfigFile();
 
   // Load configuration ONCE for all modules
@@ -270,6 +272,9 @@ void setup() {
   // Relay endpoints
   server.on("/api/relays", HTTP_GET, handleRelayList);
   server.on("/api/relay/toggle", HTTP_POST, handleRelayToggle);
+
+  server.on("/api/admin/info", HTTP_GET, handleApiAdminInfo);
+  server.on("/api/admin/password", HTTP_POST, handleApiAdminPassword);
 
   server.on("/style.css", HTTP_GET, handleStyle);
   server.on("/config.js", HTTP_GET, handleConfigJs);

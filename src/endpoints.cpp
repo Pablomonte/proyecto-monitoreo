@@ -75,6 +75,20 @@ void serveStaticFile(const char *path, const char *contentType) {
   server.send(404, "text/plain", "File not found");
 }
 
+// Basic Auth gate. Opt-in: returns true (authorized) when no admin password
+// is configured, so existing devices in the field keep working. Once the user
+// sets a password via /api/admin/password, every protected handler enforces it.
+bool requireAdminAuth() {
+  if (!secrets.hasAdminPassword()) {
+    return true;
+  }
+  if (server.authenticate("admin", secrets.getAdminPassword().c_str())) {
+    return true;
+  }
+  server.requestAuthentication();
+  return false;
+}
+
 void handleMediciones() {
   JsonDocument doc;
   JsonArray sensors = doc["sensors"].to<JsonArray>();
@@ -319,6 +333,7 @@ void handleConfiguracion() {
 }
 
 void habldePostConfig() {
+  if (!requireAdminAuth()) return;
   DBG_INFO("Updating config...\n");
 
   if (!server.hasArg("plain")) {
@@ -339,6 +354,17 @@ void habldePostConfig() {
   const char *new_ssid = doc["ssid"];
   const char *new_password = doc["passwd"];
 
+  // Validate WiFi password length (WPA2: 8-63 chars). Empty is allowed for
+  // open networks or to keep the previously stored value untouched.
+  if (new_password) {
+    size_t plen = strlen(new_password);
+    if (plen > 0 && (plen < 8 || plen > 63)) {
+      server.send(400, "text/plain",
+                  "wifi password must be 8-63 characters (WPA2) or empty");
+      return;
+    }
+  }
+
   if (new_ssid && strlen(new_ssid) > 0 && strcmp(new_ssid, "ToChange") != 0) {
     wifiManager.onChange(String(new_ssid), String(new_password));
     DBG_INFO("WiFi updated: %s\n", new_ssid);
@@ -356,6 +382,7 @@ void habldePostConfig() {
 }
 
 void handleSCD30Calibration() {
+  if (!requireAdminAuth()) return;
   DBG_VERBOSE("Calibration called: %s\n",
               sensor ? sensor->getSensorType() : "NULL");
 
@@ -400,12 +427,14 @@ void handleSCD30Calibration() {
 }
 
 void handleRestart() {
+  if (!requireAdminAuth()) return;
   server.send(200, "text/plain", "Restarting ESP32...");
   delay(1000);
   ESP.restart();
 }
 
 void handleConfigReset() {
+  if (!requireAdminAuth()) return;
   DBG_INFO("Resetting config...\n");
 
   if (SPIFFS.exists(CONFIG_FILE_PATH)) {
@@ -479,6 +508,7 @@ void handleRelayList() {
 }
 
 void handleRelayToggle() {
+  if (!requireAdminAuth()) return;
   if (!server.hasArg("addr") || !server.hasArg("ch")) {
     server.send(400, "text/plain", "Missing addr or ch param");
     return;
@@ -499,4 +529,76 @@ void handleRelayToggle() {
   }
 
   server.send(404, "text/plain", "Relay not found");
+}
+
+// GET /api/admin/info -> { "configured": bool }
+// Used by the UI to decide whether to show the "current password" input.
+// Public (no auth) so the unconfigured first-boot case can read it.
+void handleApiAdminInfo() {
+  JsonDocument doc;
+  doc["configured"] = secrets.hasAdminPassword();
+  String output;
+  serializeJson(doc, output);
+  server.send(200, "application/json", output);
+}
+
+// POST /api/admin/password
+// Body: { "current": "...", "new": "..." }
+// Rules:
+//   - new length in [8, 64]
+//   - new must differ from current stored value
+//   - if a password is already configured, `current` must match it
+//   - if not configured (default state), allow first-set without `current`
+void handleApiAdminPassword() {
+  if (!requireAdminAuth()) return;
+
+  if (server.method() != HTTP_POST) {
+    server.send(405, "text/plain", "Method not allowed");
+    return;
+  }
+
+  if (!server.hasArg("plain")) {
+    server.send(400, "text/plain", "No body");
+    return;
+  }
+
+  JsonDocument body;
+  DeserializationError err = deserializeJson(body, server.arg("plain"));
+  if (err) {
+    server.send(400, "text/plain", String("JSON error: ") + err.c_str());
+    return;
+  }
+
+  String current = body["current"] | "";
+  String next = body["new"] | "";
+
+  if (next.length() < 8) {
+    server.send(400, "text/plain",
+                "new password must be at least 8 characters");
+    return;
+  }
+  if (next.length() > 64) {
+    server.send(400, "text/plain",
+                "new password must be 64 characters or fewer");
+    return;
+  }
+
+  if (secrets.hasAdminPassword()) {
+    if (current != secrets.getAdminPassword()) {
+      server.send(401, "text/plain", "current password mismatch");
+      return;
+    }
+  }
+
+  if (next == secrets.getAdminPassword()) {
+    server.send(400, "text/plain", "new password must differ from current");
+    return;
+  }
+
+  if (!secrets.setAdminPassword(next)) {
+    server.send(500, "text/plain", "Failed to persist new password");
+    return;
+  }
+
+  server.send(200, "text/plain", "Admin password updated");
 }

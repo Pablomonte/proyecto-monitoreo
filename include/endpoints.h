@@ -15,6 +15,8 @@ void handleHome();
 void handleStyle();
 void handleConfigJs();
 void handleFavicon();
+void handleApiAdminInfo();
+void handleApiAdminPassword();
 
 #ifdef ENABLE_ESPNOW
 void handleESPNowStatus();
