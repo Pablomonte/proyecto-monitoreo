@@ -26,7 +26,7 @@ public:
     bool init() override {
         pinMode(pin, INPUT);
         analogReadResolution(12);              // 12-bit → 0-4095
-        analogSetAttenuation(ADC_ATTEN_DB_12); // full 0-3.3V range
+        analogSetAttenuation(ADC_ATTENDB_MAX); // full 0-3.3V range
         active = true;
         DBG_INFO("[Capacitive] pin %d, 12-bit, 3.3V range OK\n", pin);
         return true;
