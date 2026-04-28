@@ -14,7 +14,7 @@
  *   - LM393 comparator IC
  *   - Supply voltage: 3.3-12V
  *   - Analog output: 0-Vin (requires 2:1 divider for ESP32 when used with 5V esp32 ADC only reads 3.3V)
- *   - Digital output: 0/5V with adjustable threshold via potentiometer
+ *   - Digital output: 0/3.3 V with adjustable threshold via potentiometer
  *
  * Wiring (analog with voltage divider):
  *   Sensor AOUT -> ESP32 ADC pin
@@ -51,7 +51,7 @@ public:
         if (analogPin >= 0) {
             pinMode(analogPin, INPUT);
             analogReadResolution(12);              // 12-bit → 0-4095
-            analogSetAttenuation(ADC_ATTEN_DB_12); // full 0-3.3V range
+            analogSetAttenuation(ADC_ATTENDB_MAX); // full 0-3.3V range
         }
 
         if (digitalPin >= 0) {
