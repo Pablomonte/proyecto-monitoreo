@@ -2,23 +2,28 @@
 #define RELAY_MODULE_2CH_H
 
 #include "../ModbusManager.h"
+#include "../core/IActuator.h"
 #include "../debug.h"
 #include <Arduino.h>
 
 /**
  * 2-Channel RS485 Modbus Relay Module
- * 
+ *
+ * Implements IActuator.
+ * actuatorId encoding: bits[7:4] = Modbus address, bits[3:0] = channel (0 or 1).
+ * Use RelayModule2CH::makeActuatorId(addr, ch) to build the ID.
+ *
  * Features:
  * - 2 Relays (NO/NC)
  * - 1 Digital Input (IN1)
  * - Modbus RTU (9600 8N1 default)
- * 
+ *
  * Addressing (Standard):
  * - Relay 0: Coil 0 (0x0000)
  * - Relay 1: Coil 1 (0x0001)
  * - Input 1: Discrete Input 0 (0x0000)
  */
-class RelayModule2CH {
+class RelayModule2CH : public IActuator {
 private:
     uint8_t _address;
     String _alias;
@@ -41,14 +46,51 @@ private:
         return true;
     }
 
+    /** Build actuatorId: high nibble = Modbus address, low nibble = channel */
+    static uint8_t makeActuatorId(uint8_t modbusAddr, uint8_t channel) {
+        return (uint8_t)((modbusAddr << 4) | (channel & 0x0F));
+    }
+
 public:
-    RelayModule2CH(uint8_t address = 1, String alias = "") 
+    RelayModule2CH(uint8_t address = 1, String alias = "")
         : _address(address), _alias(alias), _active(false), _failureCount(0), _inactiveCheckCount(0) {
         _relayState[0] = false;
         _relayState[1] = false;
         _inputState[0] = false;
         _inputState[1] = false;
     }
+
+    // ── IActuator ────────────────────────────────────────────────────────────
+    /** actuatorId = (address<<4) | 0  (channel 0 by default) */
+    uint8_t getId() const override { return makeActuatorId(_address, 0); }
+
+    const char* getName() const override {
+        static char buf[24];
+        if (_alias.length() > 0) {
+            snprintf(buf, sizeof(buf), "%s", _alias.c_str());
+        } else {
+            snprintf(buf, sizeof(buf), "relay_mod_%d", _address);
+        }
+        return buf;
+    }
+
+    /** begin() → calls init() and returns result */
+    bool begin() override { return init(); }
+
+    /**
+     * execute() → routes to the correct relay channel.
+     * Channel is decoded from the low nibble of cmd.actuatorId.
+     * If actuatorId matches this module's base ID, channel 0 is used.
+     */
+    void execute(const ActuatorCommand& cmd) override {
+        uint8_t ch = cmd.actuatorId & 0x0F;  // low nibble = channel
+        if (ch > 1) ch = 0;                  // clamp to valid range
+        setRelay(ch, cmd.state);
+        // auto-off is managed by ControlMediator via tick()
+    }
+
+    /** Returns state of channel 0 (primary channel). */
+    bool getState() const override { return _relayState[0]; }
 
     void setAlias(String alias) { _alias = alias; }
     String getAlias() const { return _alias; }

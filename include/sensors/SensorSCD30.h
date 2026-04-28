@@ -5,10 +5,11 @@
 #include "ITemperatureSensor.h"
 #include "IHumiditySensor.h"
 #include "ICO2Sensor.h"
+#include "SensorBase.h"
 #include <Adafruit_SCD30.h>
 #include "../debug.h"
 
-class SensorSCD30 : public ITemperatureSensor, public IHumiditySensor, public ICO2Sensor {
+class SensorSCD30 : public SensorBase, public ITemperatureSensor, public IHumiditySensor, public ICO2Sensor {
 private:
     Adafruit_SCD30 scd30;
     bool active;
@@ -76,6 +77,18 @@ public:
     }
 
     bool isActive() override { return active; }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+    SensorKey   getKey()         const override { return SensorBase::getKey(); }
+    void        setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
+    /** Primary value: CO2 (ppm). Temperature and humidity share same sensorId. */
+    bool readValue(SensorReading& out) override {
+        if (!active) return false;
+        out.key         = SensorBase::getKey();
+        out.value       = co2;
+        out.timestampMs = millis();
+        return true;
+    }
 };
 
 #endif // SENSOR_SCD30_H

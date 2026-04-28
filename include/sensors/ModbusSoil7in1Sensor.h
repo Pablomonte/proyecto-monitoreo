@@ -5,6 +5,7 @@
 #include "ITemperatureSensor.h"
 #include "IMoistureSensor.h"
 #include "ISoilSensor.h"
+#include "SensorBase.h"
 #include "../debug.h"
 
 /**
@@ -21,7 +22,8 @@
  *   - 5 (0x05): Phosphorus P (int16, direct in mg/kg)
  *   - 6 (0x06): Potassium K (int16, direct in mg/kg)
  */
-class ModbusSoil7in1Sensor : public ModbusSensorBase<7>,
+class ModbusSoil7in1Sensor : public SensorBase,
+                              public ModbusSensorBase<7>,
                               public ITemperatureSensor,
                               public IMoistureSensor,
                               public ISoilSensor {
@@ -106,6 +108,17 @@ public:
                  "temp=%.1f,moisture=%.1f,ec=%.0f,ph=%.1f,nitrogen=%d,phosphorus=%d,potassium=%d",
                  temperature, moisture, ec, ph, nitrogen, phosphorus, potassium);
         return measString;
+    }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+    SensorKey getKey()          const override { return SensorBase::getKey(); }
+    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
+    /** Primary value: soil moisture (%). */
+    bool readValue(SensorReading& out) override {
+        out.key         = SensorBase::getKey();
+        out.value       = moisture;
+        out.timestampMs = millis();
+        return true;
     }
 };
 

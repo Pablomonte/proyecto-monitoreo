@@ -5,10 +5,11 @@
 #include "ITemperatureSensor.h"
 #include "IHumiditySensor.h"
 #include "IPressureSensor.h"
+#include "SensorBase.h"
 #include <Adafruit_BME280.h>
 #include "../debug.h"
 
-class SensorBME280 : public ITemperatureSensor, public IHumiditySensor, public IPressureSensor {
+class SensorBME280 : public SensorBase, public ITemperatureSensor, public IHumiditySensor, public IPressureSensor {
 private:
     Adafruit_BME280 bme;
     bool active;
@@ -81,6 +82,18 @@ public:
     }
 
     bool isActive() override { return active; }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+    SensorKey getKey()          const override { return SensorBase::getKey(); }
+    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
+    /** Primary value: temperature (°C). */
+    bool readValue(SensorReading& out) override {
+        if (!active) return false;
+        out.key         = SensorBase::getKey();
+        out.value       = temperature;
+        out.timestampMs = millis();
+        return true;
+    }
 };
 
 #endif // SENSOR_BME280_H

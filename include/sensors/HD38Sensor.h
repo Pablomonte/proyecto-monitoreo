@@ -3,6 +3,7 @@
 
 #include "ISensor.h"
 #include "IMoistureSensor.h"
+#include "SensorBase.h"
 #include <Arduino.h>
 #include "../debug.h"
 
@@ -19,7 +20,7 @@
  *   Sensor VCC  -> 5V
  *   Sensor GND  -> GND
  */
-class HD38Sensor : public IMoistureSensor {
+class HD38Sensor : public SensorBase, public IMoistureSensor {
 private:
     int analogPin;
     int digitalPin;
@@ -143,6 +144,17 @@ public:
             return analogRead(analogPin);
         }
         return -1;
+    }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+    SensorKey getKey()          const override { return SensorBase::getKey(); }
+    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
+    bool readValue(SensorReading& out) override {
+        if (!active) return false;
+        out.key         = SensorBase::getKey();
+        out.value       = moisture;
+        out.timestampMs = millis();
+        return true;
     }
 };
 

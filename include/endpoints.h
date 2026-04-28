@@ -16,6 +16,14 @@ void handleStyle();
 void handleConfigJs();
 void handleFavicon();
 
+// Mediator / actuator endpoints
+void handleActuatorCommand();   // POST /actuator/command
+void handleActuatorStatus();    // GET  /actuator/status
+void handleRulesReload();       // POST /rules/reload
+void handleRulesGet();          // GET  /rules
+void handleRulesSave();         // POST /rules/save
+void handleRulesEditor();       // GET  /rules-editor
+
 #ifdef ENABLE_ESPNOW
 void handleESPNowStatus();
 #endif

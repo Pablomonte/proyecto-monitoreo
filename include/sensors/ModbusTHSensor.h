@@ -4,6 +4,7 @@
 #include "ModbusSensorBase.h"
 #include "ITemperatureSensor.h"
 #include "IHumiditySensor.h"
+#include "SensorBase.h"
 #include "../debug.h"
 
 /**
@@ -14,7 +15,7 @@
  *   - 0 (0x00): Humidity (int16 * 10, e.g., 399 = 39.9% RH)
  *   - 1 (0x01): Temperature (int16 * 10, e.g., 282 = 28.2°C)
  */
-class ModbusTHSensor : public ModbusSensorBase<2>, public ITemperatureSensor, public IHumiditySensor {
+class ModbusTHSensor : public SensorBase, public ModbusSensorBase<2>, public ITemperatureSensor, public IHumiditySensor {
 private:
     float temperature = 999;
     float humidity = 999;
@@ -66,6 +67,17 @@ public:
         static char measString[32];
         snprintf(measString, sizeof(measString), "temp=%.1f,hum=%.1f", temperature, humidity);
         return measString;
+    }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+    SensorKey getKey()          const override { return SensorBase::getKey(); }
+    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
+    /** Primary value: temperature (°C). */
+    bool readValue(SensorReading& out) override {
+        out.key         = SensorBase::getKey();
+        out.value       = temperature;
+        out.timestampMs = millis();
+        return (temperature < 900.0f);  // 999 = invalid sentinel
     }
 };
 

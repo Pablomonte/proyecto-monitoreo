@@ -3,6 +3,7 @@
 
 #include "ISensor.h"
 #include "IMoistureSensor.h"
+#include "SensorBase.h"
 #include <Arduino.h>
 #include "../debug.h"
 
@@ -10,7 +11,7 @@
 #define ADC_MAX 4095
 #define ADC_MIN 0
 
-class SensorCapacitive : public IMoistureSensor {
+class SensorCapacitive : public SensorBase, public IMoistureSensor {
 private:
     int pin;
     float moisture;
@@ -67,6 +68,17 @@ public:
         dryValue = dry;
         wetValue = wet;
         DBG_INFO("[Capacitive] Cal: dry=%d wet=%d\n", dry, wet);
+    }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+    SensorKey getKey()          const override { return SensorBase::getKey(); }
+    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
+    bool readValue(SensorReading& out) override {
+        if (!active) return false;
+        out.key         = SensorBase::getKey();
+        out.value       = moisture;
+        out.timestampMs = millis();
+        return true;
     }
 };
 

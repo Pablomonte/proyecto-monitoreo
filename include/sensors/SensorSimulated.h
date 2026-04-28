@@ -5,10 +5,11 @@
 #include "ITemperatureSensor.h"
 #include "IHumiditySensor.h"
 #include "ICO2Sensor.h"
+#include "SensorBase.h"
 #include <Arduino.h>
 #include "../debug.h"
 
-class SensorSimulated : public ITemperatureSensor, public IHumiditySensor, public ICO2Sensor {
+class SensorSimulated : public SensorBase, public ITemperatureSensor, public IHumiditySensor, public ICO2Sensor {
 private:
     bool active;
     float temperature;
@@ -58,6 +59,17 @@ public:
     }
 
     bool isActive() override { return active; }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+    SensorKey getKey()          const override { return SensorBase::getKey(); }
+    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
+    bool readValue(SensorReading& out) override {
+        if (!active) return false;
+        out.key         = SensorBase::getKey();
+        out.value       = temperature;
+        out.timestampMs = millis();
+        return true;
+    }
 };
 
 #endif // SENSOR_SIMULATED_H

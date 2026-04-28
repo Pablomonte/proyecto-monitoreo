@@ -3,11 +3,12 @@
 
 #include "ISensor.h"
 #include "ITemperatureSensor.h"
+#include "SensorBase.h"
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include "../debug.h"
 
-class SensorOneWire : public ITemperatureSensor {
+class SensorOneWire : public SensorBase, public ITemperatureSensor {
 private:
     DallasTemperature* dallas;
     DeviceAddress address;
@@ -77,6 +78,17 @@ public:
     }
 
     bool isActive() override { return active; }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+    SensorKey getKey()          const override { return SensorBase::getKey(); }
+    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
+    bool readValue(SensorReading& out) override {
+        if (!active) return false;
+        out.key         = SensorBase::getKey();
+        out.value       = temperature;
+        out.timestampMs = millis();
+        return true;
+    }
 };
 
 #endif // SENSOR_ONEWIRE_H

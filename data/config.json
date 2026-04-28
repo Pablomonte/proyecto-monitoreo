@@ -14,6 +14,8 @@
   "hash": "F024F90C7F98",
   "incubator_name": "moni-F024F90C7F98",
   "modbus_delay_ms": 50,
+  "send_interval_ms": 10000,
+  "read_interval_ms": 3000,
   "sensors": [
     {
       "type": "scd30",

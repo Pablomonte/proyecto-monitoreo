@@ -500,3 +500,138 @@ void handleRelayToggle() {
 
   server.send(404, "text/plain", "Relay not found");
 }
+
+// ── Mediator / Rules endpoints ────────────────────────────────────────────────
+
+#include "core/ControlMediator.h"
+#include "core/RuleLoader.h"
+#include "rules_html.h"
+
+extern ControlMediator mediator;
+
+/**
+ * POST /actuator/command
+ * Body: { "id": <uint>, "state": <bool>, "duration": <ms>, "priority": <1-3> }
+ * Sends a manual command to the mediator.
+ */
+void handleActuatorCommand() {
+  if (!server.hasArg("plain")) {
+    server.send(400, "text/plain", "Body required");
+    return;
+  }
+
+  JsonDocument doc;
+  if (deserializeJson(doc, server.arg("plain"))) {
+    server.send(400, "text/plain", "Invalid JSON");
+    return;
+  }
+
+  ActuatorCommand cmd;
+  cmd.actuatorId = doc["id"]       | (uint8_t)0;
+  cmd.state      = doc["state"]    | false;
+  cmd.durationMs = doc["duration"] | (uint32_t)0;
+  cmd.priority   = doc["priority"] | (uint8_t)3;   // default: manual
+
+  mediator.onManualCommand(cmd);
+
+  server.send(200, "application/json",
+              "{\"ok\":true,\"id\":" + String(cmd.actuatorId) +
+              ",\"state\":" + (cmd.state ? "true" : "false") + "}");
+}
+
+/**
+ * GET /actuator/status
+ * Returns JSON array of registered actuator states.
+ */
+void handleActuatorStatus() {
+  JsonDocument doc;
+  JsonArray arr = doc.to<JsonArray>();
+
+  for (uint8_t i = 0; i < mediator.getActuatorCount(); i++) {
+    IActuator* a = mediator.getActuator(i);
+    if (!a) continue;
+    JsonObject o = arr.add<JsonObject>();
+    o["id"]    = a->getId();
+    o["name"]  = a->getName();
+    o["state"] = a->getState();
+  }
+
+  String out;
+  serializeJson(doc, out);
+  server.send(200, "application/json", out);
+}
+
+/**
+ * POST /rules/reload
+ * Re-reads /rules.json from SPIFFS and reloads mediator rules.
+ */
+void handleRulesReload() {
+  int n = RuleLoader::load(mediator, true);
+  if (n < 0) {
+    server.send(500, "application/json", "{\"ok\":false,\"error\":\"Cannot open rules.json\"}");
+    return;
+  }
+  server.send(200, "application/json",
+              "{\"ok\":true,\"rules_loaded\":" + String(n) + "}");
+}
+
+/**
+ * GET /rules
+ * Returns raw content of /rules.json from SPIFFS.
+ */
+void handleRulesGet() {
+  if (!SPIFFS.exists("/rules.json")) {
+    server.send(200, "application/json", "{\"rules\":[]}");
+    return;
+  }
+  File f = SPIFFS.open("/rules.json", "r");
+  if (!f) {
+    server.send(500, "application/json", "{\"error\":\"Cannot open file\"}");
+    return;
+  }
+  server.streamFile(f, "application/json");
+  f.close();
+}
+
+/**
+ * POST /rules/save
+ * Receives full rules JSON, writes to /rules.json, reloads mediator.
+ */
+void handleRulesSave() {
+  if (!server.hasArg("plain")) {
+    server.send(400, "text/plain", "Body required");
+    return;
+  }
+
+  // Validate JSON
+  const String& body = server.arg("plain");
+  JsonDocument doc;
+  if (deserializeJson(doc, body)) {
+    server.send(400, "text/plain", "Invalid JSON");
+    return;
+  }
+
+  // Write to SPIFFS
+  File f = SPIFFS.open("/rules.json", "w");
+  if (!f) {
+    server.send(500, "text/plain", "Cannot write file");
+    return;
+  }
+  f.print(body);
+  f.close();
+
+  // Reload mediator
+  int n = RuleLoader::load(mediator, true);
+  DBG_INFO("[Rules] Saved & reloaded: %d rules\n", n);
+
+  server.send(200, "application/json",
+              "{\"ok\":true,\"rules_loaded\":" + String(n) + "}");
+}
+
+/**
+ * GET /rules-editor
+ * Serves the rules editor SPA.
+ */
+void handleRulesEditor() {
+  server.send(200, "text/html", rules_html);
+}
