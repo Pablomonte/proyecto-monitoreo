@@ -315,6 +315,39 @@ input[type="checkbox"] {
     margin-top: 3px;
 }
 
+.pwd-wrap {
+    position: relative;
+}
+
+.pwd-wrap input {
+    padding-right: 60px;
+}
+
+.pwd-toggle {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 1px solid var(--gray-medium);
+    color: var(--gray-dark);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.pwd-toggle:hover {
+    border-color: var(--altermundi-green);
+    color: var(--altermundi-green);
+}
+
+.hidden {
+    display: none !important;
+}
+
 .inline-group {
     display: flex;
     gap: 10px;
@@ -745,8 +778,11 @@ const char *config_html = R"=====(<!DOCTYPE html>
                 </div>
                 <div class="form-group">
                     <label for="passwd">Contraseña</label>
-                    <input type="text" id="passwd" name="passwd">
-                    <div class="info-text">Dejar vacío para mantener contraseña actual</div>
+                    <div class="pwd-wrap">
+                        <input type="password" id="passwd" name="passwd" minlength="8" maxlength="63">
+                        <button type="button" class="pwd-toggle" data-target="passwd" aria-label="Mostrar contraseña">Ver</button>
+                    </div>
+                    <div class="info-text">8-63 caracteres (WPA2). Dejar vacío para mantener contraseña actual.</div>
                 </div>
                 <div class="form-group">
                     <label>Canal WiFi Actual</label>
@@ -911,6 +947,42 @@ const char *config_html = R"=====(<!DOCTYPE html>
             <button type="button" class="btn btn-secondary"
                 onclick="if(confirm('¿Reiniciar ESP32?')) restartDevice()">Reiniciar Dispositivo</button>
         </form>
+
+        <!-- Admin password change (out of the main form to avoid sending it with the rest of the config) -->
+        <form id="adminPwdForm" autocomplete="off" style="margin-top: 20px;">
+            <div class="section">
+                <h2>Acceso admin</h2>
+                <div class="info-text" style="margin-bottom: 10px;">
+                    Cambiar la contraseña usada por el panel y la API (Basic Auth).
+                    Si nunca configuraste una, los endpoints sensibles aceptan acceso libre
+                    hasta que la fijes desde aquí.
+                </div>
+                <div class="form-group" id="currentAdminPassRow">
+                    <label for="currentAdminPass">Contraseña actual</label>
+                    <div class="pwd-wrap">
+                        <input type="password" id="currentAdminPass" autocomplete="current-password" minlength="8" maxlength="64">
+                        <button type="button" class="pwd-toggle" data-target="currentAdminPass" aria-label="Mostrar contraseña">Ver</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newAdminPass">Nueva contraseña</label>
+                    <div class="pwd-wrap">
+                        <input type="password" id="newAdminPass" autocomplete="new-password" minlength="8" maxlength="64" required>
+                        <button type="button" class="pwd-toggle" data-target="newAdminPass" aria-label="Mostrar contraseña">Ver</button>
+                    </div>
+                    <div class="info-text">8 a 64 caracteres.</div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmAdminPass">Confirmar nueva contraseña</label>
+                    <div class="pwd-wrap">
+                        <input type="password" id="confirmAdminPass" autocomplete="new-password" minlength="8" maxlength="64" required>
+                        <button type="button" class="pwd-toggle" data-target="confirmAdminPass" aria-label="Mostrar contraseña">Ver</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn">Cambiar contraseña</button>
+                <div class="message" id="adminPwdMessage"></div>
+            </div>
+        </form>
     </div>
 
     <!-- We can move the large JS logic to a separate file, but for now inline to match previous structure, 
@@ -945,7 +1017,96 @@ const DEFAULT_RELAY_TEMPLATE = {
 };
 
 // Load configuration on page load
-window.addEventListener('DOMContentLoaded', loadConfig);
+window.addEventListener('DOMContentLoaded', () => {
+    loadConfig();
+    initPasswordToggles();
+    initAdminPasswordForm();
+    refreshAdminPasswordState();
+});
+
+function initPasswordToggles() {
+    document.querySelectorAll('.pwd-toggle').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const target = document.getElementById(btn.dataset.target);
+            if (!target) return;
+            if (target.type === 'password') {
+                target.type = 'text';
+                btn.textContent = 'Ocultar';
+            } else {
+                target.type = 'password';
+                btn.textContent = 'Ver';
+            }
+        });
+    });
+}
+
+async function refreshAdminPasswordState() {
+    try {
+        const r = await fetch('/api/admin/info', { cache: 'no-store' });
+        if (!r.ok) return;
+        const data = await r.json();
+        const row = document.getElementById('currentAdminPassRow');
+        const input = document.getElementById('currentAdminPass');
+        if (!row || !input) return;
+        if (data.configured) {
+            row.classList.remove('hidden');
+            input.required = true;
+        } else {
+            row.classList.add('hidden');
+            input.required = false;
+            input.value = '';
+        }
+    } catch (e) {
+        // Silent: leave UI as default (current visible).
+    }
+}
+
+function showAdminPwdMessage(text, type) {
+    const el = document.getElementById('adminPwdMessage');
+    if (!el) return;
+    el.className = 'message ' + type;
+    el.textContent = text;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 6000);
+}
+
+function initAdminPasswordForm() {
+    const form = document.getElementById('adminPwdForm');
+    if (!form) return;
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const next = document.getElementById('newAdminPass').value;
+        const confirm = document.getElementById('confirmAdminPass').value;
+        if (next.length < 8 || next.length > 64) {
+            showAdminPwdMessage('La nueva contraseña debe tener entre 8 y 64 caracteres.', 'error');
+            return;
+        }
+        if (next !== confirm) {
+            showAdminPwdMessage('La confirmación no coincide.', 'error');
+            return;
+        }
+        const payload = {
+            current: document.getElementById('currentAdminPass').value,
+            new: next
+        };
+        showAdminPwdMessage('Actualizando contraseña admin...', 'info');
+        try {
+            const r = await fetch('/api/admin/password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const text = await r.text();
+            if (!r.ok) throw new Error(text || 'No se pudo cambiar la contraseña.');
+            showAdminPwdMessage(text + ' En el próximo acceso el navegador pedirá la nueva.', 'success');
+            form.reset();
+            document.querySelectorAll('.pwd-toggle').forEach(b => { b.textContent = 'Ver'; });
+            refreshAdminPasswordState();
+        } catch (err) {
+            showAdminPwdMessage(err.message || 'No se pudo cambiar la contraseña.', 'error');
+        }
+    });
+}
 
 function showMessage(msg, type) {
     const el = document.getElementById('message');
