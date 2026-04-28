@@ -8,3 +8,4 @@ ISensor* sensor = nullptr;
 WiFiManager wifiManager;
 WiFiClientSecure clientSecure;
 WiFiClient client;
+SecretManager secrets;
