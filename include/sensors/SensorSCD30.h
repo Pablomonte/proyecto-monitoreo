@@ -10,15 +10,10 @@
 #include "../debug.h"
 
 class SensorSCD30 : public SensorBase, public ITemperatureSensor, public IHumiditySensor, public ICO2Sensor {
-private:
-    Adafruit_SCD30 scd30;
-    bool active;
-    float temperature;
-    float humidity;
-    float co2;
-
+    // sensorId = 0x61 = SCD30 default I2C address (stable)
+    // deviceId = last byte of EFuse MAC (set by SensorBase)
 public:
-    SensorSCD30() : active(false), temperature(999), humidity(100), co2(999999) {}
+    SensorSCD30() : SensorBase(0x61), active(false), temperature(999), humidity(100), co2(999999) {}
 
     bool init() override {
         active = scd30.begin();
@@ -78,16 +73,19 @@ public:
 
     bool isActive() override { return active; }
 
+private:
+    Adafruit_SCD30 scd30;
+    bool active;
+    float temperature;
+    float humidity;
+    float co2;
+
     // ── Mediator interface ────────────────────────────────────────────────
-    SensorKey   getKey()         const override { return SensorBase::getKey(); }
-    void        setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
-    /** Primary value: CO2 (ppm). Temperature and humidity share same sensorId. */
+public:
+    SensorKey getKey() const override { return SensorBase::getKey(); }
     bool readValue(SensorReading& out) override {
         if (!active) return false;
-        out.key         = SensorBase::getKey();
-        out.value       = co2;
-        out.timestampMs = millis();
-        return true;
+        return _fillReading(out, co2);   // primary: CO2 ppm
     }
 };
 

@@ -40,10 +40,9 @@ protected:
 
 public:
     ModbusTHSensor(uint8_t address = 1)
-        : ModbusSensorBase<2>(address),
-          temperature(999),
-          humidity(99) {
-    }
+        : SensorBase(address),         // Modbus address = stable sensorId
+          ModbusSensorBase<2>(address),
+          temperature(999), humidity(99) {}
 
     // ITemperatureSensor
     float getTemperature() override { return temperature; }
@@ -70,14 +69,9 @@ public:
     }
 
     // ── Mediator interface ────────────────────────────────────────────────
-    SensorKey getKey()          const override { return SensorBase::getKey(); }
-    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
-    /** Primary value: temperature (°C). */
+    SensorKey getKey() const override { return SensorBase::getKey(); }
     bool readValue(SensorReading& out) override {
-        out.key         = SensorBase::getKey();
-        out.value       = temperature;
-        out.timestampMs = millis();
-        return (temperature < 900.0f);  // 999 = invalid sentinel
+        return _fillReading(out, temperature);  // 999 = invalid sentinel checked by caller
     }
 };
 

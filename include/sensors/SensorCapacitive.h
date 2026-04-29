@@ -21,7 +21,8 @@ private:
 
 public:
     SensorCapacitive(int adcPin = CAPACITIVE_PIN, int dry = ADC_MAX, int wet = ADC_MIN)
-        : pin(adcPin), moisture(0), active(false), dryValue(dry), wetValue(wet) {}
+        : SensorBase((uint8_t)adcPin),   // pin number = stable sensorId
+          pin(adcPin), moisture(0), active(false), dryValue(dry), wetValue(wet) {}
 
     bool init() override {
         pinMode(pin, INPUT);
@@ -71,14 +72,10 @@ public:
     }
 
     // ── Mediator interface ────────────────────────────────────────────────
-    SensorKey getKey()          const override { return SensorBase::getKey(); }
-    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
+    SensorKey getKey() const override { return SensorBase::getKey(); }
     bool readValue(SensorReading& out) override {
         if (!active) return false;
-        out.key         = SensorBase::getKey();
-        out.value       = moisture;
-        out.timestampMs = millis();
-        return true;
+        return _fillReading(out, moisture);
     }
 };
 

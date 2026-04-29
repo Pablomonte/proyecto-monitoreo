@@ -127,22 +127,21 @@ void onMeshDataReceived(const uint8_t *senderMAC, float temp, float hum,
 
   meshBufferHead = nextHead;
 
-  // Feed mediator (runs in main loop context via buffer, but we build
-  // the SensorReadings here since MAC is available)
-  // nodeId = last byte of sender MAC
+  // Feed mediator — use packet sequence as monotonic counter per remote sensor.
+  // nodeId = last byte of sender MAC (unique per board, matches SensorBase logic).
+  // sensorIds 0/1/2 are conventional for temp/hum/co2 on remote nodes.
   uint8_t nodeId = senderMAC[5];
-  uint32_t ts = millis();
 
   if (temp > -200.0f) {
-    SensorReading r; r.key = {nodeId, 0}; r.value = temp; r.timestampMs = ts;
+    SensorReading r; r.key = {nodeId, 0}; r.value = temp; r.counter = seq;
     mediator.onSensorReading(r);
   }
   if (hum > -200.0f) {
-    SensorReading r; r.key = {nodeId, 1}; r.value = hum;  r.timestampMs = ts;
+    SensorReading r; r.key = {nodeId, 1}; r.value = hum;  r.counter = seq;
     mediator.onSensorReading(r);
   }
   if (co2 > -200.0f) {
-    SensorReading r; r.key = {nodeId, 2}; r.value = co2;  r.timestampMs = ts;
+    SensorReading r; r.key = {nodeId, 2}; r.value = co2;  r.counter = seq;
     mediator.onSensorReading(r);
   }
 }

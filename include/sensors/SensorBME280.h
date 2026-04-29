@@ -19,16 +19,21 @@ private:
     uint8_t address = 0x76;
 
 public:
-    SensorBME280() : active(false), temperature(999), humidity(100), pressure(0) {}
+    SensorBME280() : SensorBase(0x76), active(false), temperature(999), humidity(100), pressure(0) {}
 
     bool init() override {
-        // Try I2C address 0x76 (default) or 0x77 (alternate)
-        active = bme.begin(0x76) || (bme.begin(0x77) && ((address = 0x77) || true));
-
+        active = bme.begin(0x76);
+        if (!active) {
+            active = bme.begin(0x77);
+            if (active) {
+                address = 0x77;
+                _key.sensorId = 0x77;  // update stable ID to actual I2C addr
+            }
+        }
         if (!active) {
             DBG_ERROR("[BME280] Init failed\n");
         } else {
-            DBG_INFO("[BME280] OK\n");
+            DBG_INFO("[BME280] OK addr=0x%02X\n", address);
             bme.setSampling(Adafruit_BME280::MODE_NORMAL,
                           Adafruit_BME280::SAMPLING_X2,
                           Adafruit_BME280::SAMPLING_X16,
@@ -84,15 +89,10 @@ public:
     bool isActive() override { return active; }
 
     // ── Mediator interface ────────────────────────────────────────────────
-    SensorKey getKey()          const override { return SensorBase::getKey(); }
-    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
-    /** Primary value: temperature (°C). */
+    SensorKey getKey() const override { return SensorBase::getKey(); }
     bool readValue(SensorReading& out) override {
         if (!active) return false;
-        out.key         = SensorBase::getKey();
-        out.value       = temperature;
-        out.timestampMs = millis();
-        return true;
+        return _fillReading(out, temperature);  // primary: temperature
     }
 };
 

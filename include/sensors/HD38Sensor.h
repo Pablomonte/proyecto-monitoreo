@@ -34,21 +34,12 @@ private:
     String sensorName;
 
 public:
-    HD38Sensor(int aPin = 35,
-               int dPin = -1,
-               bool voltageDivider = true,
-               bool invert = false,
-               const char* name = "HD38")
-        : analogPin(aPin),
-          digitalPin(dPin),
-          useVoltageDivider(voltageDivider),
-          invertLogic(invert),
-          moisture(0),
-          digitalState(false),
-          active(false),
-          dryValue(4095),
-          wetValue(0),
-          sensorName(name) {}
+    HD38Sensor(int aPin = 35, int dPin = -1, bool voltageDivider = true,
+               bool invert = false, const char* name = "HD38")
+        : SensorBase((uint8_t)(aPin >= 0 ? aPin : 0xFF)),  // analog pin = stable sensorId
+          analogPin(aPin), digitalPin(dPin), useVoltageDivider(voltageDivider),
+          invertLogic(invert), moisture(0), digitalState(false),
+          active(false), dryValue(4095), wetValue(0), sensorName(name) {}
 
     bool init() override {
         DBG_VERBOSE("[HD38] '%s': a=%d d=%d div=%s\n",
@@ -147,14 +138,10 @@ public:
     }
 
     // ── Mediator interface ────────────────────────────────────────────────
-    SensorKey getKey()          const override { return SensorBase::getKey(); }
-    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
+    SensorKey getKey() const override { return SensorBase::getKey(); }
     bool readValue(SensorReading& out) override {
         if (!active) return false;
-        out.key         = SensorBase::getKey();
-        out.value       = moisture;
-        out.timestampMs = millis();
-        return true;
+        return _fillReading(out, moisture);
     }
 };
 

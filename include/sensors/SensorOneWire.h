@@ -19,10 +19,9 @@ private:
 
 public:
     SensorOneWire(DallasTemperature* dt, DeviceAddress addr, int idx)
-        : dallas(dt), deviceIndex(idx), temperature(-127), active(false) {
+        : SensorBase(addr[7]),   // last byte of 8-byte OneWire address = stable ID
+          dallas(dt), deviceIndex(idx), temperature(-127), active(false) {
         memcpy(address, addr, 8);
-
-        // Convert address to hex string
         addressStr = "";
         for (uint8_t i = 0; i < 8; i++) {
             if (address[i] < 16) addressStr += "0";
@@ -80,14 +79,10 @@ public:
     bool isActive() override { return active; }
 
     // ── Mediator interface ────────────────────────────────────────────────
-    SensorKey getKey()          const override { return SensorBase::getKey(); }
-    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
+    SensorKey getKey() const override { return SensorBase::getKey(); }
     bool readValue(SensorReading& out) override {
         if (!active) return false;
-        out.key         = SensorBase::getKey();
-        out.value       = temperature;
-        out.timestampMs = millis();
-        return true;
+        return _fillReading(out, temperature);
     }
 };
 

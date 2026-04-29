@@ -17,7 +17,7 @@ private:
     float co2;
 
 public:
-    SensorSimulated() : active(false), temperature(22.5), humidity(50), co2(400) {}
+    SensorSimulated() : SensorBase(0xFE), active(false), temperature(22.5), humidity(50), co2(400) {}
 
     bool init() override {
         active = true;
@@ -61,14 +61,10 @@ public:
     bool isActive() override { return active; }
 
     // ── Mediator interface ────────────────────────────────────────────────
-    SensorKey getKey()          const override { return SensorBase::getKey(); }
-    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
+    SensorKey getKey() const override { return SensorBase::getKey(); }
     bool readValue(SensorReading& out) override {
         if (!active) return false;
-        out.key         = SensorBase::getKey();
-        out.value       = temperature;
-        out.timestampMs = millis();
-        return true;
+        return _fillReading(out, temperature);
     }
 };
 

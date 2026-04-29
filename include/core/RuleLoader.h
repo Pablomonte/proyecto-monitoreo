@@ -5,46 +5,34 @@
 #include <SPIFFS.h>
 
 /**
- * RuleLoader — carga reglas desde SPIFFS/rules.json y las registra
- *              en el ControlMediator.
+ * RuleLoader — parses /rules.json from SPIFFS and populates ControlMediator.
  *
- * Formato JSON soportado:
- * {
- *   "rules": [
- *     {
- *       "expr": {
- *         "op": "AND",
- *         "left":  { "sensor": {"device":0,"id":1}, "cond":"LT", "value":30 },
- *         "right": { "sensor": {"device":0,"id":0}, "cond":"GT", "value":50 }
- *       },
- *       "actuator": 1,
- *       "state": true,
- *       "priority": 2,
- *       "duration_ms": 5000
- *     }
- *   ]
- * }
+ * Supported expression formats:
  *
- * Operadores "op"/"cond": "GT", "LT", "EQ", "GTE", "LTE"
- * Operadores de árbol "op": "AND", "OR" (nodos internos)
- *                           cualquier otro → hoja LEAF (se ignora op)
+ *   LEAF (single condition):
+ *     { "sensor": {"device":0,"id":97}, "cond":"LT", "value":30.0 }
  *
- * Uso:
- *   RuleLoader::load(mediator);         // en setup()
- *   RuleLoader::load(mediator, true);   // reload (limpia reglas previas)
+ *   AND / OR with 2 explicit branches (legacy):
+ *     { "op":"AND", "left": <expr>, "right": <expr> }
+ *
+ *   AND / OR with N conditions (flat array, up to 4+):
+ *     { "op":"AND", "conditions": [ <leaf>, <leaf>, <leaf>, <leaf> ] }
+ *     Builds a left-deep tree: AND(c0, AND(c1, AND(c2, c3)))
+ *     Works up to RULE_EXPR_POOL capacity.
+ *
+ * Both formats can be mixed within the same rule file.
+ *
+ * Operators: "GT" "LT" "EQ" "GTE" "LTE"
  */
 class RuleLoader {
 public:
     /**
-     * Cargar reglas desde /rules.json en SPIFFS.
-     * @param mediator  Instancia del mediador a poblar.
-     * @param clearFirst Si true, llama mediator.clearRules() antes de cargar.
-     * @return Número de reglas cargadas, o -1 si falla la apertura del archivo.
+     * @param mediator   Mediator to populate.
+     * @param clearFirst If true, clears existing rules first.
+     * @return Number of rules loaded, or -1 on file error.
      */
     static int load(ControlMediator& mediator, bool clearFirst = true) {
-        if (!SPIFFS.exists("/rules.json")) {
-            return 0;  // sin reglas — arranque limpio
-        }
+        if (!SPIFFS.exists("/rules.json")) return 0;
 
         File f = SPIFFS.open("/rules.json", "r");
         if (!f) return -1;
@@ -52,7 +40,6 @@ public:
         JsonDocument doc;
         DeserializationError err = deserializeJson(doc, f);
         f.close();
-
         if (err) return -1;
 
         if (clearFirst) mediator.clearRules();
@@ -68,31 +55,37 @@ public:
     }
 
 private:
-    // Parsea una regla completa y la agrega al mediador
+    // ── Rule ───────────────────────────────────────────────────────────────
     static bool _loadRule(ControlMediator& mediator, JsonObject obj) {
-        if (!obj.containsKey("expr")) return false;
+        if (!obj["expr"].is<JsonObject>() && !obj["expr"].is<JsonVariant>()) return false;
 
         uint8_t rootIdx = _loadExpr(mediator, obj["expr"]);
         if (rootIdx == 0xFF) return false;
 
         Rule rule;
         rule.rootExprIdx  = rootIdx;
-        rule.actuatorId   = obj["actuator"]    | (uint8_t)0;
-        rule.triggerState = obj["state"]        | true;
-        rule.priority     = obj["priority"]     | (uint8_t)2;
-        rule.durationMs   = obj["duration_ms"]  | (uint32_t)0;
+        rule.actuatorId   = obj["actuator"]   | (uint8_t)0;
+        rule.triggerState = obj["state"]       | true;
+        rule.priority     = obj["priority"]    | (uint8_t)2;
+        rule.durationMs   = obj["duration_ms"] | (uint32_t)0;
 
         mediator.addRule(rule);
         return true;
     }
 
-    // Parsea recursivamente un nodo de expresión; retorna índice en pool o 0xFF
+    // ── Expression dispatcher ──────────────────────────────────────────────
     static uint8_t _loadExpr(ControlMediator& mediator, JsonVariant node) {
         if (node.isNull()) return 0xFF;
 
         const char* op = node["op"] | "";
 
-        // Nodo AND / OR
+        // ── Flat N-condition array ─────────────────────────────────────────
+        // { "op":"AND", "conditions":[leaf, leaf, leaf, leaf] }
+        if (node["conditions"].is<JsonArray>()) {
+            return _loadFlatConditions(mediator, node["conditions"], op);
+        }
+
+        // ── Two-branch AND / OR ────────────────────────────────────────────
         if (strcmp(op, "AND") == 0 || strcmp(op, "OR") == 0) {
             uint8_t leftIdx  = _loadExpr(mediator, node["left"]);
             uint8_t rightIdx = _loadExpr(mediator, node["right"]);
@@ -102,30 +95,65 @@ private:
             expr.type     = (strcmp(op, "AND") == 0) ? ExprType::AND : ExprType::OR;
             expr.leftIdx  = leftIdx;
             expr.rightIdx = rightIdx;
-            // cond sin usar en nodos internos
-            expr.cond = {{0, 0}, CondOp::GT, 0.0f};
+            expr.cond     = {{0, 0}, CondOp::GT, 0.0f};
             return mediator.addExpr(expr);
         }
 
-        // Nodo LEAF
+        // ── LEAF ──────────────────────────────────────────────────────────
+        return _loadLeaf(mediator, node);
+    }
+
+    /**
+     * Build a left-deep binary tree from a flat conditions array.
+     * Supports any number of conditions (limited by RULE_EXPR_POOL).
+     *
+     * Example with 4 conditions and op="AND":
+     *   AND( AND( AND(c0, c1), c2 ), c3 )
+     */
+    static uint8_t _loadFlatConditions(ControlMediator& mediator,
+                                        JsonArray conds, const char* op) {
+        if (conds.size() == 0) return 0xFF;
+
+        ExprType combineType = (strcmp(op, "OR") == 0) ? ExprType::OR : ExprType::AND;
+
+        // Start with the first leaf
+        uint8_t result = _loadLeaf(mediator, conds[0]);
+        if (result == 0xFF) return 0xFF;
+
+        // Fold remaining conditions left-to-right
+        for (size_t i = 1; i < conds.size(); i++) {
+            uint8_t rightIdx = _loadLeaf(mediator, conds[i]);
+            if (rightIdx == 0xFF) return 0xFF;
+
+            RuleExpr compound;
+            compound.type     = combineType;
+            compound.leftIdx  = result;
+            compound.rightIdx = rightIdx;
+            compound.cond     = {{0, 0}, CondOp::GT, 0.0f};
+
+            result = mediator.addExpr(compound);
+            if (result == 0xFF) return 0xFF;  // pool exhausted
+        }
+        return result;
+    }
+
+    // ── LEAF builder ──────────────────────────────────────────────────────
+    static uint8_t _loadLeaf(ControlMediator& mediator, JsonVariant node) {
         JsonObject sensorObj = node["sensor"];
         if (sensorObj.isNull()) return 0xFF;
 
-        const char* condStr = node["cond"] | "GT";
-
         RuleExpr expr;
         expr.type = ExprType::LEAF;
-        expr.cond.key.deviceId  = sensorObj["device"]  | (uint8_t)0;
-        expr.cond.key.sensorId  = sensorObj["id"]       | (uint8_t)0;
-        expr.cond.threshold     = node["value"]          | 0.0f;
-        expr.cond.op            = _parseCondOp(condStr);
-        expr.leftIdx  = 0;
-        expr.rightIdx = 0;
+        expr.cond.key.deviceId  = sensorObj["device"] | (uint8_t)0;
+        expr.cond.key.sensorId  = sensorObj["id"]     | (uint8_t)0;
+        expr.cond.threshold     = node["value"]        | 0.0f;
+        expr.cond.op            = _parseCondOp(node["cond"] | "GT");
+        expr.leftIdx = expr.rightIdx = 0;
         return mediator.addExpr(expr);
     }
 
     static CondOp _parseCondOp(const char* s) {
-        if (!s) return CondOp::GT;
+        if (!s)                   return CondOp::GT;
         if (strcmp(s, "LT")  == 0) return CondOp::LT;
         if (strcmp(s, "EQ")  == 0) return CondOp::EQ;
         if (strcmp(s, "GTE") == 0) return CondOp::GTE;

@@ -67,15 +67,10 @@ protected:
 
 public:
     ModbusSoil7in1Sensor(uint8_t address = 1)
-        : ModbusSensorBase<7>(address),
-          moisture(0),
-          temperature(999),
-          ec(0),
-          ph(0),
-          nitrogen(0),
-          phosphorus(0),
-          potassium(0) {
-    }
+        : SensorBase(address),          // Modbus address = stable sensorId
+          ModbusSensorBase<7>(address),
+          moisture(0), temperature(999), ec(0), ph(0),
+          nitrogen(0), phosphorus(0), potassium(0) {}
 
     // ITemperatureSensor
     float getTemperature() override { return temperature; }
@@ -111,14 +106,9 @@ public:
     }
 
     // ── Mediator interface ────────────────────────────────────────────────
-    SensorKey getKey()          const override { return SensorBase::getKey(); }
-    void      setSensorId(uint8_t id) override { SensorBase::setSensorId(id); }
-    /** Primary value: soil moisture (%). */
+    SensorKey getKey() const override { return SensorBase::getKey(); }
     bool readValue(SensorReading& out) override {
-        out.key         = SensorBase::getKey();
-        out.value       = moisture;
-        out.timestampMs = millis();
-        return true;
+        return _fillReading(out, moisture);  // primary: soil moisture %
     }
 };
 
