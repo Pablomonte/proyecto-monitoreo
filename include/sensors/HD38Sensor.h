@@ -36,12 +36,22 @@ private:
     String sensorName;
 
 public:
-    HD38Sensor(int aPin = 35, int dPin = -1, bool voltageDivider = true,
-               bool invert = false, const char* name = "HD38")
-        : SensorBase((uint8_t)(aPin >= 0 ? aPin : 0xFF)),  // analog pin = stable sensorId
-          analogPin(aPin), digitalPin(dPin), useVoltageDivider(voltageDivider),
-          invertLogic(invert), moisture(0),rawValue(0), digitalState(false),
-          active(false), dryValue(4095), wetValue(0), sensorName(name) {}
+    HD38Sensor(int aPin = 35,
+               int dPin = -1,
+               bool voltageDivider = true,
+               bool invert = false,
+               const char* name = "HD38")
+        : analogPin(aPin),
+          digitalPin(dPin),
+          useVoltageDivider(voltageDivider),
+          invertLogic(invert),
+          moisture(0),
+          rawValue(0),
+          digitalState(false),
+          active(false),
+          dryValue(4095),
+          wetValue(0),
+          sensorName(name) {}
 
     bool init() override {
         DBG_VERBOSE("[HD38] '%s': a=%d d=%d div=%s\n",

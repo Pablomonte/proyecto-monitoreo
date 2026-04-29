@@ -74,7 +74,6 @@ public:
         int wet = cfg["wet"] | 0;
         SensorCapacitive *s = new SensorCapacitive(pin, dry, wet);
         if (s->init()) {
-          s->setSensorId((uint8_t)sensors.size());
           sensors.push_back(s);
           DBG_INFO("Capacitive sensor pin %d cal=%d/%d added\n", pin, dry, wet);
         }
@@ -82,7 +81,6 @@ public:
       } else if (strcmp(type, "scd30") == 0) {
         ISensor *s = new SensorSCD30();
         if (s->init()) {
-          s->setSensorId((uint8_t)sensors.size());
           sensors.push_back(s);
           DBG_INFO("SCD30 sensor added\n");
         }
@@ -90,7 +88,6 @@ public:
       } else if (strcmp(type, "bme280") == 0) {
         ISensor *s = new SensorBME280();
         if (s->init()) {
-          s->setSensorId((uint8_t)sensors.size());
           sensors.push_back(s);
           DBG_INFO("BME280 sensor added\n");
         }
@@ -98,7 +95,6 @@ public:
       } else if (strcmp(type, "simulated") == 0) {
         ISensor *s = new SensorSimulated();
         if (s->init()) {
-          s->setSensorId((uint8_t)sensors.size());
           sensors.push_back(s);
           DBG_INFO("Simulated sensor added\n");
         }
@@ -138,7 +134,6 @@ public:
         for (uint8_t addr : addrList) {
           ISensor *s = new ModbusTHSensor(addr);
           if (s->init()) {
-            s->setSensorId((uint8_t)sensors.size());
             sensors.push_back(s);
             DBG_INFO("ModbusTH addr=%d added\n", addr);
           } else {
@@ -165,7 +160,6 @@ public:
         for (uint8_t addr : addrList) {
           ISensor *s = new ModbusSoil7in1Sensor(addr);
           if (s->init()) {
-            s->setSensorId((uint8_t)sensors.size());
             sensors.push_back(s);
             DBG_INFO("ModbusSoil7in1 addr=%d added\n", addr);
           } else {
@@ -210,7 +204,6 @@ public:
           HD38Sensor *s = new HD38Sensor(aPin, -1, divider, invert, sensorName);
           s->setCalibration(dry, wet);
           if (s->init()) {
-            s->setSensorId((uint8_t)sensors.size());
             sensors.push_back(s);
             DBG_INFO("HD38 '%s' pin %d dry=%d wet=%d added\n", sensorName, aPin, dry, wet);
           } else {
@@ -238,7 +231,6 @@ public:
       if (dallas->getAddress(addr, i)) {
         ISensor *s = new SensorOneWire(dallas, addr, i);
         if (s->init()) {
-          s->setSensorId((uint8_t)sensors.size());
           sensors.push_back(s);
         }
       }

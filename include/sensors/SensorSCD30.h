@@ -10,13 +10,8 @@
 #include "../debug.h"
 
 class SensorSCD30 : public SensorBase, public ITemperatureSensor, public IHumiditySensor, public ICO2Sensor {
-private:
-    Adafruit_SCD30 scd30;
-    bool active;
-    float temperature;
-    float humidity;
-    float co2;
-
+    // sensorId = 0x61 = SCD30 default I2C address (stable)
+    // deviceId = last byte of EFuse MAC (set by SensorBase)
 public:
     SensorSCD30() : SensorBase(0x61), active(false), temperature(999), humidity(100), co2(999999) {}
 
@@ -77,6 +72,7 @@ public:
     }
 
     bool isActive() override { return active; }
+
     // ── Mediator interface ────────────────────────────────────────────────
 public:
     SensorKey getKey() const override { return SensorBase::getKey(); }
