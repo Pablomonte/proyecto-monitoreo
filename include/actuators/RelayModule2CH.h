@@ -9,7 +9,7 @@
 /**
  * 2-Channel RS485 Modbus Relay Module
  *
- * Implements IActuator.
+ * Provides two IActuator channels via getChannel(ch).
  * actuatorId encoding: bits[7:4] = Modbus address, bits[3:0] = channel (0 or 1).
  * Use RelayModule2CH::makeActuatorId(addr, ch) to build the ID.
  *
@@ -23,7 +23,39 @@
  * - Relay 1: Coil 1 (0x0001)
  * - Input 1: Discrete Input 0 (0x0000)
  */
-class RelayModule2CH : public IActuator {
+class RelayModule2CH {
+public:
+    /** Build actuatorId: high nibble = Modbus address, low nibble = channel */
+    static uint8_t makeActuatorId(uint8_t modbusAddr, uint8_t channel) {
+        return (uint8_t)((modbusAddr << 4) | (channel & 0x0F));
+    }
+
+    class ChannelActuator : public IActuator {
+    private:
+        RelayModule2CH* _module;
+        uint8_t _channel;
+        String _nameCache;
+    public:
+        ChannelActuator(RelayModule2CH* module, uint8_t channel)
+            : _module(module), _channel(channel) {}
+
+        void updateName() {
+            _nameCache = _module->getAlias();
+            if (_nameCache.length() == 0) {
+                _nameCache = "Relay " + String(_module->getAddress());
+            }
+            _nameCache += " CH" + String(_channel + 1);
+        }
+
+        uint8_t getId() const override {
+            return RelayModule2CH::makeActuatorId(_module->getAddress(), _channel);
+        }
+        const char* getName() const override { return _nameCache.c_str(); }
+        bool begin() override { return true; } // Init is handled centrally by the Module
+        void execute(const ActuatorCommand& cmd) override { _module->setRelay(_channel, cmd.state); }
+        bool getState() const override { return _module->getState(_channel); }
+    };
+
 private:
     uint8_t _address;
     String _alias;
@@ -46,53 +78,32 @@ private:
         return true;
     }
 
-    /** Build actuatorId: high nibble = Modbus address, low nibble = channel */
-    static uint8_t makeActuatorId(uint8_t modbusAddr, uint8_t channel) {
-        return (uint8_t)((modbusAddr << 4) | (channel & 0x0F));
-    }
+    ChannelActuator _ch0;
+    ChannelActuator _ch1;
 
 public:
     RelayModule2CH(uint8_t address = 1, String alias = "")
-        : _address(address), _alias(alias), _active(false), _failureCount(0), _inactiveCheckCount(0) {
+        : _address(address), _alias(alias), _active(false), _failureCount(0), _inactiveCheckCount(0),
+          _ch0(this, 0), _ch1(this, 1) {
         _relayState[0] = false;
         _relayState[1] = false;
         _inputState[0] = false;
         _inputState[1] = false;
+        _ch0.updateName();
+        _ch1.updateName();
     }
 
-    // ── IActuator ────────────────────────────────────────────────────────────
-    /** actuatorId = (address<<4) | 0  (channel 0 by default) */
-    uint8_t getId() const override { return makeActuatorId(_address, 0); }
-
-    const char* getName() const override {
-        static char buf[24];
-        if (_alias.length() > 0) {
-            snprintf(buf, sizeof(buf), "%s", _alias.c_str());
-        } else {
-            snprintf(buf, sizeof(buf), "relay_mod_%d", _address);
-        }
-        return buf;
+    IActuator* getChannel(uint8_t ch) {
+        if (ch == 0) return &_ch0;
+        if (ch == 1) return &_ch1;
+        return nullptr;
     }
 
-    /** begin() → calls init() and returns result */
-    bool begin() override { return init(); }
-
-    /**
-     * execute() → routes to the correct relay channel.
-     * Channel is decoded from the low nibble of cmd.actuatorId.
-     * If actuatorId matches this module's base ID, channel 0 is used.
-     */
-    void execute(const ActuatorCommand& cmd) override {
-        uint8_t ch = cmd.actuatorId & 0x0F;  // low nibble = channel
-        if (ch > 1) ch = 0;                  // clamp to valid range
-        setRelay(ch, cmd.state);
-        // auto-off is managed by ControlMediator via tick()
+    void setAlias(String alias) { 
+        _alias = alias; 
+        _ch0.updateName();
+        _ch1.updateName();
     }
-
-    /** Returns state of channel 0 (primary channel). */
-    bool getState() const override { return _relayState[0]; }
-
-    void setAlias(String alias) { _alias = alias; }
     String getAlias() const { return _alias; }
     uint8_t getAddress() const { return _address; }
 

@@ -14,7 +14,7 @@
 #define RULE_MAX         16
 
 /** Máximo de actuadores registrados */
-#define ACTUATOR_MAX      8
+#define ACTUATOR_MAX     16
 
 /**
  * Tamaño del state-store plano (array de floats).

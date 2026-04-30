@@ -23,7 +23,11 @@ public:
 
     // ── Registration ──────────────────────────────────────────────────────
     void registerActuator(IActuator* a) {
-        if (!a || _actuatorCount >= ACTUATOR_MAX) return;
+        if (!a) return;
+        if (_actuatorCount >= ACTUATOR_MAX) {
+            DBG_ERROR("[Mediator] Cannot register actuator. ACTUATOR_MAX (%d) reached.\n", ACTUATOR_MAX);
+            return;
+        }
         _actuators[_actuatorCount++] = a;
     }
 
@@ -84,9 +88,9 @@ public:
             if (_actuators[i]) _actuators[i]->tick();
 
             // clear mediator priority slot when duration has elapsed
-            if (_activeUntil[i] > 0 && now >= _activeUntil[i]) {
-                _activeUntil[i]       = 0;
-                _active[i].priority   = 0;   // reset so next rule can fire
+            if (_activeDuration[i] > 0 && (now - _activeStartTime[i] >= _activeDuration[i])) {
+                _activeDuration[i]  = 0;
+                _active[i].priority = 0;   // reset so next rule can fire
             }
         }
     }
@@ -116,7 +120,8 @@ private:
     IActuator*      _actuators[ACTUATOR_MAX];
     uint8_t         _actuatorCount;
     ActuatorCommand _active[ACTUATOR_MAX];
-    uint32_t        _activeUntil[ACTUATOR_MAX];
+    uint32_t        _activeStartTime[ACTUATOR_MAX];
+    uint32_t        _activeDuration[ACTUATOR_MAX];
     bool            _dispatched[ACTUATOR_MAX];
 
     void _clear() {
@@ -126,9 +131,10 @@ private:
         _exprCount = _ruleCount = _actuatorCount = 0;
         for (uint8_t i = 0; i < ACTUATOR_MAX; i++) {
             _actuators[i]   = nullptr;
-            _activeUntil[i] = 0;
-            _active[i]      = {0, false, 0, 0};
-            _dispatched[i]  = false;   // <-- add this
+            _activeStartTime[i] = 0;
+            _activeDuration[i]  = 0;
+            _active[i]          = {0, false, 0, 0};
+            _dispatched[i]      = false;
         }
     }
 
@@ -202,22 +208,31 @@ private:
 
     void dispatch(const ActuatorCommand& cmd) {
         int8_t ai = _findActuatorIndex(cmd.actuatorId);
-        if (ai < 0) return;
 
+        if (ai < 0) {
+            DBG_ERROR("[Mediator] dispatch: Actuator ID %d not found\n", cmd.actuatorId);
+            return;
+        }
+        DBG_VERBOSE("[Mediator] dispatch: Actuator ID %d state=%s duration=%d priority=%d\n", 
+                    cmd.actuatorId, cmd.state ? "ON" : "OFF", cmd.durationMs, cmd.priority);
         // Priority 0 is a special command to reset the actuator to AUTO mode (clear manual override)
         if (cmd.priority == 0) {
             _active[ai].priority = 0;
-            _activeUntil[ai] = 0;
+            _activeStartTime[ai] = 0;
+            _activeDuration[ai]  = 0;
             _dispatched[ai] = false; // Next rule evaluation will enforce state if needed
             return;
         }
 
-        if (cmd.priority >= _active[ai].priority) {
+        if (cmd.priority >= _active[ai].priority) 
+        {
+            DBG_VERBOSE("[Mediator] dispatch: Actuator ID %d command with priority %d overrides current priority %d\n", 
+                      cmd.actuatorId, cmd.priority, _active[ai].priority);
             bool stateChanged = !_dispatched[ai] || (_active[ai].state != cmd.state);
             _active[ai] = cmd;
             _dispatched[ai] = true;
-            _activeUntil[ai] = (cmd.state && cmd.durationMs > 0)
-                                ? millis() + cmd.durationMs : 0;
+            _activeStartTime[ai] = millis();
+            _activeDuration[ai]  = (cmd.state) ? cmd.durationMs : 0;
             if (stateChanged && _actuators[ai]) {
                 _actuators[ai]->execute(cmd);
             }

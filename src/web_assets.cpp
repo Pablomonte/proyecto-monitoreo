@@ -1617,7 +1617,9 @@ const char *rules_html = R"=====(<!DOCTYPE html>
             <div class="inline-group" style="margin-top:16px">
                 <div class="form-group">
                     <label>ID Actuador</label>
-                    <input type="number" id="ruleActuator" value="0" min="0" max="255">
+                    <select id="ruleActuator">
+                        <option value="0">Cargando...</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Estado al activar</label>
@@ -1865,9 +1867,51 @@ const char *rules_html = R"=====(<!DOCTYPE html>
 
         async function loadActuators() {
             try {
-                const r = await fetch('/actuator/status');
-                const d = await r.json();
-                renderActuators(d);
+                const [actRes, relRes] = await Promise.all([
+                    fetch('/actuator/status').catch(() => ({ json: () => [] })),
+                    fetch('/api/relays').catch(() => ({ json: () => [] }))
+                ]);
+                
+                let d = [];
+                try { d = await actRes.json(); } catch(e) {}
+                let relays = [];
+                try { relays = await relRes.json(); } catch(e) {}
+
+                let combinedList = [];
+                let selectOptions = '';
+
+                if (relays && relays.length > 0) {
+                    relays.forEach(r => {
+                        if (r.state) {
+                            r.state.forEach((st, idx) => {
+                                let actId = (r.address << 4) | idx;
+                                let name = (r.alias || ('Relé ' + r.address)) + ' - Canal ' + (idx + 1);
+                                combinedList.push({ id: actId, name: name, state: st });
+                                selectOptions += `<option value="${actId}">${name} (ID: ${actId})</option>`;
+                            });
+                        }
+                    });
+                }
+                
+                if (d && d.length > 0) {
+                    d.forEach(a => {
+                        if (!combinedList.find(c => c.id === a.id)) {
+                            combinedList.push({ id: a.id, name: a.name || ('Act ' + a.id), state: a.state });
+                            selectOptions += `<option value="${a.id}">${a.name || ('Act ' + a.id)} (ID: ${a.id})</option>`;
+                        }
+                    });
+                }
+
+                const sel = document.getElementById('ruleActuator');
+                if (sel) {
+                    const currentVal = sel.value;
+                    sel.innerHTML = selectOptions || '<option value="0">Sin actuadores</option>';
+                    if (combinedList.find(c => c.id == currentVal)) {
+                        sel.value = currentVal;
+                    }
+                }
+
+                renderActuators(combinedList);
             } catch(e) {
                 document.getElementById('actuatorGrid').innerHTML = '<div class="info-text">No disponible.</div>';
             }

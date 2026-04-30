@@ -273,8 +273,9 @@ void setup() {
   for (auto *r : relayMgr.getRelays()) {
     if (r) {
       r->init();
-      // Register each relay channel as actuator in mediator
-      mediator.registerActuator(r);
+      // Register each individual relay channel as an actuator in mediator
+      mediator.registerActuator(r->getChannel(0));
+      mediator.registerActuator(r->getChannel(1));
     }
   }
 
