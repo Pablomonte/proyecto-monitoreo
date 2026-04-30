@@ -449,19 +449,20 @@ function renderActuators(list) {
         ${a.state ? '● ON' : '○ OFF'}
       </div>
       <div class="ctl">
-        <button class="btn btn-success btn-sm" onclick="sendCmd(${a.id},true,0)">ON</button>
-        <button class="btn btn-danger  btn-sm" onclick="sendCmd(${a.id},false,0)">OFF</button>
+        <button class="btn btn-success btn-sm" onclick="sendCmd(${a.id},true,0,3)">ON</button>
+        <button class="btn btn-danger  btn-sm" onclick="sendCmd(${a.id},false,0,3)">OFF</button>
+        <button class="btn btn-primary btn-sm" onclick="sendCmd(${a.id},false,0,0)">AUTO</button>
       </div>
     </div>
   `).join('');
 }
 
-async function sendCmd(id, state, duration) {
+async function sendCmd(id, state, duration, priority = 3) {
   try {
     const r = await fetch('/actuator/command', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, state, duration, priority: 3 })
+      body: JSON.stringify({ id, state, duration, priority })
     });
     toast(r.ok ? `✅ Actuador ${id} → ${state?'ON':'OFF'}` : '❌ Error');
     setTimeout(loadActuators, 500);

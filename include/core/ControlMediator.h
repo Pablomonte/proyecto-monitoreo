@@ -203,6 +203,15 @@ private:
     void dispatch(const ActuatorCommand& cmd) {
         int8_t ai = _findActuatorIndex(cmd.actuatorId);
         if (ai < 0) return;
+
+        // Priority 0 is a special command to reset the actuator to AUTO mode (clear manual override)
+        if (cmd.priority == 0) {
+            _active[ai].priority = 0;
+            _activeUntil[ai] = 0;
+            _dispatched[ai] = false; // Next rule evaluation will enforce state if needed
+            return;
+        }
+
         if (cmd.priority >= _active[ai].priority) {
             bool stateChanged = !_dispatched[ai] || (_active[ai].state != cmd.state);
             _active[ai] = cmd;
