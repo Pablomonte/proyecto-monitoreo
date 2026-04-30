@@ -41,7 +41,8 @@ public:
                bool voltageDivider = true,
                bool invert = false,
                const char* name = "HD38")
-        : analogPin(aPin),
+        : SensorBase(SensorClass::ANALOG_ADC, (uint8_t)(aPin >= 0 ? aPin : 0xFF)),
+          analogPin(aPin),
           digitalPin(dPin),
           useVoltageDivider(voltageDivider),
           invertLogic(invert),

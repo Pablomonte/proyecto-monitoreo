@@ -12,6 +12,14 @@
 class SensorSCD30 : public SensorBase, public ITemperatureSensor, public IHumiditySensor, public ICO2Sensor {
     // sensorId = 0x61 = SCD30 default I2C address (stable)
     // deviceId = last byte of EFuse MAC (set by SensorBase)
+
+private:
+    Adafruit_SCD30 scd30;
+    bool active;
+    float temperature;
+    float humidity;
+    float co2;
+
 public:
     SensorSCD30() : SensorBase(SensorClass::I2C_BUS, 0x61), active(false), temperature(999), humidity(100), co2(999999) {}
 

@@ -3,9 +3,9 @@
                         BUILD MEMORY REPORT
 ================================================================================
 Environment: esp32dev_multi
-Git version: 5d847d17c25dd845e5ed207438518f291826f996
+Git version: 051a9974e2c57b973b9303e92f22067a87010890
 MCU:         esp32
-Timestamp:   2026-04-30 16:38:44
+Timestamp:   2026-04-30 17:22:30
 Firmware:    firmware.elf
 Partitions:  min_spiffs.csv
 --------------------------------------------------------------------------------
@@ -184,8 +184,8 @@ BY RAM USAGE:
 40   FrameworkArduino/esp32-hal-rgb-led.c.o                           0          5          5
 41   FrameworkArduino/main.cpp.o                                      0          5          5
 42   lib651/WiFi/WiFi.cpp.o                                           4          1          5
-43   libbcf/WiFiClientSecure/ssl_client.cpp.o                         4          0          4
-44   libb35/WifiManager/WiFiManager.cpp.o                             0          4          4
+43   lib9da/WifiManager/WiFiManager.cpp.o                             0          4          4
+44   libbcf/WiFiClientSecure/ssl_client.cpp.o                         4          0          4
 45   src/RelayModule2CH.cpp.o                                         0          2          2
 46   FrameworkArduino/WMath.cpp.o                                     1          0          1
 47   src/otaUpdater.cpp.o                                             0          1          1
@@ -443,6 +443,10 @@ section                                                                         
 .xt.lit._ZN11ArduinoJson8V741PB226detailorIhLi0EEET_RKNS1_11MemberProxyIRNS0_12JsonDocumentENS1_9RamStringEEERKS3_                                                                                                                   0            0
 .xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyIRNS0_12JsonDocumentENS1_9RamStringEEEE2asIPKcEET_v                                                                                                       0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detailorERKNS1_11MemberProxyIRNS0_12JsonDocumentENS1_9RamStringEEEPKc                                                                                                                              0            0
+.xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE3setIA5_cEEbRKT_                                                                                                      0            0
+.xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE3setIA4_cEEbRKT_                                                                                                      0            0
+.xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE3setIA3_cEEbRKT_                                                                                                      0            0
+.xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE3setIA2_cEEbRKT_                                                                                                      0            0
 .xt.lit._ZN11ArduinoJson8V741PB2213convertToJsonI6StringEENS0_6detail9enable_ifIXsrNS3_8IsStringIT_vEE5valueEvE4typeERKS6_NS0_11JsonVariantE                                                                                         0            0
 .xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE3setI6StringEEbRKT_                                                                                                   0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderI6StringvEEE11skipKeywordEPKc                                                                                                                                  0            0
@@ -474,7 +478,7 @@ section                                                                         
 .xt.lit._ZN11ArduinoJson8V741PB226detail17CountingDecoratorINS1_6WriterI6StringvEEE5writeEh                                                                                                                                          0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail13TextFormatterINS1_6WriterI6StringvEEE11writeStringEPKcj                                                                                                                                    8            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail13TextFormatterINS1_6WriterI6StringvEEE12writeIntegerIxEENS1_9enable_ifIXsrNS1_9is_signedIT_EE5valueEvE4typeESA_                                                                             0            0
-.xt.lit._ZNK11ArduinoJson8V741PB226detail11VariantData6acceptINS1_14JsonSerializerINS1_6WriterI6StringvEEEEEENT_11result_typeERS9_PKNS1_15ResourceManagerE                                                                           8            0
+.xt.lit._ZNK11ArduinoJson8V741PB226detail11VariantData6acceptINS1_14JsonSerializerINS1_6WriterI6StringvEEEEEENT_11result_typeERS9_PKNS1_15ResourceManagerE                                                                           0            0
 .xt.lit._ZN11ArduinoJson8V741PB2213serializeJsonI6StringLi0EEEjNS0_16JsonVariantConstERT_                                                                                                                                            0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderI6StringvEEE22canBeInNonQuotedStringEc                                                                                                                         8            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderI6StringvEEE11parseObjectINS1_14AllowAllFilterEEENS0_20DeserializationError4CodeERNS1_10ObjectDataET_NS0_21DeserializationOption12NestingLimitE                0            0
@@ -485,7 +489,6 @@ section                                                                         
 .xt.lit._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderIK6StringvEEE12parseVariantINS1_14AllowAllFilterEEENS0_20DeserializationError4CodeERNS1_11VariantDataET_NS0_21DeserializationOption12NestingLimitE             0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail11deserializeINS1_16JsonDeserializerERNS0_12JsonDocumentERK6StringJELi0EEENS0_20DeserializationErrorEOT0_OT1_DpT2_                                                                           0            0
 .xt.lit._ZN10RuleLoader4loadER15ControlMediatorb                                                                                                                                                                                     8            0
-.xt.prop._ZN14RelayModule2CH14modbusCallbackEN6Modbus10ResultCodeEtPv                                                                                                                                                               48            0
 .xt.prop._ZNSt14_Function_base13_Base_managerIPFbN6Modbus10ResultCodeEtPvEE10_M_managerERSt9_Any_dataRKS7_St18_Manager_operation                                                                                                    96            0
 .xt.prop._ZN14RelayModule2CH14modbusCallbackEN6Modbus10ResultCodeEtPv                                                                                                                                                               48            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail13TextFormatterINS1_6WriterI6StringvEEE10writeFloatEda                                                                                                                                    348            0
@@ -521,6 +524,10 @@ section                                                                         
 .xt.prop._ZN11ArduinoJson8V741PB226detailorIhLi0EEET_RKNS1_11MemberProxyIRNS0_12JsonDocumentENS1_9RamStringEEERKS3_                                                                                                                 84            0
 .xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyIRNS0_12JsonDocumentENS1_9RamStringEEEE2asIPKcEET_v                                                                                                     48            0
 .xt.prop._ZN11ArduinoJson8V741PB226detailorERKNS1_11MemberProxyIRNS0_12JsonDocumentENS1_9RamStringEEEPKc                                                                                                                            48            0
+.xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE3setIA5_cEEbRKT_                                                                                                    36            0
+.xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE3setIA4_cEEbRKT_                                                                                                    36            0
+.xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE3setIA3_cEEbRKT_                                                                                                    36            0
+.xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE3setIA2_cEEbRKT_                                                                                                    36            0
 .xt.prop._ZN11ArduinoJson8V741PB2213convertToJsonI6StringEENS0_6detail9enable_ifIXsrNS3_8IsStringIT_vEE5valueEvE4typeERKS6_NS0_11JsonVariantE                                                                                       60            0
 .xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE3setI6StringEEbRKT_                                                                                                 36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderI6StringvEEE11skipKeywordEPKc                                                                                                                               108            0
@@ -552,7 +559,7 @@ section                                                                         
 .xt.prop._ZN11ArduinoJson8V741PB226detail17CountingDecoratorINS1_6WriterI6StringvEEE5writeEh                                                                                                                                        36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail13TextFormatterINS1_6WriterI6StringvEEE11writeStringEPKcj                                                                                                                                 120            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail13TextFormatterINS1_6WriterI6StringvEEE12writeIntegerIxEENS1_9enable_ifIXsrNS1_9is_signedIT_EE5valueEvE4typeESA_                                                                           48            0
-.xt.prop._ZNK11ArduinoJson8V741PB226detail11VariantData6acceptINS1_14JsonSerializerINS1_6WriterI6StringvEEEEEENT_11result_typeERS9_PKNS1_15ResourceManagerE                                                                        432            0
+.xt.prop._ZNK11ArduinoJson8V741PB226detail11VariantData6acceptINS1_14JsonSerializerINS1_6WriterI6StringvEEEEEENT_11result_typeERS9_PKNS1_15ResourceManagerE                                                                        420            0
 .xt.prop._ZN11ArduinoJson8V741PB2213serializeJsonI6StringLi0EEEjNS0_16JsonVariantConstERT_                                                                                                                                          84            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderI6StringvEEE22canBeInNonQuotedStringEc                                                                                                                       60            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderI6StringvEEE11parseObjectINS1_14AllowAllFilterEEENS0_20DeserializationError4CodeERNS1_10ObjectDataET_NS0_21DeserializationOption12NestingLimitE             204            0
@@ -567,6 +574,7 @@ section                                                                         
 .xt.prop._ZNK11ArduinoJson8V741PB226detail7pgm_ptrIdEixEi$isra$102                                                                                                                                                                  36            0
 .xt.prop._ZNSt14_Function_baseD2Ev                                                                                                                                                                                                  36            0
 .xt.prop._ZN11ArduinoJson8V741PB2212JsonDocumentC2EPNS0_9AllocatorE                                                                                                                                                                 36            0
+.xt.prop._ZNK9SensorKey5toU32Ev                                                                                                                                                                                                     36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail14MemoryPoolListINS1_15ResourceManager8SlotDataEE11shrinkToFitEPNS0_9AllocatorE                                                                                                            48            0
 .xt.prop._ZNSt8functionIFbN6Modbus10ResultCodeEtPvEEC2ERKS4_                                                                                                                                                                        60            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail14VisitorAdapterINS1_17JsonVariantCopierEE5visitINS0_10JsonStringEEEbRKT_$isra$127                                                                                                         36            0
@@ -620,6 +628,8 @@ section                                                                         
 .xt.lit._ZN14ModbusTHSensor11getSensorIDEv                                                                                                                                                                                           8            0
 .xt.lit._ZN20ModbusSoil7in1Sensor21getMeasurementsStringEv                                                                                                                                                                           8            0
 .xt.lit._ZN20ModbusSoil7in1Sensor11getSensorIDEv                                                                                                                                                                                     8            0
+.xt.lit._ZN10HD38Sensor21getMeasurementsStringEv                                                                                                                                                                                     8            0
+.xt.lit._ZN10HD38Sensor11getSensorIDEv                                                                                                                                                                                               8            0
 .xt.lit._ZN10HD38Sensor13getSensorTypeEv                                                                                                                                                                                             8            0
 .xt.lit._ZNK3Uri5cloneEv                                                                                                                                                                                                             8            0
 .xt.lit._ZN11SensorSCD304initEv                                                                                                                                                                                                      8            0
@@ -709,16 +719,14 @@ section                                                                         
 .xt.lit._ZN11ArduinoJson8V741PB229ConverterIivE9checkJsonENS0_16JsonVariantConstE                                                                                                                                                    8            0
 .xt.lit._ZNSt6vectorIP17DallasTemperatureSaIS1_EE17_M_realloc_insertIJRKS1_EEEvN9__gnu_cxx17__normal_iteratorIPS1_S3_EEDpOT_                                                                                                         8            0
 .xt.lit._ZNK11ArduinoJson8V741PB2215JsonObjectConstixIA7_cLi0EEENS0_16JsonVariantConstERKT_                                                                                                                                          0            0
-.xt.lit._ZN11ArduinoJson8V741PB229ConverterIivE9checkJsonENS0_16JsonVariantConstE                                                                                                                                                    8            0
 .xt.lit._ZNSt6vectorIP14RelayModule2CHSaIS1_EE17_M_realloc_insertIJS1_EEEvN9__gnu_cxx17__normal_iteratorIPS1_S3_EEDpOT_                                                                                                              0            0
 .xt.lit._ZNKSt6vectorIP7ISensorSaIS1_EE12_M_check_lenEjPKc                                                                                                                                                                           0            0
 .xt.lit._ZNSt6vectorIiSaIiEE17_M_realloc_insertIJiEEEvN9__gnu_cxx17__normal_iteratorIPiS1_EEDpOT_                                                                                                                                    0            0
 .xt.lit._ZNSt6vectorIiSaIiEE12emplace_backIJiEEERiDpOT_                                                                                                                                                                              0            0
 .xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS0_11JsonVariantEE2asIhEET_v                                                                                                                                              0            0
+.xt.lit._ZN11ArduinoJson8V741PB229ConverterIivE8fromJsonENS0_16JsonVariantConstE                                                                                                                                                     0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail11parseNumberImEET_PKc                                                                                                                                                                       0            0
 .xt.lit._ZNK11ArduinoJson8V741PB226detail11VariantData10asIntegralImEET_PKNS1_15ResourceManagerE                                                                                                                                     0            0
-.xt.lit._ZN11ArduinoJson8V741PB226detailorImLi0EEET_RKNS1_11MemberProxyIRNS0_12JsonDocumentENS1_9RamStringEEERKS3_                                                                                                                   0            0
-.xt.lit._ZN12RelayManager14loadFromConfigERN11ArduinoJson8V741PB2212JsonDocumentE                                                                                                                                                    8            0
 .xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyIRNS0_12JsonDocumentENS1_9RamStringEEEE2asINS0_9JsonArrayEEET_v                                                                                           0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detailorImLi0EEET_RKNS1_11MemberProxyIRNS0_12JsonDocumentENS1_9RamStringEEERKS3_                                                                                                                   0            0
 .xt.lit._ZN12RelayManager14loadFromConfigERN11ArduinoJson8V741PB2212JsonDocumentE                                                                                                                                                    8            0
@@ -786,6 +794,8 @@ section                                                                         
 .xt.prop._ZN14ModbusTHSensor11getSensorIDEv                                                                                                                                                                                         72            0
 .xt.prop._ZN20ModbusSoil7in1Sensor21getMeasurementsStringEv                                                                                                                                                                         72            0
 .xt.prop._ZN20ModbusSoil7in1Sensor11getSensorIDEv                                                                                                                                                                                   72            0
+.xt.prop._ZN10HD38Sensor21getMeasurementsStringEv                                                                                                                                                                                   72            0
+.xt.prop._ZN10HD38Sensor11getSensorIDEv                                                                                                                                                                                             72            0
 .xt.prop._ZN10HD38Sensor13getSensorTypeEv                                                                                                                                                                                           72            0
 .xt.prop._ZNK3Uri5cloneEv                                                                                                                                                                                                           96            0
 .xt.prop._ZN11SensorSCD304initEv                                                                                                                                                                                                    84            0
@@ -883,7 +893,6 @@ section                                                                         
 .xt.prop._ZN11ArduinoJson8V741PB229ConverterIivE9checkJsonENS0_16JsonVariantConstE                                                                                                                                                 180            0
 .xt.prop._ZNSt6vectorIP17DallasTemperatureSaIS1_EE17_M_realloc_insertIJRKS1_EEEvN9__gnu_cxx17__normal_iteratorIPS1_S3_EEDpOT_                                                                                                       84            0
 .xt.prop._ZNK11ArduinoJson8V741PB2215JsonObjectConstixIA7_cLi0EEENS0_16JsonVariantConstERKT_                                                                                                                                        36            0
-.xt.prop._ZN11ArduinoJson8V741PB229ConverterIivE9checkJsonENS0_16JsonVariantConstE                                                                                                                                                 180            0
 .xt.prop._ZNSt6vectorIP14RelayModule2CHSaIS1_EE17_M_realloc_insertIJS1_EEEvN9__gnu_cxx17__normal_iteratorIPS1_S3_EEDpOT_                                                                                                            72            0
 .xt.prop._ZNKSt6vectorIP7ISensorSaIS1_EE12_M_check_lenEjPKc                                                                                                                                                                         72            0
 .xt.prop._ZNSt6vectorIiSaIiEE17_M_realloc_insertIJiEEEvN9__gnu_cxx17__normal_iteratorIPiS1_EEDpOT_                                                                                                                                  72            0
