@@ -67,7 +67,7 @@ protected:
 
 public:
     ModbusSoil7in1Sensor(uint8_t address = 1)
-        : SensorBase(address),          // Modbus address = stable sensorId
+        : SensorBase(SensorClass::RS485_MODBUS, address),          // Modbus address = stable sensorId
           ModbusSensorBase<7>(address),
           moisture(0), temperature(999), ec(0), ph(0),
           nitrogen(0), phosphorus(0), potassium(0) {}
@@ -107,8 +107,14 @@ public:
 
     // ── Mediator interface ────────────────────────────────────────────────
     SensorKey getKey() const override { return SensorBase::getKey(); }
-    bool readValue(SensorReading& out) override {
-        return _fillReading(out, moisture);  // primary: soil moisture %
+    void notifyMediator(ControlMediator& mediator) override {
+        if (temperature != 999) _notify(mediator, SensorVariable::TEMPERATURE, temperature);
+        if (moisture != 0)      _notify(mediator, SensorVariable::MOISTURE, moisture);
+        if (ec != 0)            _notify(mediator, SensorVariable::EC, ec);
+        if (ph != 0)            _notify(mediator, SensorVariable::PH, ph);
+        if (nitrogen != 0)      _notify(mediator, SensorVariable::NITROGEN, nitrogen);
+        if (phosphorus != 0)    _notify(mediator, SensorVariable::PHOSPHORUS, phosphorus);
+        if (potassium != 0)     _notify(mediator, SensorVariable::POTASSIUM, potassium);
     }
 };
 

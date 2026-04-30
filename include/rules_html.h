@@ -154,7 +154,11 @@ static const char rules_html[] PROGMEM = R"rawliteral(
         </div>
         <div>
           <label>Sensor ID</label>
-          <input type="number" id="leafSensor" value="0" min="0" max="255">
+          <input type="number" id="leafSensor" value="0" min="0" max="65535">
+        </div>
+        <div>
+          <label>Variable (0=Temp)</label>
+          <input type="number" id="leafVariable" value="0" min="0" max="255">
         </div>
         <div>
           <label>Operador</label>
@@ -180,7 +184,8 @@ static const char rules_html[] PROGMEM = R"rawliteral(
       </p>
       <div class="row">
         <div><label>Device</label><input type="number" id="leftDevice" value="0" min="0" max="255"></div>
-        <div><label>Sensor</label><input type="number" id="leftSensor" value="0" min="0" max="255"></div>
+        <div><label>Sensor</label><input type="number" id="leftSensor" value="0" min="0" max="65535"></div>
+        <div><label>Var</label><input type="number" id="leftVariable" value="0" min="0" max="255"></div>
         <div><label>Op</label>
           <select id="leftOp">
             <option>GT</option><option>LT</option><option>GTE</option><option>LTE</option><option>EQ</option>
@@ -191,7 +196,8 @@ static const char rules_html[] PROGMEM = R"rawliteral(
       <p style="color:var(--muted);font-size:.8rem;margin-top:10px">Condición DERECHA</p>
       <div class="row">
         <div><label>Device</label><input type="number" id="rightDevice" value="0" min="0" max="255"></div>
-        <div><label>Sensor</label><input type="number" id="rightSensor" value="0" min="0" max="255"></div>
+        <div><label>Sensor</label><input type="number" id="rightSensor" value="0" min="0" max="65535"></div>
+        <div><label>Var</label><input type="number" id="rightVariable" value="0" min="0" max="255"></div>
         <div><label>Op</label>
           <select id="rightOp">
             <option>GT</option><option>LT</option><option>GTE</option><option>LTE</option><option>EQ</option>
@@ -232,6 +238,15 @@ static const char rules_html[] PROGMEM = R"rawliteral(
     <button class="btn btn-primary" onclick="addRule()">💾 Agregar Regla</button>
     <button class="btn btn-success" onclick="saveRules()">☁️ Guardar en dispositivo</button>
   </div>
+
+  <!-- REFERENCE PANEL -->
+  <div style="margin-top: 20px; padding: 15px; background: var(--bg-card); border-radius: 8px;">
+    <h3 style="margin-top:0; font-size:1.1rem; color:var(--primary)">🔑 Referencia de IDs (En vivo)</h3>
+    <button class="btn btn-sm" style="margin-bottom:10px" onclick="loadReferencePanel()">🔄 Actualizar Referencias</button>
+    <div id="refPanelContent" style="font-size:0.85rem; max-height: 200px; overflow-y: auto; background:#111; padding:10px; border-radius:4px; font-family:monospace;">
+      Cargando referencias...
+    </div>
+  </div>
 </div>
 
 <div id="toast">✅ Operación exitosa</div>
@@ -266,7 +281,7 @@ function exprSummary(expr) {
     return `(${exprSummary(expr.left)} ${op} ${exprSummary(expr.right)})`;
   }
   const s = expr.sensor || {};
-  return `[D${s.device||0}:S${s.id||0}] ${expr.cond||'?'} ${expr.value}`;
+  return `[D${s.device||0}:S${s.id||0}:V${s.var||0}] ${expr.cond||'?'} ${expr.value}`;
 }
 
 async function loadRules() {
@@ -277,6 +292,53 @@ async function loadRules() {
   } catch(e) { currentRules = []; }
   renderRules();
 }
+
+async function loadReferencePanel() {
+  const el = document.getElementById('refPanelContent');
+  el.innerHTML = "Cargando...";
+  try {
+    const r = await fetch('/actual');
+    const d = await r.json();
+    let html = "<div style='display:flex; gap:20px; flex-wrap:wrap;'>";
+    
+    // Sensores
+    html += "<div style='flex:1; min-width:200px'><b>📡 Sensores</b><br>";
+    if (d.sensors && d.sensors.length > 0) {
+      d.sensors.forEach(s => {
+        if(s.readings) {
+          s.readings.forEach(rd => {
+            if(rd.key_device !== undefined) {
+              html += `<span style="color:#0f0">Device:</span> ${rd.key_device} | <span style="color:#0ff">Sensor:</span> ${rd.key_sensor} | <span style="color:#f0f">Var:</span> ${rd.key_var} &rarr; ${rd.label} (${rd.value} ${rd.unit})<br>`;
+            }
+          });
+        }
+      });
+    } else {
+      html += "Ninguno<br>";
+    }
+    html += "</div>";
+
+    // Actuadores
+    html += "<div style='flex:1; min-width:200px'><b>⚡ Actuadores</b><br>";
+    if (d.actuators && d.actuators.length > 0) {
+      d.actuators.forEach(a => {
+         html += `<span style="color:#ff0">ID:</span> ${a.id} &rarr; ${a.name} (Estado: ${a.state})<br>`;
+      });
+    } else {
+      html += "Ninguno<br>";
+    }
+    html += "</div></div>";
+
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = "<span style='color:red'>Error cargando referencias</span>";
+  }
+}
+
+window.addEventListener('load', () => {
+  loadRules();
+  loadReferencePanel();
+});
 
 function renderRules() {
   const el = document.getElementById('ruleList');
@@ -303,8 +365,8 @@ function deleteRule(idx) {
   toast('🗑 Regla eliminada (guarda para aplicar)');
 }
 
-function buildLeafExpr(device, sensor, op, value) {
-  return { sensor: { device: parseInt(device), id: parseInt(sensor) }, cond: op, value: parseFloat(value) };
+function buildLeafExpr(device, sensor, variable, op, value) {
+  return { sensor: { device: parseInt(device), id: parseInt(sensor), var: parseInt(variable) }, cond: op, value: parseFloat(value) };
 }
 
 function addRule() {
@@ -315,6 +377,7 @@ function addRule() {
     expr = buildLeafExpr(
       document.getElementById('leafDevice').value,
       document.getElementById('leafSensor').value,
+      document.getElementById('leafVariable').value,
       document.getElementById('leafOp').value,
       document.getElementById('leafValue').value
     );
@@ -322,12 +385,14 @@ function addRule() {
     const left  = buildLeafExpr(
       document.getElementById('leftDevice').value,
       document.getElementById('leftSensor').value,
+      document.getElementById('leftVariable').value,
       document.getElementById('leftOp').value,
       document.getElementById('leftValue').value
     );
     const right = buildLeafExpr(
       document.getElementById('rightDevice').value,
       document.getElementById('rightSensor').value,
+      document.getElementById('rightVariable').value,
       document.getElementById('rightOp').value,
       document.getElementById('rightValue').value
     );

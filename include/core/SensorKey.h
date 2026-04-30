@@ -13,18 +13,34 @@
  * toU32()  : encodes key as uint32_t for use as hash index in the
  *            ControlMediator state-store.
  */
+enum class SensorVariable : uint8_t {
+    TEMPERATURE = 0,
+    HUMIDITY    = 1,
+    CO2         = 2,
+    MOISTURE    = 3,
+    PRESSURE    = 4,
+    EC          = 5,
+    PH          = 6,
+    NITROGEN    = 7,
+    PHOSPHORUS  = 8,
+    POTASSIUM   = 9,
+    RAW_ADC     = 10,
+    UNKNOWN     = 255
+};
+
 struct SensorKey {
-    uint8_t deviceId;
-    uint8_t sensorId;
+    uint8_t  deviceId;
+    uint16_t sensorId;
+    uint8_t  varId;
 
     bool operator==(const SensorKey& o) const {
-        return deviceId == o.deviceId && sensorId == o.sensorId;
+        return deviceId == o.deviceId && sensorId == o.sensorId && varId == o.varId;
     }
     bool operator!=(const SensorKey& o) const { return !(*this == o); }
 
-    /** [15:8]=deviceId  [7:0]=sensorId */
+    /** [31:24]=varId [23:16]=deviceId [15:0]=sensorId */
     uint32_t toU32() const {
-        return ((uint32_t)deviceId << 8) | (uint32_t)sensorId;
+        return ((uint32_t)varId << 24) | ((uint32_t)deviceId << 16) | (uint32_t)sensorId;
     }
 };
 

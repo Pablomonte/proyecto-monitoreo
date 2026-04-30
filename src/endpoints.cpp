@@ -16,6 +16,7 @@
 #include "sensors/ITemperatureSensor.h"
 #include "sensors/SensorCapacitive.h"
 #include "sensors/HD38Sensor.h"
+#include "core/ControlMediator.h"
 #include <Arduino.h>
 #include <HTTPClient.h>
 #include <SPIFFS.h>
@@ -46,6 +47,7 @@ extern ESPNowManager espnowMgr;
 #endif
 
 extern RelayManager relayMgr;
+extern ControlMediator mediator;
 
 // Helper to get sensor icon based on capabilities
 String getSensorIcon(ISensor *s) {
@@ -121,6 +123,11 @@ void handleMediciones() {
       r["value"] = String(tempSensor->getTemperature(), 1);
       r["unit"] = "°C";
       r["status"] = "ok";
+      r["id"] = tempSensor->getSensorID();
+      r["key"] = tempSensor->getKey().toU32();
+      r["key_device"] = tempSensor->getKey().deviceId;
+      r["key_sensor"] = tempSensor->getKey().sensorId;
+      r["key_var"] = (uint8_t)SensorVariable::TEMPERATURE;
     }
     if (humSensor) {
       JsonObject r = readings.add<JsonObject>();
@@ -128,12 +135,22 @@ void handleMediciones() {
       r["value"] = String(humSensor->getHumidity(), 1);
       r["unit"] = "%";
       r["status"] = "ok";
+      r["id"] = humSensor->getSensorID();
+      r["key"] = humSensor->getKey().toU32();
+      r["key_device"] = humSensor->getKey().deviceId;
+      r["key_sensor"] = humSensor->getKey().sensorId;
+      r["key_var"] = (uint8_t)SensorVariable::HUMIDITY;
     }
     if (co2Sensor) {
       JsonObject r = readings.add<JsonObject>();
       r["label"] = "CO2";
       r["value"] = String(co2Sensor->getCO2(), 0);
       r["unit"] = "ppm";
+      r["id"] = co2Sensor->getSensorID();
+      r["key"] = co2Sensor->getKey().toU32();
+      r["key_device"] = co2Sensor->getKey().deviceId;
+      r["key_sensor"] = co2Sensor->getKey().sensorId;
+      r["key_var"] = (uint8_t)SensorVariable::CO2;
 
       float val = co2Sensor->getCO2();
       if (val > 1000)
@@ -149,12 +166,18 @@ void handleMediciones() {
       r["value"] = String(moistSensor->getMoisture(), 1);
       r["unit"] = "%";
       r["status"] = "ok";
+      r["id"] = moistSensor->getSensorID();
+      r["key"] = moistSensor->getKey().toU32();
+      r["key_device"] = moistSensor->getKey().deviceId;
+      r["key_sensor"] = moistSensor->getKey().sensorId;
+      r["key_var"] = (uint8_t)SensorVariable::MOISTURE;
     }
     if (capSensor) {
       JsonObject diag = sensorObj["diagnostics"].to<JsonObject>();
       diag["raw"] = capSensor->getRawValue();
       diag["pin"] = capSensor->getPin();
-
+      diag["id"] = capSensor->getSensorID();
+      diag["key"] = capSensor->getKey().toU32();
       JsonObject cal = sensorObj["calibration"].to<JsonObject>();
       cal["dry"] = capSensor->getDryValue();
       cal["wet"] = capSensor->getWetValue();
@@ -163,7 +186,8 @@ void handleMediciones() {
       JsonObject diag = sensorObj["diagnostics"].to<JsonObject>();
       diag["raw"] = hd38Sensor->getRawValue();
       diag["pin"] = hd38Sensor->getPin();
-
+      diag["id"] = hd38Sensor->getSensorID();
+      diag["key"] = hd38Sensor->getKey().toU32();
       JsonObject cal = sensorObj["calibration"].to<JsonObject>();
       cal["dry"] = hd38Sensor->getDryValue();
       cal["wet"] = hd38Sensor->getWetValue();
@@ -174,6 +198,8 @@ void handleMediciones() {
       r["value"] = String(presSensor->getPressure(), 1);
       r["unit"] = "hPa";
       r["status"] = "ok";
+      r["id"] = presSensor->getSensorID();
+      r["key"] = presSensor->getKey().toU32();
     }
 
     // Soil Sensor specific extras (N, P, K, pH, EC) if available via generic
@@ -266,6 +292,17 @@ void handleMediciones() {
                   String((uptimeSec % 3600) / 60) + "m " +
                   String(uptimeSec % 60) + "s";
   doc["uptime"] = uptime;
+
+  JsonArray actuators = doc["actuators"].to<JsonArray>();
+  for (uint8_t i = 0; i < mediator.getActuatorCount(); i++) {
+    IActuator* a = mediator.getActuator(i);
+    if (!a) continue;
+    JsonObject o = actuators.add<JsonObject>();
+    o["id"]    = a->getId();
+    o["name"]  = a->getName();
+    o["state"] = a->getState();
+    o["key_actuator"] = a->getId();
+  }
 
   String output;
   serializeJson(doc, output);
@@ -553,11 +590,8 @@ void handleRelayToggle() {
 
 // ── Mediator / Rules endpoints ────────────────────────────────────────────────
 
-#include "core/ControlMediator.h"
 #include "core/RuleLoader.h"
 #include "rules_html.h"
-
-extern ControlMediator mediator;
 
 /**
  * POST /actuator/command

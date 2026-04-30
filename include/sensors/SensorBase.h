@@ -18,12 +18,25 @@
  *
  * setSensorId() is intentionally absent — IDs must be stable at construction.
  */
+enum class SensorClass : uint8_t {
+    SYSTEM       = 0x00,
+    ANALOG_ADC   = 0x10,
+    I2C_BUS      = 0x20,
+    RS485_MODBUS = 0x30,
+    ONE_WIRE     = 0x40,
+    VIRTUAL      = 0x50
+};
+
 class SensorBase {
 public:
-    explicit SensorBase(uint8_t stableSensorId)
-        : _key({_localDeviceId(), stableSensorId}), _counter(0) {}
+    explicit SensorBase(SensorClass sclass, uint8_t physicalId)
+        : _key({_localDeviceId(), (uint16_t)(((uint16_t)sclass << 8) | physicalId), 0}), _counter(0) {}
 
     SensorKey getKey() const { return _key; }
+
+    void updatePhysicalId(SensorClass sclass, uint8_t physicalId) {
+        _key.sensorId = (uint16_t)(((uint16_t)sclass << 8) | physicalId);
+    }
 
 protected:
     SensorKey _key;
@@ -32,6 +45,7 @@ protected:
     /**
      * Fill a SensorReading with the current counter and value.
      * Increments counter before filling — always call after a successful read().
+     * (Legacy for single-value sensors, varId defaults to 0)
      */
     bool _fillReading(SensorReading& out, float value) {
         ++_counter;
@@ -39,6 +53,20 @@ protected:
         out.value   = value;
         out.counter = _counter;
         return true;
+    }
+
+    /**
+     * Helper to directly notify the mediator of a specific variable reading.
+     * Use this for multi-variable sensors.
+     */
+    void _notify(ControlMediator& mediator, SensorVariable var, float value) {
+        ++_counter;
+        SensorReading r;
+        r.key         = _key;
+        r.key.varId   = (uint8_t)var;
+        r.value       = value;
+        r.counter     = _counter;
+        mediator.onSensorReading(r);
     }
 
     /**

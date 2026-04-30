@@ -145,8 +145,9 @@ private:
         RuleExpr expr;
         expr.type = ExprType::LEAF;
         expr.cond.key.deviceId  = sensorObj["device"] | (uint8_t)0;
-        expr.cond.key.sensorId  = sensorObj["id"]     | (uint8_t)0;
-        expr.cond.threshold     = node["value"]        | 0.0f;
+        expr.cond.key.sensorId  = sensorObj["id"]     | (uint16_t)0;
+        expr.cond.key.varId     = sensorObj["var"]    | (uint8_t)0;
+        expr.cond.threshold     = node["value"]       | 0.0f;
         expr.cond.op            = _parseCondOp(node["cond"] | "GT");
         expr.leftIdx = expr.rightIdx = 0;
         return mediator.addExpr(expr);

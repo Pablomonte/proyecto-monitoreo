@@ -157,9 +157,10 @@ public:
 
     // ── Mediator interface ────────────────────────────────────────────────
     SensorKey getKey() const override { return SensorBase::getKey(); }
-    bool readValue(SensorReading& out) override {
-        if (!active) return false;
-        return _fillReading(out, moisture);
+    void notifyMediator(ControlMediator& mediator) override {
+        if (!active) return;
+        _notify(mediator, SensorVariable::MOISTURE, moisture);
+        _notify(mediator, SensorVariable::RAW_ADC, rawValue);
     }
 };
 

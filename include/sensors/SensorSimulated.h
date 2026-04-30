@@ -17,7 +17,7 @@ private:
     float co2;
 
 public:
-    SensorSimulated() : SensorBase(0xFE), active(false), temperature(22.5), humidity(50), co2(400) {}
+    SensorSimulated() : SensorBase(SensorClass::VIRTUAL, 0xFE), active(false), temperature(22.5), humidity(50), co2(400) {}
 
     bool init() override {
         active = true;
@@ -36,7 +36,7 @@ public:
         temperature = 22.5 + random(-100, 100) * 0.01;
         humidity = 50 + random(-500, 500) * 0.01;
         co2 = 400 + random(0, 200);
-
+        DBG_VERBOSE("[Simulated] Read: temp=%.1f hum=%.1f co2=%.0f\n", temperature, humidity, co2);
         return true;
     }
 
@@ -62,9 +62,11 @@ public:
 
     // ── Mediator interface ────────────────────────────────────────────────
     SensorKey getKey() const override { return SensorBase::getKey(); }
-    bool readValue(SensorReading& out) override {
-        if (!active) return false;
-        return _fillReading(out, temperature);
+    void notifyMediator(ControlMediator& mediator) override {
+        if (!active) return;
+        _notify(mediator, SensorVariable::TEMPERATURE, temperature);
+        _notify(mediator, SensorVariable::HUMIDITY, humidity);
+        _notify(mediator, SensorVariable::CO2, co2);
     }
 };
 

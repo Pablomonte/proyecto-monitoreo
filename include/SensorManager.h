@@ -278,12 +278,9 @@ public:
       if (s->isActive() && s->dataReady()) {
         if (!isFirst && modbusDelayMs > 0) delay(modbusDelayMs);
         isFirst = false;
-        if (s->read()) {
-          SensorReading r;
-          if (s->readValue(r)) {
-            mediator.onSensorReading(r);
+          if (s->read()) {
+            s->notifyMediator(mediator);
           }
-        }
       }
     }
   }

@@ -304,10 +304,12 @@ Lista de relays configurados.
 ```json
 [
   {
-    "address": 1,
-    "alias": "Relay 01",
-    "channels": 2,
-    "states": [false, false]
+    "address":1,
+    "alias":"Relay 01",
+    "r0":1,
+    "r1":1,
+    "state":[true,true],
+    "input_state":[false,true]
   }
 ]
 ```

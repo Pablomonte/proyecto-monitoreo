@@ -19,7 +19,7 @@ private:
 
 public:
     SensorOneWire(DallasTemperature* dt, DeviceAddress addr, int idx)
-        : SensorBase(addr[7]),   // last byte of 8-byte OneWire address = stable ID
+        : SensorBase(SensorClass::ONE_WIRE, addr[7]),   // last byte of 8-byte OneWire address = stable ID
           dallas(dt), deviceIndex(idx), temperature(-127), active(false) {
         memcpy(address, addr, 8);
         addressStr = "";
@@ -51,6 +51,7 @@ public:
 
         if (temp != DEVICE_DISCONNECTED_C && temp != 85.0) {
             temperature = temp;
+            DBG_VERBOSE("[OneWire] %s: %.1f\n", addressStr.c_str(), temperature);
             return true;
         }
 
@@ -80,9 +81,9 @@ public:
 
     // ── Mediator interface ────────────────────────────────────────────────
     SensorKey getKey() const override { return SensorBase::getKey(); }
-    bool readValue(SensorReading& out) override {
-        if (!active) return false;
-        return _fillReading(out, temperature);
+    void notifyMediator(ControlMediator& mediator) override {
+        if (!active) return;
+        _notify(mediator, SensorVariable::TEMPERATURE, temperature);
     }
 };
 

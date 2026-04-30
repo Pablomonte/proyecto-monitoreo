@@ -4,6 +4,7 @@
 #include "Rule.h"
 #include "SensorKey.h"
 #include <math.h>
+#include "../debug.h"
 
 /**
  * ControlMediator — central control arbiter.
@@ -47,13 +48,17 @@ public:
      * (prevents processing stale or out-of-order readings).
      */
     void onSensorReading(const SensorReading& r) {
+        DBG_VERBOSE("[Mediator] onSensorReading: key=%08lX val=%.2f cnt=%lu\n", 
+                    (unsigned long)r.key.toU32(), r.value, (unsigned long)r.counter);
         uint8_t idx = _storeIndex(r.key);
-        if (_stateValid[idx] && r.counter <= _stateCounter[idx]) {
+        if (_state[idx].valid && _state[idx].keyU32 == r.key.toU32() && r.counter <= _state[idx].counter) {
+            DBG_VERBOSE("[Mediator] Discarded stale reading (stored cnt=%lu)\n", (unsigned long)_state[idx].counter);
             return;  // stale — discard
         }
-        _state[idx]        = r.value;
-        _stateCounter[idx] = r.counter;
-        _stateValid[idx]   = true;
+        _state[idx].keyU32  = r.key.toU32();
+        _state[idx].value   = r.value;
+        _state[idx].counter = r.counter;
+        _state[idx].valid   = true;
         evaluateAllRules();
     }
 
@@ -94,9 +99,13 @@ public:
     uint8_t getRuleCount() const { return _ruleCount; }
 
 private:
-    float    _state[STATE_STORE_SIZE];
-    uint32_t _stateCounter[STATE_STORE_SIZE];   // per-slot monotonic counter
-    bool     _stateValid[STATE_STORE_SIZE];
+    struct StateEntry {
+        uint32_t keyU32;
+        float    value;
+        uint32_t counter;
+        bool     valid;
+    };
+    StateEntry _state[STATE_STORE_SIZE];
 
     RuleExpr _exprPool[RULE_EXPR_POOL];
     uint8_t  _exprCount;
@@ -108,23 +117,37 @@ private:
     uint8_t         _actuatorCount;
     ActuatorCommand _active[ACTUATOR_MAX];
     uint32_t        _activeUntil[ACTUATOR_MAX];
+    bool            _dispatched[ACTUATOR_MAX];
 
     void _clear() {
         for (uint16_t i = 0; i < STATE_STORE_SIZE; i++) {
-            _state[i]        = 0.0f;
-            _stateCounter[i] = 0;
-            _stateValid[i]   = false;
+            _state[i] = {0, 0.0f, 0, false};
         }
         _exprCount = _ruleCount = _actuatorCount = 0;
         for (uint8_t i = 0; i < ACTUATOR_MAX; i++) {
             _actuators[i]   = nullptr;
             _activeUntil[i] = 0;
             _active[i]      = {0, false, 0, 0};
+            _dispatched[i]  = false;   // <-- add this
         }
     }
 
-    static uint8_t _storeIndex(const SensorKey& key) {
-        return (uint8_t)(key.toU32() % STATE_STORE_SIZE);
+    uint8_t _storeIndex(const SensorKey& key) const {
+        uint32_t u32 = key.toU32();
+        // Better hash to mix high bits
+        uint32_t hash = u32 ^ (u32 >> 16) ^ (u32 >> 24);
+        uint8_t startIdx = (uint8_t)(hash % STATE_STORE_SIZE);
+        uint8_t idx = startIdx;
+        
+        // Linear probing to resolve collisions
+        do {
+            if (!_state[idx].valid || _state[idx].keyU32 == u32) {
+                return idx;
+            }
+            idx = (idx + 1) % STATE_STORE_SIZE;
+        } while (idx != startIdx);
+        
+        return startIdx; // Table full; fallback to overwrite (should ideally increase STATE_STORE_SIZE)
     }
 
     bool evalExpr(uint8_t idx) const {
@@ -133,36 +156,46 @@ private:
         switch (e.type) {
             case ExprType::LEAF: {
                 uint8_t si = _storeIndex(e.cond.key);
-                if (!_stateValid[si]) return false;
-                float v = _state[si];
-                switch (e.cond.op) {
-                    case CondOp::GT:  return v >  e.cond.threshold;
-                    case CondOp::LT:  return v <  e.cond.threshold;
-                    case CondOp::EQ:  return fabsf(v - e.cond.threshold) < 1e-4f;
-                    case CondOp::GTE: return v >= e.cond.threshold;
-                    case CondOp::LTE: return v <= e.cond.threshold;
+                if (!_state[si].valid || _state[si].keyU32 != e.cond.key.toU32()) {
+                    DBG_VERBOSE("[Mediator] evalExpr LEAF: key=%08lX state invalid\n", (unsigned long)e.cond.key.toU32());
+                    return false;
                 }
-                return false;
+                float v = _state[si].value;
+                bool res = false;
+                switch (e.cond.op) {
+                    case CondOp::GT:  res = v >  e.cond.threshold; break;
+                    case CondOp::LT:  res = v <  e.cond.threshold; break;
+                    case CondOp::EQ:  res = fabsf(v - e.cond.threshold) < 1e-4f; break;
+                    case CondOp::GTE: res = v >= e.cond.threshold; break;
+                    case CondOp::LTE: res = v <= e.cond.threshold; break;
+                }
+                DBG_VERBOSE("[Mediator] evalExpr LEAF: key=%08lX val=%.2f op=%d thresh=%.2f -> %s\n", 
+                            (unsigned long)e.cond.key.toU32(), v, (int)e.cond.op, e.cond.threshold, res ? "TRUE" : "FALSE");
+                return res;
             }
-            case ExprType::AND: return evalExpr(e.leftIdx) && evalExpr(e.rightIdx);
-            case ExprType::OR:  return evalExpr(e.leftIdx) || evalExpr(e.rightIdx);
+            case ExprType::AND: {
+                bool res = evalExpr(e.leftIdx) && evalExpr(e.rightIdx);
+                DBG_VERBOSE("[Mediator] evalExpr AND: left=%d right=%d -> %s\n", e.leftIdx, e.rightIdx, res ? "TRUE" : "FALSE");
+                return res;
+            }
+            case ExprType::OR: {
+                bool res = evalExpr(e.leftIdx) || evalExpr(e.rightIdx);
+                DBG_VERBOSE("[Mediator] evalExpr OR: left=%d right=%d -> %s\n", e.leftIdx, e.rightIdx, res ? "TRUE" : "FALSE");
+                return res;
+            }
         }
         return false;
     }
 
     void evaluateAllRules() {
+        DBG_VERBOSE("[Mediator] Evaluating %d rules...\n", _ruleCount);
         for (uint8_t i = 0; i < _ruleCount; i++) {
             const Rule& r = _rules[i];
-            if (evalExpr(r.rootExprIdx)) {
+            bool result = evalExpr(r.rootExprIdx);
+            DBG_VERBOSE("[Mediator]  - Rule %d (actuator %d): %s\n", i, r.actuatorId, result ? "TRUE" : "FALSE");
+            if (result) {
                 ActuatorCommand cmd{r.actuatorId, r.triggerState, r.durationMs, r.priority};
                 dispatch(cmd);
-            } else {
-                int8_t ai = _findActuatorIndex(r.actuatorId);
-                if (ai >= 0 && _active[ai].priority == r.priority
-                    && r.durationMs == 0 && _actuators[ai]->getState()) {
-                    ActuatorCommand off{r.actuatorId, false, 0, r.priority};
-                    dispatch(off);
-                }
             }
         }
     }
@@ -171,10 +204,14 @@ private:
         int8_t ai = _findActuatorIndex(cmd.actuatorId);
         if (ai < 0) return;
         if (cmd.priority >= _active[ai].priority) {
+            bool stateChanged = !_dispatched[ai] || (_active[ai].state != cmd.state);
             _active[ai] = cmd;
+            _dispatched[ai] = true;
             _activeUntil[ai] = (cmd.state && cmd.durationMs > 0)
                                 ? millis() + cmd.durationMs : 0;
-            if (_actuators[ai]) _actuators[ai]->execute(cmd);
+            if (stateChanged && _actuators[ai]) {
+                _actuators[ai]->execute(cmd);
+            }
         }
     }
 

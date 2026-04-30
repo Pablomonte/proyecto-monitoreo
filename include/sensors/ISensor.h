@@ -2,6 +2,7 @@
 #define ISENSOR_H
 
 #include "core/SensorKey.h"
+#include "core/ControlMediator.h"
 
 /**
  * Base interface for all sensors.
@@ -44,11 +45,10 @@ public:
 
     // ── Mediator reading ──────────────────────────────────────────────────
     /**
-     * Fill `out` with the primary value and the per-sensor monotonic counter.
+     * Notify the mediator with all valid readings from this sensor.
      * Call only after a successful read().
-     * @return false if no valid data is cached.
      */
-    virtual bool readValue(SensorReading& out) = 0;
+    virtual void notifyMediator(ControlMediator& mediator) = 0;
 
     // ── Optional calibration ──────────────────────────────────────────────
     virtual bool calibrate(float reference = 0) { return false; }

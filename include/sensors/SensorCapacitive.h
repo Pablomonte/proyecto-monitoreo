@@ -22,7 +22,7 @@ private:
 
 public:
     SensorCapacitive(int adcPin = CAPACITIVE_PIN, int dry = ADC_MAX, int wet = ADC_MIN)
-        : SensorBase((uint8_t)(adcPin >= 0 ? adcPin : 0xFF)), pin(adcPin), moisture(0), rawValue(0), active(false), dryValue(dry), wetValue(wet) {}
+        : SensorBase(SensorClass::ANALOG_ADC, (uint8_t)(adcPin >= 0 ? adcPin : 0xFF)), pin(adcPin), moisture(0), rawValue(0), active(false), dryValue(dry), wetValue(wet) {}
 
     bool init() override {
         pinMode(pin, INPUT);
@@ -44,7 +44,7 @@ public:
         moisture = map(rawValue, dryValue, wetValue, 0, 100);
         moisture = constrain(moisture, 0, 100);
 
-        DBG_VERBOSE("[Capacitive] Raw=%d M=%.1f%%\n", rawValue, moisture);
+        DBG_VERBOSE("[Capacitive] Raw=%d M=%.1f%% \tkey=0x%llx \n", rawValue, moisture, (unsigned long long)this->getKey().toU32());
         return true;
     }
 
@@ -80,9 +80,10 @@ public:
 
     // ── Mediator interface ────────────────────────────────────────────────
     SensorKey getKey() const override { return SensorBase::getKey(); }
-    bool readValue(SensorReading& out) override {
-        if (!active) return false;
-        return _fillReading(out, moisture);
+    void notifyMediator(ControlMediator& mediator) override {
+        if (!active) return;
+        _notify(mediator, SensorVariable::MOISTURE, moisture);
+        _notify(mediator, SensorVariable::RAW_ADC, rawValue);
     }
 };
 

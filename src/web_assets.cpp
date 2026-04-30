@@ -509,6 +509,7 @@ const char *index_html = R"=====(<!DOCTYPE html>
         <div class="nav-buttons">
             <a href="/data" class="btn btn-primary">📊 Ver Datos</a>
             <a href="/settings" class="btn btn-secondary">⚙️ Configuración</a>
+            <a href="/rules-editor" class="btn btn-secondary">⚡ Reglas Automáticas</a>
             <a href="/wifi-setup" class="btn btn-secondary">📡 Configurar WiFi</a>
         </div>
         
@@ -534,6 +535,7 @@ const char *data_html = R"=====(<!DOCTYPE html>
     <div class="nav">
         <a href="/">🏠 Inicio</a>
         <a href="/settings">⚙️ Configuración</a>
+        <a href="/rules-editor">⚡ Reglas</a>
     </div>
 
     <div class="cards" id="sensorCards">
@@ -732,7 +734,7 @@ const char *config_html = R"=====(<!DOCTYPE html>
     <div class="container">
         <h1>Configuración del Sistema</h1>
         <div class="subtitle">AlterMundi - La pata tecnológica de ese otro mundo posible</div>
-        <div class="nav"><a href="/">🏠 Inicio</a><a href="/data">📊 Datos</a></div>
+        <div class="nav"><a href="/">🏠 Inicio</a><a href="/data">📊 Datos</a><a href="/rules-editor">⚡ Reglas</a></div>
         <div id="loading" class="loading">Cargando configuración...</div>
 
         <form id="configForm" style="display:none;">

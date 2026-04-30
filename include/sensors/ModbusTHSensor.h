@@ -40,7 +40,7 @@ protected:
 
 public:
     ModbusTHSensor(uint8_t address = 1)
-        : SensorBase(address),         // Modbus address = stable sensorId
+        : SensorBase(SensorClass::RS485_MODBUS, address),         // Modbus address = stable sensorId
           ModbusSensorBase<2>(address),
           temperature(999), humidity(99) {}
 
@@ -70,8 +70,9 @@ public:
 
     // ── Mediator interface ────────────────────────────────────────────────
     SensorKey getKey() const override { return SensorBase::getKey(); }
-    bool readValue(SensorReading& out) override {
-        return _fillReading(out, temperature);  // 999 = invalid sentinel checked by caller
+    void notifyMediator(ControlMediator& mediator) override {
+        if (temperature != 999) _notify(mediator, SensorVariable::TEMPERATURE, temperature);
+        if (humidity != 99)    _notify(mediator, SensorVariable::HUMIDITY, humidity);
     }
 };
 

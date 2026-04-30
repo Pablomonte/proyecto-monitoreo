@@ -13,7 +13,7 @@ class SensorSCD30 : public SensorBase, public ITemperatureSensor, public IHumidi
     // sensorId = 0x61 = SCD30 default I2C address (stable)
     // deviceId = last byte of EFuse MAC (set by SensorBase)
 public:
-    SensorSCD30() : SensorBase(0x61), active(false), temperature(999), humidity(100), co2(999999) {}
+    SensorSCD30() : SensorBase(SensorClass::I2C_BUS, 0x61), active(false), temperature(999), humidity(100), co2(999999) {}
 
     bool init() override {
         active = scd30.begin();
@@ -40,7 +40,7 @@ public:
         temperature = scd30.temperature;
         humidity = scd30.relative_humidity;
         co2 = scd30.CO2;
-        return true;
+        DBG_VERBOSE("[SCD30] Read: temp=%.1f hum=%.1f co2=%.0f key=%llx\n", temperature, humidity, co2, (unsigned long long)this->getKey().toU32());        return true;
     }
 
     // ITemperatureSensor
@@ -76,9 +76,11 @@ public:
     // ── Mediator interface ────────────────────────────────────────────────
 public:
     SensorKey getKey() const override { return SensorBase::getKey(); }
-    bool readValue(SensorReading& out) override {
-        if (!active) return false;
-        return _fillReading(out, co2);   // primary: CO2 ppm
+    void notifyMediator(ControlMediator& mediator) override {
+        if (!active) return;
+        _notify(mediator, SensorVariable::CO2, co2);
+        _notify(mediator, SensorVariable::TEMPERATURE, temperature);
+        _notify(mediator, SensorVariable::HUMIDITY, humidity);
     }
 };
 
