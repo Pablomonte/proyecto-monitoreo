@@ -22,7 +22,7 @@ private:
 
 public:
     SensorCapacitive(int adcPin = CAPACITIVE_PIN, int dry = ADC_MAX, int wet = ADC_MIN)
-        : pin(adcPin), moisture(0), rawValue(0), active(false), dryValue(dry), wetValue(wet) {}
+        : SensorBase((uint8_t)(adcPin >= 0 ? adcPin : 0xFF)), pin(adcPin), moisture(0), rawValue(0), active(false), dryValue(dry), wetValue(wet) {}
 
     bool init() override {
         pinMode(pin, INPUT);

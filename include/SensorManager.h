@@ -198,6 +198,9 @@ public:
 
         for (size_t i = 0; i < pinList.size(); i++) {
           int aPin = pinList[i];
+          int dry = hasDryArr ? (cfg["dry_values"][i] | flatDry) : flatDry;
+          int wet = hasWetArr ? (cfg["wet_values"][i] | flatWet) : flatWet;
+
           char sensorName[16];
           snprintf(sensorName, sizeof(sensorName), "%d", aPin);
 
