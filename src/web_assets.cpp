@@ -670,8 +670,8 @@ const char *data_html = R"=====(<!DOCTYPE html>
                 }
 
                 // Outputs (Channels)
-                if (r.channels) {
-                    r.channels.forEach((state, idx) => {
+                if (r.state) {
+                    r.state.forEach((state, idx) => {
                         const status = state ? "ok" : "warn";
                         const label = state ? "ON" : "OFF";
                         // Note: toggle function needs to be global or accessible
@@ -683,8 +683,8 @@ const char *data_html = R"=====(<!DOCTYPE html>
                 }
 
                 // Inputs
-                if (r.inputs) {
-                    r.inputs.forEach((state, idx) => {
+                if (r.input_state) {
+                    r.input_state.forEach((state, idx) => {
                         const status = state ? "ok" : "warn";
                         const label = state ? "ON" : "OFF";
                         html += `<div class='val ${status}'>

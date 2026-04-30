@@ -279,7 +279,9 @@ public:
         json += "\"address\":" + String(_address) + ",";
         json += "\"alias\":\"" + _alias + "\",";
         json += "\"r0\":" + String(_relayState[0] ? 1 : 0) + ",";
-        json += "\"r1\":" + String(_relayState[1] ? 1 : 0);
+        json += "\"r1\":" + String(_relayState[1] ? 1 : 0) + ",";
+        json += "\"state\":[" + String(_relayState[0] ? "true" : "false") + "," + String(_relayState[1] ? "true" : "false") + "],";
+        json += "\"input_state\":[" + String(_inputState[0] ? "true" : "false") + "," + String(_inputState[1] ? "true" : "false") + "]";
         json += "}";
         return json;
     }
