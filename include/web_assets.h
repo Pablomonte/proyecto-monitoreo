@@ -7,6 +7,7 @@ extern const char *index_html;
 extern const char *data_html;
 extern const char *config_html;
 extern const char *config_js;
+extern const char *rules_html;
 extern const char *favicon_svg;
 
 #endif // WEB_ASSETS_H

@@ -591,7 +591,6 @@ void handleRelayToggle() {
 // ── Mediator / Rules endpoints ────────────────────────────────────────────────
 
 #include "core/RuleLoader.h"
-#include "rules_html.h"
 
 /**
  * POST /actuator/command
