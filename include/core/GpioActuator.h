@@ -1,5 +1,5 @@
 #pragma once
-#include "IActuator.h"
+#include "ActuatorBase.h"
 #include <Arduino.h>
 #include <esp_timer.h>
 
@@ -15,7 +15,7 @@
  *
  * Alias: RelayActuator = GpioActuator
  */
-class GpioActuator : public IActuator {
+class GpioActuator : public ActuatorBase {
 public:
     GpioActuator(uint8_t id, uint8_t pin, String name = "gpio",
                  bool activeHigh = true)
@@ -51,23 +51,17 @@ public:
         return true;
     }
 
-    /**
-     * Execute a command.
-     * If cmd.state == true and cmd.durationMs > 0, the hardware timer
-     * is armed to call _timerCb() after durationMs µs, which pulls the pin
-     * back to the inactive level automatically — no loop() polling needed.
-     */
-    void execute(const ActuatorCommand& cmd) override {
-        // cancel any running auto-off first
+    void _turnOn(uint32_t effDuration) override {
         if (_timer) esp_timer_stop(_timer);
-
-        _write(cmd.state);
-
-        if (cmd.state && cmd.durationMs > 0 && _timer) {
-            // esp_timer works in microseconds
-            esp_timer_start_once(_timer,
-                                 (uint64_t)cmd.durationMs * 1000ULL);
+        _write(true);
+        if (effDuration > 0 && _timer) {
+            esp_timer_start_once(_timer, (uint64_t)effDuration * 1000ULL);
         }
+    }
+
+    void _turnOff() override {
+        if (_timer) esp_timer_stop(_timer);
+        _write(false);
     }
 
     bool getState() const override { return _state; }
@@ -84,6 +78,9 @@ private:
     esp_timer_handle_t _timer;
 
     void _write(bool on) {
+        if (!on && _state) { // was ON, now OFF
+             _recordTurnOff();
+        }
         _state = on;
         digitalWrite(_pin, (_activeHigh ? on : !on) ? HIGH : LOW);
     }

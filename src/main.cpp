@@ -601,7 +601,7 @@ void loop() {
     for (auto *r : relayMgr.getRelays()) {
       if (r && r->isActive()) {
         r->syncState();
-        r->syncInputs();
+        r->syncInputs(mediator);
 
         String data = r->getGrafanaString();
         String id = r->getAlias();

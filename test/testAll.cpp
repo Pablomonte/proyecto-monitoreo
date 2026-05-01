@@ -18,6 +18,7 @@ extern void runRuleConditionTests();
 extern void runSensorIdentityTests();
 extern void runAutomationFlowTests();
 extern void runRuleLoaderTests();
+extern void runActuatorTimingTests();
 
 void setUp() {
 #ifndef ARDUINO
@@ -41,6 +42,7 @@ int main() {
     runSensorIdentityTests();
     runAutomationFlowTests();
     runRuleLoaderTests();
+    runActuatorTimingTests();
 
     return UNITY_END();
 }
@@ -61,6 +63,7 @@ void setup() {
     runSensorIdentityTests();
     runAutomationFlowTests();
     runRuleLoaderTests();
+    runActuatorTimingTests();
     UNITY_END();
 }
 void loop() {}

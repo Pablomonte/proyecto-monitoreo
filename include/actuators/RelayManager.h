@@ -53,6 +53,7 @@ public:
                     
                     uint8_t gpioId = pin + 200; // Desplazamiento para evitar colisión con Modbus
                     auto* act = new GpioActuator(gpioId, pin, alias, !activeLow);
+                    act->configure(r["config"]["max_on_ms"] | 0, r["config"]["min_off_ms"] | 0);
                     gpioRelays.push_back({act, pin, alias});
                     DBG_INFO("[RelayMgr] Added GPIO: Pin=%d '%s' (ID=%d)\n", pin, alias.c_str(), gpioId);
                 } else {
@@ -61,7 +62,15 @@ public:
                         DBG_ERROR("[RelayMgr] WARN: Modbus Dir %d (ID %d) puede colisionar con GPIOs!\n", addr, addr << 4);
                     }
                     String alias = r["config"]["alias"] | "";
-                    relays.push_back(new RelayModule2CH(addr, alias));
+                    
+                    auto* modbusRelay = new RelayModule2CH(addr, alias);
+                    JsonObjectConst ch0 = r["config"]["ch0"];
+                    JsonObjectConst ch1 = r["config"]["ch1"];
+                    
+                    modbusRelay->configureChannel(0, ch0["max_on_ms"] | 0, ch0["min_off_ms"] | 0, ch0["inverted"] | false);
+                    modbusRelay->configureChannel(1, ch1["max_on_ms"] | 0, ch1["min_off_ms"] | 0, ch1["inverted"] | false);
+
+                    relays.push_back(modbusRelay);
                     DBG_INFO("[RelayMgr] Added Modbus: Addr=%d '%s'\n", addr, alias.c_str());
                 }
             } else {

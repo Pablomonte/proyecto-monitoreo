@@ -282,6 +282,38 @@ void handleMediciones() {
   }
 #endif
 
+  // Exponer Entradas Digitales de los reles Modbus como sensores visuales
+  for (auto *r : relayMgr.getRelays()) {
+    if (!r || !r->isActive()) continue;
+
+    JsonObject sensorObj = sensors.add<JsonObject>();
+    sensorObj["type"] = "Entradas Digitales";
+    sensorObj["id"] = "modbus_relay_" + String(r->getAddress());
+    sensorObj["icon"] = "🔌";
+    sensorObj["active"] = true;
+    sensorObj["error"] = false;
+
+    JsonArray readings = sensorObj["readings"].to<JsonArray>();
+
+    JsonObject in1 = readings.add<JsonObject>();
+    in1["label"] = "IN 1";
+    in1["value"] = String(r->getInputState(0) ? 1 : 0);
+    in1["unit"]  = "";
+    in1["status"]= r->getInputState(0) ? "ok" : "warn";
+    in1["key_device"] = (uint8_t)(ESP.getEfuseMac() & 0xFF);
+    in1["key_sensor"] = r->getAddress();
+    in1["key_var"] = (uint8_t)SensorVariable::DIGITAL_IN_1;
+
+    JsonObject in2 = readings.add<JsonObject>();
+    in2["label"] = "IN 2";
+    in2["value"] = String(r->getInputState(1) ? 1 : 0);
+    in2["unit"]  = "";
+    in2["status"]= r->getInputState(1) ? "ok" : "warn";
+    in2["key_device"] = (uint8_t)(ESP.getEfuseMac() & 0xFF);
+    in2["key_sensor"] = r->getAddress();
+    in2["key_var"] = (uint8_t)SensorVariable::DIGITAL_IN_2;
+  }
+
   // Legacy fields for backward compatibility (optional, but good practice)
   // We can populate them from the first sensor found, or leave empty.
   doc["wifi_status"] = wifiStatus;
@@ -587,11 +619,13 @@ void handleRelayToggle() {
 
   for (auto *r : relayMgr.getRelays()) {
     if (r->getAddress() == addr) {
-      if (r->toggleRelay(ch)) {
-        server.send(200, "text/plain", "OK");
-      } else {
-        server.send(500, "text/plain", "Failed to toggle");
-      }
+      ActuatorCommand cmd;
+      cmd.actuatorId = r->getChannel(ch)->getId();
+      cmd.state = !r->getChannel(ch)->getState(); // Commuta el estado LÓGICO
+      cmd.durationMs = 0;
+      cmd.priority = 3;
+      mediator.onManualCommand(cmd);
+      server.send(200, "text/plain", "OK");
       return;
     }
   }

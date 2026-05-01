@@ -1352,9 +1352,21 @@ function renderRelays(relays) {
                     <label>Pin GPIO</label>
                     <input type="number" id="relay_${index}_pin" value="${relay.config.pin !== undefined ? relay.config.pin : 2}" min="0" max="39">
                 </div>
-                <div class="form-group" style="padding-top: 25px;">
-                    <input type="checkbox" id="relay_${index}_active_low" ${relay.config.active_low ? 'checked' : ''}>
-                    <label class="checkbox-label" for="relay_${index}_active_low">Activo en BAJO</label>
+            </div>
+            <div style="background:#f0f7ff; padding:12px; border-radius:4px; margin-bottom:8px; border-left: 3px solid var(--altermundi-blue);">
+                <div class="inline-group">
+                    <div class="form-group">
+                        <label>Max ON (ms)</label>
+                        <input type="number" id="relay_${index}_max_on" value="${relay.config.max_on_ms || 0}" placeholder="0 = Infinito">
+                    </div>
+                    <div class="form-group">
+                        <label>Min OFF (ms)</label>
+                        <input type="number" id="relay_${index}_min_off" value="${relay.config.min_off_ms || 0}" placeholder="0 = Sin límite">
+                    </div>
+                    <div class="form-group" style="padding-top:25px;">
+                        <input type="checkbox" id="relay_${index}_active_low" ${relay.config.active_low ? 'checked' : ''}>
+                        <label class="checkbox-label" for="relay_${index}_active_low">Lógica Invertida (Activo en BAJO)</label>
+                    </div>
                 </div>
             </div>`;
         } else {
@@ -1367,6 +1379,40 @@ function renderRelays(relays) {
                 <div class="form-group">
                     <label>Dirección Modbus</label>
                     <input type="number" id="relay_${index}_address" value="${relay.config.address || 1}" min="1" max="254">
+                </div>
+            </div>
+            <div style="background:#f0f7ff; padding:12px; border-radius:4px; margin-bottom:8px; border-left: 3px solid var(--altermundi-blue);">
+                <strong style="font-size:13px; color:var(--altermundi-blue); display:block; margin-bottom:10px;">Configuración Canal 1</strong>
+                <div class="inline-group">
+                    <div class="form-group">
+                        <label>Max ON (ms)</label>
+                        <input type="number" id="relay_${index}_ch0_max" value="${relay.config.ch0?.max_on_ms || 0}" placeholder="0 = Infinito">
+                    </div>
+                    <div class="form-group">
+                        <label>Min OFF (ms)</label>
+                        <input type="number" id="relay_${index}_ch0_min" value="${relay.config.ch0?.min_off_ms || 0}" placeholder="0 = Sin límite">
+                    </div>
+                    <div class="form-group" style="padding-top:25px;">
+                        <input type="checkbox" id="relay_${index}_ch0_inv" ${relay.config.ch0?.inverted ? 'checked' : ''}>
+                        <label class="checkbox-label" for="relay_${index}_ch0_inv">Lógica Invertida (Activo en BAJO)</label>
+                    </div>
+                </div>
+            </div>
+            <div style="background:#f0f7ff; padding:12px; border-radius:4px; margin-bottom:8px; border-left: 3px solid var(--altermundi-blue);">
+                <strong style="font-size:13px; color:var(--altermundi-blue); display:block; margin-bottom:10px;">Configuración Canal 2</strong>
+                <div class="inline-group">
+                    <div class="form-group">
+                        <label>Max ON (ms)</label>
+                        <input type="number" id="relay_${index}_ch1_max" value="${relay.config.ch1?.max_on_ms || 0}" placeholder="0 = Infinito">
+                    </div>
+                    <div class="form-group">
+                        <label>Min OFF (ms)</label>
+                        <input type="number" id="relay_${index}_ch1_min" value="${relay.config.ch1?.min_off_ms || 0}" placeholder="0 = Sin límite">
+                    </div>
+                    <div class="form-group" style="padding-top:25px;">
+                        <input type="checkbox" id="relay_${index}_ch1_inv" ${relay.config.ch1?.inverted ? 'checked' : ''}>
+                        <label class="checkbox-label" for="relay_${index}_ch1_inv">Lógica Invertida (Activo en BAJO)</label>
+                    </div>
                 </div>
             </div>`;
         }
@@ -1546,9 +1592,24 @@ function buildConfigFromForm() {
 
                 const activeLowCheckbox = document.getElementById(`relay_${index}_active_low`);
                 if (activeLowCheckbox) relay.config.active_low = activeLowCheckbox.checked;
+                const maxOnInput = document.getElementById(`relay_${index}_max_on`);
+                if (maxOnInput) relay.config.max_on_ms = parseInt(maxOnInput.value) || 0;
+                const minOffInput = document.getElementById(`relay_${index}_min_off`);
+                if (minOffInput) relay.config.min_off_ms = parseInt(minOffInput.value) || 0;
             } else {
                 const addrInput = document.getElementById(`relay_${index}_address`);
                 if (addrInput) relay.config.address = parseInt(addrInput.value);
+                
+                relay.config.ch0 = {
+                    max_on_ms: parseInt(document.getElementById(`relay_${index}_ch0_max`)?.value || 0),
+                    min_off_ms: parseInt(document.getElementById(`relay_${index}_ch0_min`)?.value || 0),
+                    inverted: document.getElementById(`relay_${index}_ch0_inv`)?.checked || false
+                };
+                relay.config.ch1 = {
+                    max_on_ms: parseInt(document.getElementById(`relay_${index}_ch1_max`)?.value || 0),
+                    min_off_ms: parseInt(document.getElementById(`relay_${index}_ch1_min`)?.value || 0),
+                    inverted: document.getElementById(`relay_${index}_ch1_inv`)?.checked || false
+                };
             }
         });
     }

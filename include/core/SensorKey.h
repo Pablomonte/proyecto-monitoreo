@@ -25,6 +25,8 @@ enum class SensorVariable : uint8_t {
     PHOSPHORUS  = 8,
     POTASSIUM   = 9,
     RAW_ADC     = 10,
+    DIGITAL_IN_1= 11,
+    DIGITAL_IN_2= 12,
     UNKNOWN     = 255
 };
 
