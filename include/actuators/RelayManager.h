@@ -51,11 +51,15 @@ public:
                     String defaultAlias = "GPIO " + String(pin);
                     String alias = r["config"]["alias"] | defaultAlias;
                     
-                    auto* act = new GpioActuator(pin, pin, alias, !activeLow);
+                    uint8_t gpioId = pin + 200; // Desplazamiento para evitar colisión con Modbus
+                    auto* act = new GpioActuator(gpioId, pin, alias, !activeLow);
                     gpioRelays.push_back({act, pin, alias});
-                    DBG_INFO("[RelayMgr] Added GPIO: Pin=%d '%s'\n", pin, alias.c_str());
+                    DBG_INFO("[RelayMgr] Added GPIO: Pin=%d '%s' (ID=%d)\n", pin, alias.c_str(), gpioId);
                 } else {
                     uint8_t addr = r["config"]["address"] | 1;
+                    if (addr >= 12) {
+                        DBG_ERROR("[RelayMgr] WARN: Modbus Dir %d (ID %d) puede colisionar con GPIOs!\n", addr, addr << 4);
+                    }
                     String alias = r["config"]["alias"] | "";
                     relays.push_back(new RelayModule2CH(addr, alias));
                     DBG_INFO("[RelayMgr] Added Modbus: Addr=%d '%s'\n", addr, alias.c_str());

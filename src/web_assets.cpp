@@ -1796,7 +1796,7 @@ const char *rules_html = R"=====(<!DOCTYPE html>
                         html += `<div style="margin-top:8px; font-weight:bold; color:var(--altermundi-blue)">Módulo: ${r.alias || (isGpio ? 'GPIO '+r.address : 'Relé Modbus '+r.address)}</div>`;
                         if (r.state) {
                             r.state.forEach((st, idx) => {
-                                let actId = isGpio ? r.address : ((r.address << 4) | idx);
+                                let actId = isGpio ? (r.address + 200) : ((r.address << 4) | idx);
                                 let label = isGpio ? 'Estado' : ('Canal ' + (idx+1));
                                 html += `<div style="padding-left:12px; font-size:12px; border-left:1px solid #ddd;">ID: <b style="color:var(--altermundi-orange)">${actId}</b> &rarr; ${label} (Estado: ${st ? 'ON' : 'OFF'})</div>`;
                             });
@@ -1928,7 +1928,7 @@ const char *rules_html = R"=====(<!DOCTYPE html>
                         let isGpio = r.type === 'gpio';
                         if (r.state) {
                             r.state.forEach((st, idx) => {
-                                let actId = isGpio ? r.address : ((r.address << 4) | idx);
+                                let actId = isGpio ? (r.address + 200) : ((r.address << 4) | idx);
                                 let name = (r.alias || (isGpio ? 'GPIO ' + r.address : 'Relé ' + r.address)) + (isGpio ? '' : ' - Canal ' + (idx + 1));
                                 combinedList.push({ id: actId, name: name, state: st });
                                 selectOptions += `<option value="${actId}">${name} (ID: ${actId})</option>`;

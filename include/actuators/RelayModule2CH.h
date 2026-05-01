@@ -35,9 +35,12 @@ public:
         RelayModule2CH* _module;
         uint8_t _channel;
         String _nameCache;
+        uint32_t _startTime;
+        uint32_t _durationMs;
+
     public:
         ChannelActuator(RelayModule2CH* module, uint8_t channel)
-            : _module(module), _channel(channel) {}
+            : _module(module), _channel(channel), _startTime(0), _durationMs(0) {}
 
         void updateName() {
             _nameCache = _module->getAlias();
@@ -52,7 +55,25 @@ public:
         }
         const char* getName() const override { return _nameCache.c_str(); }
         bool begin() override { return true; } // Init is handled centrally by the Module
-        void execute(const ActuatorCommand& cmd) override { _module->setRelay(_channel, cmd.state); }
+        
+        void execute(const ActuatorCommand& cmd) override { 
+            _module->setRelay(_channel, cmd.state); 
+            
+            if (cmd.state && cmd.durationMs > 0) {
+                _startTime = millis();
+                _durationMs = cmd.durationMs;
+            } else {
+                _durationMs = 0;
+            }
+        }
+
+        void tick() override {
+            if (_durationMs > 0 && (millis() - _startTime >= _durationMs)) {
+                _durationMs = 0; // Previene re-ejecuciones continuas
+                _module->setRelay(_channel, false);
+            }
+        }
+
         bool getState() const override { return _module->getState(_channel); }
     };
 
