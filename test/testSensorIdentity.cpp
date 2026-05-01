@@ -21,10 +21,7 @@
 // ── Arduino / ESP32 stubs ─────────────────────────────────────────────────────
 
 #ifndef ARDUINO
-// Fixed EFuse MAC: last byte = 0xBB
-static struct _MockESP {
-    uint64_t getEfuseMac() const { return 0x112233445566AABB; }  // last byte = 0xBB
-} ESP;
+#include "MockESP.h"
 #define EXPECTED_MAC_BYTE 0xBB
 #else
 #include <Arduino.h>

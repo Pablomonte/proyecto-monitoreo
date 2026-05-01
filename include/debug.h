@@ -33,7 +33,11 @@
     #include <Arduino.h>
     #define DBG_ERROR(...)    Serial.printf(__VA_ARGS__)
   #endif
-  #define DBG_ERRORLN(x)      Serial.println(x)
+  #ifndef ARDUINO
+    #define DBG_ERRORLN(x)    printf("%s\n", x)
+  #else
+    #define DBG_ERRORLN(x)    Serial.println(x)
+  #endif
 #else
   #define DBG_ERROR(...)      ((void)0)
   #define DBG_ERRORLN(x)      ((void)0)
@@ -50,8 +54,11 @@
     #include <Arduino.h>
     #define DBG_INFO(...)    Serial.printf(__VA_ARGS__)
   #endif
-  #define DBG_INFO(...)       Serial.printf(__VA_ARGS__)
-  #define DBG_INFOLN(x)       Serial.println(x)
+  #ifndef ARDUINO
+    #define DBG_INFOLN(x)     printf("%s\n", x)
+  #else
+    #define DBG_INFOLN(x)     Serial.println(x)
+  #endif
 #else
   #define DBG_INFO(...)       ((void)0)
   #define DBG_INFOLN(x)       ((void)0)
@@ -69,7 +76,11 @@
     #include <Arduino.h>
     #define DBG_VERBOSE(...)    Serial.printf(__VA_ARGS__)
   #endif
-  #define DBG_VERBOSELN(x)    Serial.println(x)
+  #ifndef ARDUINO
+    #define DBG_VERBOSELN(x)    printf("%s\n", x)
+  #else
+    #define DBG_VERBOSELN(x)    Serial.println(x)
+  #endif
 #else
   #define DBG_VERBOSE(...)    ((void)0)
   #define DBG_VERBOSELN(x)    ((void)0)

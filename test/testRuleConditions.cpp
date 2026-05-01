@@ -19,10 +19,7 @@
 // ── Minimal Arduino / ESP32 stubs ────────────────────────────────────────────
 
 #ifndef ARDUINO
-// SensorBase calls ESP.getEfuseMac() - provide a fixed stub value
-static struct _MockESP {
-    uint64_t getEfuseMac() const { return 0x1122334455AABBCC; }  // last byte = 0xCC
-} ESP;
+#include "MockESP.h"
 #else
 #include <Arduino.h>
 #endif
@@ -58,11 +55,13 @@ struct StubActuator : public IActuator {
 
 /** Build a LEAF expression and add it to the mediator pool. Returns exprIdx. */
 static uint8_t addLeaf(ControlMediator& m,
-                        uint8_t devId, uint8_t sensorId,
+                        uint8_t devId, uint16_t sensorId,
                         CondOp op, float threshold) {
     RuleExpr e;
     e.type = ExprType::LEAF;
-    e.cond.key  = {devId, sensorId};
+    e.cond.key.deviceId = devId;
+    e.cond.key.varId = 0;
+    e.cond.key.sensorId = sensorId;
     e.cond.op   = op;
     e.cond.threshold = threshold;
     e.leftIdx = e.rightIdx = 0;
@@ -70,10 +69,12 @@ static uint8_t addLeaf(ControlMediator& m,
 }
 
 /** Feed a reading directly into the mediator. */
-static void feed(ControlMediator& m, uint8_t dev, uint8_t sid,
+static void feed(ControlMediator& m, uint8_t dev, uint16_t sid,
                  float value, uint32_t counter = 1) {
     SensorReading r;
-    r.key     = {dev, sid};
+    r.key.deviceId = dev;
+    r.key.varId = 0;
+    r.key.sensorId = sid;
     r.value   = value;
     r.counter = counter;
     m.onSensorReading(r);

@@ -40,6 +40,7 @@ static uint8_t addLeaf(ControlMediator& m, uint8_t devId, uint16_t sensorId, Con
     RuleExpr e;
     e.type = ExprType::LEAF;
     e.cond.key.deviceId = devId;
+    e.cond.key.varId = 0;
     e.cond.key.sensorId = sensorId;
     e.cond.op   = op;
     e.cond.threshold = threshold;
@@ -50,6 +51,7 @@ static uint8_t addLeaf(ControlMediator& m, uint8_t devId, uint16_t sensorId, Con
 static void feed(ControlMediator& m, uint8_t dev, uint16_t sid, float value, uint32_t counter = 1) {
     SensorReading r;
     r.key.deviceId = dev;
+    r.key.varId = 0;
     r.key.sensorId = sid;
     r.value   = value;
     r.counter = counter;
