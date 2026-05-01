@@ -18,11 +18,9 @@
 
 // ── Minimal Arduino / ESP32 stubs ────────────────────────────────────────────
 
-static unsigned long mock_millis_val = 0;
-unsigned long millis() { return mock_millis_val; }
 
 // SensorBase calls ESP.getEfuseMac() — provide a fixed stub value
-struct _MockESP {
+static struct _MockESP {
     uint64_t getEfuseMac() const { return 0x1122334455AABBCC; }  // last byte = 0xCC
 } ESP;
 
@@ -381,9 +379,6 @@ void test_four_conditions_with_duration_ms() {
 // ────────────────────────────────────────────────────────────────────────────
 // Test entry points
 // ────────────────────────────────────────────────────────────────────────────
-
-void setUp()    {}
-void tearDown() {}
 
 void runRuleConditionTests() {
     // Single condition

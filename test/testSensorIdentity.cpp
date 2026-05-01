@@ -20,11 +20,9 @@
 
 // ── Arduino / ESP32 stubs ─────────────────────────────────────────────────────
 
-static unsigned long mock_millis_val = 0;
-unsigned long millis() { return mock_millis_val; }
 
 // Fixed EFuse MAC: last byte = 0xAB
-struct _MockESP {
+static struct _MockESP {
     uint64_t getEfuseMac() const { return 0x112233445566AABB; }  // last byte = 0xBB
 } ESP;
 
@@ -39,7 +37,7 @@ struct _MockESP {
 /** A minimal ISensor that holds a stable sensorId and exposes _fillReading */
 class StubSensor : public SensorBase {
 public:
-    explicit StubSensor(uint8_t sid) : SensorBase(sid), _lastValue(0) {}
+    explicit StubSensor(uint8_t sid) : SensorBase(SensorClass::VIRTUAL, sid), _lastValue(0) {}
 
     // ISensor interface (minimal stubs)
     bool init()       { return true; }
@@ -92,11 +90,11 @@ void test_sensorkey_sensorId_modbus_address() {
 }
 
 void test_sensorkey_tou32_encoding() {
-    // toU32() = (deviceId << 8) | sensorId
-    // With deviceId=0xBB, sensorId=0x61 → 0xBB61
+    // toU32() incorporates deviceId, sensorClass, and sensorId
+    // With deviceId=0xBB, sensorClass=VIRTUAL, sensorId=0x61
     StubSensor s(0x61);
     SensorKey k = s.getKey();
-    uint32_t expected = ((uint32_t)0xBB << 8) | 0x61;
+    uint32_t expected = ((uint32_t)0xBB << 16) | ((uint32_t)SensorClass::VIRTUAL << 8) | 0x61;
     TEST_ASSERT_EQUAL_UINT32(expected, k.toU32());
 }
 
