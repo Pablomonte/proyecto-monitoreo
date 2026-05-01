@@ -18,11 +18,14 @@
 
 // ── Minimal Arduino / ESP32 stubs ────────────────────────────────────────────
 
-
-// SensorBase calls ESP.getEfuseMac() — provide a fixed stub value
+#ifndef ARDUINO
+// SensorBase calls ESP.getEfuseMac() - provide a fixed stub value
 static struct _MockESP {
     uint64_t getEfuseMac() const { return 0x1122334455AABBCC; }  // last byte = 0xCC
 } ESP;
+#else
+#include <Arduino.h>
+#endif
 
 // ── Headers under test ───────────────────────────────────────────────────────
 #include "core/SensorKey.h"

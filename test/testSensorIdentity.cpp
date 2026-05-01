@@ -20,11 +20,16 @@
 
 // ── Arduino / ESP32 stubs ─────────────────────────────────────────────────────
 
-
-// Fixed EFuse MAC: last byte = 0xAB
+#ifndef ARDUINO
+// Fixed EFuse MAC: last byte = 0xBB
 static struct _MockESP {
     uint64_t getEfuseMac() const { return 0x112233445566AABB; }  // last byte = 0xBB
 } ESP;
+#define EXPECTED_MAC_BYTE 0xBB
+#else
+#include <Arduino.h>
+#define EXPECTED_MAC_BYTE (ESP.getEfuseMac() & 0xFF)
+#endif
 
 // ── Minimal sensor-interface stubs needed by headers ────────────────────────
 // (SensorBase only needs SensorKey.h; keep includes minimal)
@@ -62,7 +67,7 @@ void test_sensorkey_deviceId_from_mac() {
     // SensorBase derives deviceId from ESP.getEfuseMac() & 0xFF
     // Our stub returns 0x...AABB → last byte = 0xBB
     StubSensor s(0x61);
-    TEST_ASSERT_EQUAL_HEX8(0xBB, s.getKey().deviceId);
+    TEST_ASSERT_EQUAL_HEX8(EXPECTED_MAC_BYTE, s.getKey().deviceId);
 }
 
 void test_sensorkey_sensorId_pin_based() {
@@ -94,7 +99,7 @@ void test_sensorkey_tou32_encoding() {
     // With deviceId=0xBB, sensorClass=VIRTUAL, sensorId=0x61
     StubSensor s(0x61);
     SensorKey k = s.getKey();
-    uint32_t expected = ((uint32_t)0xBB << 16) | ((uint32_t)SensorClass::VIRTUAL << 8) | 0x61;
+    uint32_t expected = ((uint32_t)EXPECTED_MAC_BYTE << 16) | ((uint32_t)SensorClass::VIRTUAL << 8) | 0x61;
     TEST_ASSERT_EQUAL_UINT32(expected, k.toU32());
 }
 
@@ -142,7 +147,7 @@ void test_fill_reading_key_matches_sensor() {
     SensorReading r;
     s.readValue(r);
 
-    TEST_ASSERT_EQUAL_HEX8(0xBB, r.key.deviceId);
+    TEST_ASSERT_EQUAL_HEX8(EXPECTED_MAC_BYTE, r.key.deviceId);
     TEST_ASSERT_EQUAL_HEX8(0x76, r.key.sensorId);
 }
 
