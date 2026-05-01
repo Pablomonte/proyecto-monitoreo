@@ -17,7 +17,7 @@
  */
 class GpioActuator : public IActuator {
 public:
-    GpioActuator(uint8_t id, uint8_t pin, const char* name = "gpio",
+    GpioActuator(uint8_t id, uint8_t pin, String name = "gpio",
                  bool activeHigh = true)
         : _id(id), _pin(pin), _name(name), _activeHigh(activeHigh),
           _state(false), _timer(nullptr) {}
@@ -31,7 +31,7 @@ public:
     }
 
     uint8_t     getId()   const override { return _id; }
-    const char* getName() const override { return _name; }
+    const char* getName() const override { return _name.c_str(); }
 
     bool begin() override {
         const esp_timer_create_args_t args = {
@@ -78,7 +78,7 @@ public:
 private:
     uint8_t            _id;
     uint8_t            _pin;
-    const char*        _name;
+    String             _name;
     bool               _activeHigh;
     volatile bool      _state;
     esp_timer_handle_t _timer;

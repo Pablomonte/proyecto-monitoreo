@@ -560,6 +560,17 @@ void handleRelayList() {
     }
   }
 
+  for (auto& g : relayMgr.getGpioRelays()) {
+    if (g.actuator) {
+      JsonObject obj = arr.add<JsonObject>();
+      obj["type"] = "gpio";
+      obj["address"] = g.pin;
+      obj["alias"] = g.alias;
+      JsonArray stateArr = obj["state"].to<JsonArray>();
+      stateArr.add(g.actuator->getState());
+    }
+  }
+
   String output;
   serializeJson(doc, output);
   server.send(200, "application/json", output);
@@ -581,6 +592,19 @@ void handleRelayToggle() {
       } else {
         server.send(500, "text/plain", "Failed to toggle");
       }
+      return;
+    }
+  }
+
+  for (auto& g : relayMgr.getGpioRelays()) {
+    if (g.pin == addr && ch == 0) {
+      ActuatorCommand cmd;
+      cmd.actuatorId = g.actuator->getId();
+      cmd.state = !g.actuator->getState();
+      cmd.durationMs = 0;
+      cmd.priority = 3;  // Manual toggle priority
+      mediator.onManualCommand(cmd);
+      server.send(200, "text/plain", "OK");
       return;
     }
   }

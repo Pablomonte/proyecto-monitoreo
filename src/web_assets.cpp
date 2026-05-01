@@ -660,8 +660,8 @@ const char *data_html = R"=====(<!DOCTYPE html>
                 card.style.borderLeftColor = '#0198fe';
 
                 let html = `<div class='hdr'>
-                    <span class='type'>Relé Modbus</span>
-                    <span class='id'>Dir: ${r.address}</span>
+                    <span class='type'>${r.type === 'gpio' ? 'Relé GPIO' : 'Relé Modbus'}</span>
+                    <span class='id'>${r.type === 'gpio' ? 'Pin: ' : 'Dir: '}${r.address}</span>
                 </div>
                 <div class='vals'>`;
 
@@ -676,10 +676,11 @@ const char *data_html = R"=====(<!DOCTYPE html>
                     r.state.forEach((state, idx) => {
                         const status = state ? "ok" : "warn";
                         const label = state ? "ON" : "OFF";
+                        const chanLabel = r.type === 'gpio' ? 'Estado' : `Canal ${idx + 1}`;
                         // Note: toggle function needs to be global or accessible
                         html += `<div class='val ${status}' style='cursor:pointer' 
                              onclick='toggle(${r.address}, ${idx})'>
-                             <span>Canal ${idx + 1}</span><b>${label}</b>
+                             <span>${chanLabel}</span><b>${label}</b>
                         </div>`;
                     });
                 }
@@ -908,9 +909,12 @@ const char *config_html = R"=====(<!DOCTYPE html>
             <div class="section">
                 <h2>Relés / Actuadores</h2>
                 <div id="relays-list"></div>
-                <button type="button" class="btn btn-secondary"
-                    style="margin-top:10px; padding: 6px 12px; font-size: 12px;" onclick="addRelay()">+ Agregar
-                    Relé</button>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn btn-secondary"
+                        style="padding: 6px 12px; font-size: 12px;" onclick="addRelay('relay_2ch')">+ Agregar Relé Modbus</button>
+                    <button type="button" class="btn btn-secondary"
+                        style="padding: 6px 12px; font-size: 12px;" onclick="addRelay('gpio')">+ Agregar Relé GPIO</button>
+                </div>
             </div>
 
             <div class="message" id="message"></div>
@@ -951,6 +955,9 @@ const DEFAULT_SENSORS = [
 
 const DEFAULT_RELAY_TEMPLATE = {
     type: "relay_2ch", enabled: true, config: { address: 1, alias: "Nuevo Relé" }
+};
+const DEFAULT_GPIO_RELAY_TEMPLATE = {
+    type: "gpio", enabled: true, config: { pin: 2, alias: "Nuevo Relé GPIO", active_low: false }
 };
 
 // Load configuration on page load
@@ -1333,14 +1340,25 @@ function renderRelays(relays) {
         relayDiv.className = 'sensor-item'; // Reuse style
         relayDiv.style.borderLeftColor = '#0198fe'; // Blue for relays
 
-        relayDiv.innerHTML = `
-            <div class="hdr" style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                <div class="form-group" style="margin-bottom:0;">
-                    <input type="checkbox" id="relay_${index}_enabled" ${relay.enabled ? 'checked' : ''}>
-                    <label class="checkbox-label" for="relay_${index}_enabled"><strong>Habilitado</strong></label>
+        let configHtml = '';
+        if (relay.type === 'gpio') {
+            configHtml = `
+            <div class="inline-group">
+                <div class="form-group">
+                    <label>Alias</label>
+                    <input type="text" id="relay_${index}_alias" value="${relay.config.alias || ''}" placeholder="Ej: Ventilador">
                 </div>
-                <button type="button" style="background:none; border:none; color:#dc3545; cursor:pointer;" onclick="removeRelay(${index})">🗑️</button>
-            </div>
+                <div class="form-group">
+                    <label>Pin GPIO</label>
+                    <input type="number" id="relay_${index}_pin" value="${relay.config.pin !== undefined ? relay.config.pin : 2}" min="0" max="39">
+                </div>
+                <div class="form-group" style="padding-top: 25px;">
+                    <input type="checkbox" id="relay_${index}_active_low" ${relay.config.active_low ? 'checked' : ''}>
+                    <label class="checkbox-label" for="relay_${index}_active_low">Activo en BAJO</label>
+                </div>
+            </div>`;
+        } else {
+            configHtml = `
             <div class="inline-group">
                 <div class="form-group">
                     <label>Alias</label>
@@ -1350,16 +1368,31 @@ function renderRelays(relays) {
                     <label>Dirección Modbus</label>
                     <input type="number" id="relay_${index}_address" value="${relay.config.address || 1}" min="1" max="254">
                 </div>
+            </div>`;
+        }
+
+        relayDiv.innerHTML = `
+            <div class="hdr" style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <div class="form-group" style="margin-bottom:0;">
+                    <input type="checkbox" id="relay_${index}_enabled" ${relay.enabled ? 'checked' : ''}>
+                    <label class="checkbox-label" for="relay_${index}_enabled"><strong>Habilitado (${relay.type === 'gpio' ? 'GPIO' : 'Modbus'})</strong></label>
+                </div>
+                <button type="button" style="background:none; border:none; color:#dc3545; cursor:pointer;" onclick="removeRelay(${index})">🗑️</button>
             </div>
+            ${configHtml}
         `;
         container.appendChild(relayDiv);
     });
 }
 
-function addRelay() {
+function addRelay(type = 'relay_2ch') {
     if (!currentConfig.relays) currentConfig.relays = [];
-    // Clone template
-    const newRelay = JSON.parse(JSON.stringify(DEFAULT_RELAY_TEMPLATE));
+    let newRelay;
+    if (type === 'gpio') {
+        newRelay = JSON.parse(JSON.stringify(DEFAULT_GPIO_RELAY_TEMPLATE));
+    } else {
+        newRelay = JSON.parse(JSON.stringify(DEFAULT_RELAY_TEMPLATE));
+    }
     currentConfig.relays.push(newRelay);
     renderRelays(currentConfig.relays);
 }
@@ -1507,8 +1540,16 @@ function buildConfigFromForm() {
             const aliasInput = document.getElementById(`relay_${index}_alias`);
             if (aliasInput) relay.config.alias = aliasInput.value;
 
-            const addrInput = document.getElementById(`relay_${index}_address`);
-            if (addrInput) relay.config.address = parseInt(addrInput.value);
+            if (relay.type === 'gpio') {
+                const pinInput = document.getElementById(`relay_${index}_pin`);
+                if (pinInput) relay.config.pin = parseInt(pinInput.value);
+
+                const activeLowCheckbox = document.getElementById(`relay_${index}_active_low`);
+                if (activeLowCheckbox) relay.config.active_low = activeLowCheckbox.checked;
+            } else {
+                const addrInput = document.getElementById(`relay_${index}_address`);
+                if (addrInput) relay.config.address = parseInt(addrInput.value);
+            }
         });
     }
 
@@ -1751,11 +1792,13 @@ const char *rules_html = R"=====(<!DOCTYPE html>
                 if (relays && relays.length > 0) {
                     hasActuators = true;
                     relays.forEach(r => {
-                        html += `<div style="margin-top:8px; font-weight:bold; color:var(--altermundi-blue)">Módulo: ${r.alias || 'Relé Modbus '+r.address}</div>`;
+                        let isGpio = r.type === 'gpio';
+                        html += `<div style="margin-top:8px; font-weight:bold; color:var(--altermundi-blue)">Módulo: ${r.alias || (isGpio ? 'GPIO '+r.address : 'Relé Modbus '+r.address)}</div>`;
                         if (r.state) {
                             r.state.forEach((st, idx) => {
-                                let actId = (r.address << 4) | idx;
-                                html += `<div style="padding-left:12px; font-size:12px; border-left:1px solid #ddd;">ID: <b style="color:var(--altermundi-orange)">${actId}</b> &rarr; Canal ${idx+1} (Estado: ${st ? 'ON' : 'OFF'})</div>`;
+                                let actId = isGpio ? r.address : ((r.address << 4) | idx);
+                                let label = isGpio ? 'Estado' : ('Canal ' + (idx+1));
+                                html += `<div style="padding-left:12px; font-size:12px; border-left:1px solid #ddd;">ID: <b style="color:var(--altermundi-orange)">${actId}</b> &rarr; ${label} (Estado: ${st ? 'ON' : 'OFF'})</div>`;
                             });
                         }
                     });
@@ -1882,10 +1925,11 @@ const char *rules_html = R"=====(<!DOCTYPE html>
 
                 if (relays && relays.length > 0) {
                     relays.forEach(r => {
+                        let isGpio = r.type === 'gpio';
                         if (r.state) {
                             r.state.forEach((st, idx) => {
-                                let actId = (r.address << 4) | idx;
-                                let name = (r.alias || ('Relé ' + r.address)) + ' - Canal ' + (idx + 1);
+                                let actId = isGpio ? r.address : ((r.address << 4) | idx);
+                                let name = (r.alias || (isGpio ? 'GPIO ' + r.address : 'Relé ' + r.address)) + (isGpio ? '' : ' - Canal ' + (idx + 1));
                                 combinedList.push({ id: actId, name: name, state: st });
                                 selectOptions += `<option value="${actId}">${name} (ID: ${actId})</option>`;
                             });

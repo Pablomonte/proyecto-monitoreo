@@ -279,6 +279,13 @@ void setup() {
     }
   }
 
+  for (auto& g : relayMgr.getGpioRelays()) {
+    if (g.actuator) {
+      g.actuator->begin();
+      mediator.registerActuator(g.actuator);
+    }
+  }
+
   // Load automation rules from SPIFFS
   DBG_INFOLN("[INFO] Loading rules...");
   int rulesLoaded = RuleLoader::load(mediator);
@@ -600,6 +607,19 @@ void loop() {
         String id = r->getAlias();
         if (id.length() == 0)
           id = "relay_" + String(r->getAddress());
+        id.replace(" ", "_");
+
+        sendDataGrafana(data.c_str(), id.c_str());
+      }
+    }
+
+    // Report GPIO Relays to Grafana
+    for (auto& g : relayMgr.getGpioRelays()) {
+      if (g.actuator) {
+        String data = "relay1=" + String(g.actuator->getState() ? 1 : 0);
+        String id = g.alias;
+        if (id.length() == 0)
+          id = "gpio_" + String(g.pin);
         id.replace(" ", "_");
 
         sendDataGrafana(data.c_str(), id.c_str());
