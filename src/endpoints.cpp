@@ -475,26 +475,39 @@ void habldePostConfig() {
 }
 
 void handleSCD30Calibration() {
-  DBG_VERBOSE("Calibration called: %s\n",
-              sensor ? sensor->getSensorType() : "NULL");
+  DBG_VERBOSE("Calibration called for SCD30\n");
 
   String response = "{";
   int httpStatus = 200;
 
-  if (!sensor || !sensor->isActive()) {
+  ISensor* scd30 = nullptr;
+#ifdef SENSOR_MULTI
+  for (auto* s : getSensorList()) {
+    if (s && s->isActive() && String(s->getSensorType()).equalsIgnoreCase("SCD30")) {
+      scd30 = s;
+      break;
+    }
+  }
+#else
+  if (sensor && sensor->isActive() && String(sensor->getSensorType()).equalsIgnoreCase("SCD30")) {
+    scd30 = sensor;
+  }
+#endif
+
+  if (!scd30) {
     response += "\"status\":\"error\",";
-    response += "\"message\":\"No sensor active\",";
+    response += "\"message\":\"SCD30 sensor not found or not active\",";
     response += "\"sensor_detected\":false,";
     response += "\"calibration_performed\":false";
     httpStatus = 503;
   } else {
-    bool calibrationSuccess = sensor->calibrate(400);
+    bool calibrationSuccess = scd30->calibrate(400);
 
     if (calibrationSuccess) {
       response += "\"status\":\"success\",";
       response += "\"message\":\"Sensor calibration completed successfully\",";
       response +=
-          "\"sensor_type\":\"" + String(sensor->getSensorType()) + "\",";
+          "\"sensor_type\":\"" + String(scd30->getSensorType()) + "\",";
       response += "\"sensor_detected\":true,";
       response += "\"calibration_performed\":true,";
       response += "\"target_co2\":400,";
@@ -504,13 +517,13 @@ void handleSCD30Calibration() {
     } else {
       response += "\"status\":\"error\",";
       response += "\"message\":\"Calibration not supported or failed for " +
-                  String(sensor->getSensorType()) + "\",";
+                  String(scd30->getSensorType()) + "\",";
       response +=
-          "\"sensor_type\":\"" + String(sensor->getSensorType()) + "\",";
+          "\"sensor_type\":\"" + String(scd30->getSensorType()) + "\",";
       response += "\"sensor_detected\":true,";
       response += "\"calibration_performed\":false";
       httpStatus = 500;
-      DBG_ERROR("Calibration failed: %s\n", sensor->getSensorType());
+      DBG_ERROR("Calibration failed: %s\n", scd30->getSensorType());
     }
   }
 

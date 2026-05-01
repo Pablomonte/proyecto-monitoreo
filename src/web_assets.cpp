@@ -1162,6 +1162,14 @@ function renderSensorConfig(sensor, index) {
     const config = sensor.config || {};
 
     switch (sensor.type) {
+        case 'scd30':
+            return `
+                <div class="form-group" style="margin-top: 10px;">
+                    <button type="button" class="btn btn-warning" style="padding: 6px 12px; font-size: 14px;" onclick="calibrateSCD30()">⚙️ Calibrar SCD30 (400ppm)</button>
+                    <div class="info-text">Exponga el sensor al aire libre (400ppm) por 5 minutos antes de calibrar.</div>
+                </div>
+            `;
+
         case 'capacitive':
         case 'hd38':
             return renderMoistureSensorConfig(sensor, index);
@@ -1327,6 +1335,24 @@ function startRawPolling() {
             });
         }).catch(() => {});
     }, 3000);
+}
+
+function calibrateSCD30() {
+    if (!confirm("¿Está seguro de calibrar el sensor SCD30 a 400ppm? Asegúrese de que ha estado en aire limpio por al menos 5 minutos.")) {
+        return;
+    }
+    fetch('/calibrate-scd30')
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showMessage(data.message, 'success');
+            } else {
+                showMessage('Error: ' + data.message, 'error');
+            }
+        })
+        .catch(err => {
+            showMessage('Error de conexión al calibrar', 'error');
+        });
 }
 
 function renderRelays(relays) {

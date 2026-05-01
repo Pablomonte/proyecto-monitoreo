@@ -29,6 +29,30 @@ pio test -e esp32dev_multi
 
 *PlatformIO will automatically compile, upload the test firmware, open the serial monitor, and print the test results.*
 
+### 3. API Integration Tests (Python)
+
+We use `pytest` and `requests` to validate the live HTTP API endpoints directly on the ESP32.
+
+**Setup Virtual Environment:**
+It is recommended to use a Python virtual environment:
+
+```bash
+# Create the virtual environment
+python3 -m venv venv
+
+# Activate it 
+source venv/bin/activate
+# Install dependencies
+pip install pytest requests
+```
+
+**Run the Tests:**
+To run the API invariant checks against your device (change the IP as needed):
+```bash
+# This will exercise all endpoints, test state changes, and run the Pytest suite
+python tools/testendpoints.py --ip 192.168.1.110
+```
+
 ## Test Architecture
 
 - **`test/testAll.cpp`**: The central entry point for all tests. It contains the `main()` (for native) and `setup()`/`loop()` (for Arduino) functions, and orchestrates the execution of all test suites.
