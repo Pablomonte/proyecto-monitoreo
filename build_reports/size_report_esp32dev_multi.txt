@@ -3,33 +3,33 @@
                         BUILD MEMORY REPORT
 ================================================================================
 Environment: esp32dev_multi
-Git version: 4157ad4da032cf7db35940efbd4ef7d18902ad10
+Git version: c8e24ab8af8bb9bb0b78f6aec950a1f12c02d77a
 MCU:         esp32
-Timestamp:   2026-04-30 23:26:52
+Timestamp:   2026-04-30 23:35:14
 Firmware:    firmware.elf
 Partitions:  min_spiffs.csv
 --------------------------------------------------------------------------------
 
 MEMORY USAGE (matches PlatformIO):
-  Flash: [=                   ]   6.7%  (used 281,365 / 4,194,304 bytes)
-  RAM:   [====                ]  24.5%  (used 80,169 / 327,680 bytes)
+  Flash: [=                   ]   6.7%  (used 282,921 / 4,194,304 bytes)
+  RAM:   [====                ]  24.6%  (used 80,505 / 327,680 bytes)
 
 --------------------------------------------------------------------------------
 FLASH BREAKDOWN:
-  .text (code):           206,237 bytes
-  .data (init vars):       75,128 bytes
+  .text (code):           207,457 bytes
+  .data (init vars):       75,464 bytes
   ─────────────────────────────────
-  Program size:           281,365 bytes
+  Program size:           282,921 bytes
   App partition:        4,194,304 bytes
-  Free in partition:    3,912,939 bytes
+  Free in partition:    3,911,383 bytes
 
 RAM BREAKDOWN:
-  .data (init vars):       75,128 bytes
+  .data (init vars):       75,464 bytes
   .bss (zero vars):         5,041 bytes
   ─────────────────────────────────
-  Static RAM:              80,169 bytes
+  Static RAM:              80,505 bytes
   Total DRAM:             327,680 bytes
-  Free (static):          247,511 bytes
+  Free (static):          247,175 bytes
 
 --------------------------------------------------------------------------------
 FLASH CHIP LAYOUT (4MB total):
@@ -47,161 +47,102 @@ BY FLASH USAGE:
 -----------------------------------------------------------------------------------------------
 #    FILE                                                          TEXT       DATA      FLASH
 -----------------------------------------------------------------------------------------------
-1    src/web_assets.cpp.o                                       104,159         28    104,187
-2    src/main.cpp.o                                              81,160         20     81,180
-3    src/endpoints.cpp.o                                         46,994         28     47,022
-4    lib9da/WifiManager/WiFiManager.cpp.o                        31,543          0     31,543
-5    lib2b4/WebServer/WebServer.cpp.o                            22,118          0     22,118
-6    src/configFile.cpp.o                                        20,987         28     21,015
-7    lib2ca/HTTPClient/HTTPClient.cpp.o                          20,068          0     20,068
-8    lib651/WiFi/WiFiGeneric.cpp.o                               18,484         22     18,506
-9    lib2b4/WebServer/Parsing.cpp.o                              12,228        132     12,360
-10   libc1a/modbus-esp8266/Modbus.cpp.o                          10,438          8     10,446
-11   liba6f/Preferences/Preferences.cpp.o                         9,214         52      9,266
-12   lib692/FS/vfs_api.cpp.o                                      9,010          0      9,010
-13   FrameworkArduino/esp32-hal-uart.c.o                          8,726         96      8,822
-14   lib065/HTTPUpdate/HTTPUpdate.cpp.o                           8,341          8      8,349
-15   lib9a2/Wire/Wire.cpp.o                                       8,284          8      8,292
-16   lib651/WiFi/WiFiClient.cpp.o                                 8,092          0      8,092
-17   libdbf/Unity/unity.c.o                                       7,924          0      7,924
-18   FrameworkArduino/WString.cpp.o                               7,753          8      7,761
-19   lib651/WiFi/WiFiSTA.cpp.o                                    7,743          9      7,752
-20   lib45a/ArduinoOTA/ArduinoOTA.cpp.o                           7,128          8      7,136
-21   test/testRuleConditions.cpp.o                                7,126          0      7,126
-22   libbcf/WiFiClientSecure/ssl_client.cpp.o                     6,707          4      6,711
-23   FrameworkArduino/esp32-hal-i2c-slave.c.o                     6,536         96      6,632
-24   FrameworkArduino/esp32-hal-spi.c.o                           6,451         48      6,499
-25   src/otaUpdater.cpp.o                                         5,915          0      5,915
-26   lib826/DallasTemperature/DallasTemperature.cpp.o             5,783          0      5,783
-27   liba99/ESPmDNS/ESPmDNS.cpp.o                                 5,622          8      5,630
-28   FrameworkArduino/HardwareSerial.cpp.o                        5,471          8      5,479
-29   libc3d/Adafruit BME280 Library/Adafruit_BME280.cpp.o         4,955          0      4,955
-30   libd28/Update/Updater.cpp.o                                  4,208          8      4,216
-31   FrameworkArduino/esp32-hal-rmt.c.o                           3,833        320      4,153
-32   lib651/WiFi/WiFiUdp.cpp.o                                    4,041          0      4,041
-33   libbcf/WiFiClientSecure/WiFiClientSecure.cpp.o               3,491          0      3,491
-34   lib651/WiFi/WiFiAP.cpp.o                                     3,477          0      3,477
-35   FrameworkArduino/esp32-hal-i2c.c.o                           3,276          0      3,276
-36   FrameworkArduino/Esp.cpp.o                                   3,168          0      3,168
-37   FrameworkArduino/Print.cpp.o                                 2,946          0      2,946
-38   FrameworkArduino/esp32-hal-misc.c.o                          2,802          0      2,802
-39   libd2b/OneWire/OneWire.cpp.o                                 2,799          0      2,799
-40   test/testSensorIdentity.cpp.o                                2,784          0      2,784
-41   FrameworkArduino/esp32-hal-ledc.c.o                          2,764          9      2,773
-42   lib987/Adafruit SCD30/Adafruit_SCD30.cpp.o                   2,762          0      2,762
-43   lib651/WiFi/WiFiMulti.cpp.o                                  2,607          0      2,607
-44   lib8a7/SPI/SPI.cpp.o                                         2,519          8      2,527
-45   libc1a/modbus-esp8266/ModbusRTU.cpp.o                        2,471          0      2,471
-46   lib692/FS/FS.cpp.o                                           2,463          0      2,463
-47   FrameworkArduino/esp32-hal-cpu.c.o                           2,447          0      2,447
-48   FrameworkArduino/esp32-hal-adc.c.o                           2,257          5      2,262
-49   src/sendDataGrafana.cpp.o                                    2,176          0      2,176
-50   liba66/DNSServer/DNSServer.cpp.o                             2,093          0      2,093
-51   FrameworkArduino/esp32-hal-timer.c.o                         2,079          8      2,087
-52   lib5c7/SPIFFS/SPIFFS.cpp.o                                   2,068          8      2,076
-53   libbcf/WiFiClientSecure/esp_crt_bundle.c.o                   1,999          0      1,999
-54   test/testESPNowManager.cpp.o                                 1,949          0      1,949
-55   lib83a/Adafruit BusIO/Adafruit_SPIDevice.cpp.o               1,856          0      1,856
-56   lib7ad/Adafruit Unified Sensor/Adafruit_Sensor.cpp.o         1,847          0      1,847
-57   FrameworkArduino/Stream.cpp.o                                1,838          0      1,838
-58   src/createGrafanaMessage.cpp.o                               1,721          0      1,721
-59   FrameworkArduino/esp32-hal-gpio.c.o                          1,694          0      1,694
-60   FrameworkArduino/firmware_msc_fat.c.o                        1,342          0      1,342
-61   FrameworkArduino/esp32-hal-touch.c.o                         1,332          4      1,336
-62   lib83a/Adafruit BusIO/Adafruit_BusIO_Register.cpp.o          1,176          0      1,176
-63   lib651/WiFi/WiFiScan.cpp.o                                   1,162          4      1,166
-64   lib651/WiFi/WiFiServer.cpp.o                                 1,153          0      1,153
-65   lib2b4/WebServer/detail/mimetable.cpp.o                      1,104          0      1,104
-66   FrameworkArduino/stdlib_noniso.c.o                           1,092          0      1,092
-67   FrameworkArduino/esp32-hal-bt.c.o                            1,019          0      1,019
-68   FrameworkArduino/Tone.cpp.o                                    979          0        979
-69   FrameworkArduino/esp32-hal-time.c.o                            868          0        868
-70   libd28/Update/HttpsOTAUpdate.cpp.o                             853          0        853
-71   FrameworkArduino/cbuf.cpp.o                                    785          0        785
-72   FrameworkArduino/IPv6Address.cpp.o                             704          0        704
-73   FrameworkArduino/MD5Builder.cpp.o                              704          0        704
-74   test/testGrafanaManager.cpp.o                                  680          0        680
-75   FrameworkArduino/StreamString.cpp.o                            667          0        667
-76   FrameworkArduino/IPAddress.cpp.o                               634          4        638
-77   lib83a/Adafruit BusIO/Adafruit_I2CDevice.cpp.o                 634          0        634
-78   lib651/WiFi/WiFi.cpp.o                                         592          4        596
-79   FrameworkArduino/libb64/cdecode.c.o                            555          0        555
-80   FrameworkArduino/WMath.cpp.o                                   524          1        525
-81   test/testAll.cpp.o                                             475          0        475
-82   FrameworkArduino/libb64/cencode.c.o                            466          0        466
-83   FrameworkArduino/esp32-hal-rgb-led.c.o                         453          0        453
-84   FrameworkArduino/base64.cpp.o                                  381          0        381
-85   FrameworkArduino/FunctionalInterrupt.cpp.o                     310          0        310
-86   FrameworkArduino/esp32-hal-sigmadelta.c.o                      282          0        282
-87   lib83a/Adafruit BusIO/Adafruit_GenericDevice.cpp.o             268          0        268
-88   test/testCreateGrafanaMessage.cpp.o                            257          0        257
-89   unity_config_build/unity_config.cpp.o                          252          0        252
-90   FrameworkArduino/main.cpp.o                                    230          0        230
-91   src/constants.cpp.o                                            187         24        211
-92   FrameworkArduino/wiring_shift.c.o                              196          0        196
-93   FrameworkArduino/wiring_pulse.c.o                              186          0        186
-94   src/globals.cpp.o                                              148          8        156
-95   FrameworkArduino/esp32-hal-matrix.c.o                          112          0        112
-96   FrameworkArduino/esp32-hal-dac.c.o                              68          0         68
-97   FrameworkArduino/esp32-hal-psram.c.o                            35          0         35
-98   test/testEndpoints.cpp.o                                        10          0         10
-99   test/testOtaUpdater.cpp.o                                       10          0         10
-100  test/testConfigFile.cpp.o                                        5          0          5
+1    libc1a/modbus-esp8266/Modbus.cpp.o                          10,438          8     10,446
+2    FrameworkArduino/esp32-hal-uart.c.o                          8,726         96      8,822
+3    lib9a2/Wire/Wire.cpp.o                                       8,284          8      8,292
+4    libdbf/Unity/unity.c.o                                       7,924          0      7,924
+5    FrameworkArduino/WString.cpp.o                               7,753          8      7,761
+6    test/testRuleConditions.cpp.o                                7,126          0      7,126
+7    FrameworkArduino/esp32-hal-i2c-slave.c.o                     6,536         96      6,632
+8    FrameworkArduino/esp32-hal-spi.c.o                           6,451         48      6,499
+9    lib826/DallasTemperature/DallasTemperature.cpp.o             5,783          0      5,783
+10   FrameworkArduino/HardwareSerial.cpp.o                        5,471          8      5,479
+11   libc3d/Adafruit BME280 Library/Adafruit_BME280.cpp.o         4,955          0      4,955
+12   FrameworkArduino/esp32-hal-rmt.c.o                           3,833        320      4,153
+13   test/testAutomationFlow.cpp.o                                3,401          0      3,401
+14   FrameworkArduino/esp32-hal-i2c.c.o                           3,276          0      3,276
+15   FrameworkArduino/Esp.cpp.o                                   3,168          0      3,168
+16   FrameworkArduino/Print.cpp.o                                 2,946          0      2,946
+17   FrameworkArduino/esp32-hal-misc.c.o                          2,802          0      2,802
+18   libd2b/OneWire/OneWire.cpp.o                                 2,799          0      2,799
+19   test/testSensorIdentity.cpp.o                                2,784          0      2,784
+20   FrameworkArduino/esp32-hal-ledc.c.o                          2,764          9      2,773
+21   lib987/Adafruit SCD30/Adafruit_SCD30.cpp.o                   2,762          0      2,762
+22   lib8a7/SPI/SPI.cpp.o                                         2,519          8      2,527
+23   libc1a/modbus-esp8266/ModbusRTU.cpp.o                        2,471          0      2,471
+24   FrameworkArduino/esp32-hal-cpu.c.o                           2,447          0      2,447
+25   FrameworkArduino/esp32-hal-adc.c.o                           2,257          5      2,262
+26   FrameworkArduino/esp32-hal-timer.c.o                         2,079          8      2,087
+27   test/testESPNowManager.cpp.o                                 1,949          0      1,949
+28   lib83a/Adafruit BusIO/Adafruit_SPIDevice.cpp.o               1,856          0      1,856
+29   lib7ad/Adafruit Unified Sensor/Adafruit_Sensor.cpp.o         1,847          0      1,847
+30   FrameworkArduino/Stream.cpp.o                                1,838          0      1,838
+31   FrameworkArduino/esp32-hal-gpio.c.o                          1,694          0      1,694
+32   FrameworkArduino/firmware_msc_fat.c.o                        1,342          0      1,342
+33   FrameworkArduino/esp32-hal-touch.c.o                         1,332          4      1,336
+34   lib83a/Adafruit BusIO/Adafruit_BusIO_Register.cpp.o          1,176          0      1,176
+35   FrameworkArduino/stdlib_noniso.c.o                           1,092          0      1,092
+36   FrameworkArduino/esp32-hal-bt.c.o                            1,019          0      1,019
+37   FrameworkArduino/Tone.cpp.o                                    979          0        979
+38   FrameworkArduino/esp32-hal-time.c.o                            868          0        868
+39   FrameworkArduino/cbuf.cpp.o                                    785          0        785
+40   FrameworkArduino/IPv6Address.cpp.o                             704          0        704
+41   FrameworkArduino/MD5Builder.cpp.o                              704          0        704
+42   test/testGrafanaManager.cpp.o                                  680          0        680
+43   FrameworkArduino/StreamString.cpp.o                            667          0        667
+44   FrameworkArduino/IPAddress.cpp.o                               634          4        638
+45   lib83a/Adafruit BusIO/Adafruit_I2CDevice.cpp.o                 634          0        634
+46   FrameworkArduino/libb64/cdecode.c.o                            555          0        555
+47   FrameworkArduino/WMath.cpp.o                                   524          1        525
+48   test/testAll.cpp.o                                             485          0        485
+49   FrameworkArduino/libb64/cencode.c.o                            466          0        466
+50   FrameworkArduino/esp32-hal-rgb-led.c.o                         453          0        453
+51   FrameworkArduino/base64.cpp.o                                  381          0        381
+52   FrameworkArduino/FunctionalInterrupt.cpp.o                     310          0        310
+53   FrameworkArduino/esp32-hal-sigmadelta.c.o                      282          0        282
+54   lib83a/Adafruit BusIO/Adafruit_GenericDevice.cpp.o             268          0        268
+55   test/testCreateGrafanaMessage.cpp.o                            257          0        257
+56   unity_config_build/unity_config.cpp.o                          252          0        252
+57   FrameworkArduino/main.cpp.o                                    230          0        230
+58   FrameworkArduino/wiring_shift.c.o                              196          0        196
+59   FrameworkArduino/wiring_pulse.c.o                              186          0        186
+60   FrameworkArduino/esp32-hal-matrix.c.o                          112          0        112
+61   FrameworkArduino/esp32-hal-dac.c.o                              68          0         68
+62   FrameworkArduino/esp32-hal-psram.c.o                            35          0         35
+63   test/testEndpoints.cpp.o                                        10          0         10
+64   test/testOtaUpdater.cpp.o                                       10          0         10
+65   test/testConfigFile.cpp.o                                        5          0          5
 
 
 BY RAM USAGE:
 -----------------------------------------------------------------------------------------------
 #    FILE                                                          DATA        BSS        RAM
 -----------------------------------------------------------------------------------------------
-1    src/main.cpp.o                                                  20      5,019      5,039
-2    lib45a/ArduinoOTA/ArduinoOTA.cpp.o                               8      1,692      1,700
-3    src/globals.cpp.o                                                8        640        648
-4    test/testESPNowManager.cpp.o                                     0        488        488
-5    FrameworkArduino/esp32-hal-gpio.c.o                              0        481        481
-6    FrameworkArduino/esp32-hal-rmt.c.o                             320         36        356
-7    libbcf/WiFiClientSecure/esp_crt_bundle.c.o                       0        356        356
-8    FrameworkArduino/HardwareSerial.cpp.o                            8        228        236
-9    libd28/Update/Updater.cpp.o                                      8        180        188
-10   FrameworkArduino/esp32-hal-adc.c.o                               5        164        169
-11   FrameworkArduino/esp32-hal-uart.c.o                             96         69        165
-12   lib9a2/Wire/Wire.cpp.o                                           8        152        160
-13   libd28/Update/HttpsOTAUpdate.cpp.o                               0        145        145
-14   FrameworkArduino/esp32-hal-touch.c.o                             4        131        135
-15   lib2b4/WebServer/Parsing.cpp.o                                 132          0        132
-16   lib651/WiFi/WiFiGeneric.cpp.o                                   22         77         99
-17   FrameworkArduino/esp32-hal-i2c-slave.c.o                        96          0         96
-18   lib065/HTTPUpdate/HTTPUpdate.cpp.o                               8         88         96
-19   FrameworkArduino/esp32-hal-ledc.c.o                              9         56         65
-20   src/endpoints.cpp.o                                             28         36         64
-21   liba6f/Preferences/Preferences.cpp.o                            52          0         52
-22   lib2ca/HTTPClient/HTTPClient.cpp.o                               0         52         52
-23   libc1a/modbus-esp8266/Modbus.cpp.o                               8         40         48
-24   FrameworkArduino/esp32-hal-spi.c.o                              48          0         48
-25   FrameworkArduino/esp32-hal-sigmadelta.c.o                        0         40         40
-26   lib8a7/SPI/SPI.cpp.o                                             8         32         40
-27   lib651/WiFi/WiFiSTA.cpp.o                                        9         21         30
-28   liba99/ESPmDNS/ESPmDNS.cpp.o                                     8         20         28
-29   src/configFile.cpp.o                                            28          0         28
-30   src/web_assets.cpp.o                                            28          0         28
-31   FrameworkArduino/WString.cpp.o                                   8         17         25
-32   FrameworkArduino/Esp.cpp.o                                       0         25         25
-33   FrameworkArduino/esp32-hal-i2c.c.o                               0         24         24
-34   src/constants.cpp.o                                             24          0         24
-35   lib5c7/SPIFFS/SPIFFS.cpp.o                                       8         12         20
-36   lib651/WiFi/WiFiScan.cpp.o                                       4         11         15
-37   FrameworkArduino/IPAddress.cpp.o                                 4          8         12
-38   FrameworkArduino/Tone.cpp.o                                      0          9          9
-39   FrameworkArduino/esp32-hal-cpu.c.o                               0          9          9
-40   FrameworkArduino/esp32-hal-timer.c.o                             8          0          8
-41   FrameworkArduino/esp32-hal-rgb-led.c.o                           0          5          5
-42   FrameworkArduino/main.cpp.o                                      0          5          5
-43   lib651/WiFi/WiFi.cpp.o                                           4          1          5
-44   libdbf/Unity/unity.c.o                                           0          4          4
-45   lib9da/WifiManager/WiFiManager.cpp.o                             0          4          4
-46   libbcf/WiFiClientSecure/ssl_client.cpp.o                         4          0          4
-47   src/RelayModule2CH.cpp.o                                         0          2          2
-48   FrameworkArduino/WMath.cpp.o                                     1          0          1
-49   src/otaUpdater.cpp.o                                             0          1          1
+1    test/testESPNowManager.cpp.o                                     0        488        488
+2    FrameworkArduino/esp32-hal-gpio.c.o                              0        481        481
+3    FrameworkArduino/esp32-hal-rmt.c.o                             320         36        356
+4    FrameworkArduino/HardwareSerial.cpp.o                            8        228        236
+5    FrameworkArduino/esp32-hal-adc.c.o                               5        164        169
+6    FrameworkArduino/esp32-hal-uart.c.o                             96         69        165
+7    lib9a2/Wire/Wire.cpp.o                                           8        152        160
+8    FrameworkArduino/esp32-hal-touch.c.o                             4        131        135
+9    FrameworkArduino/esp32-hal-i2c-slave.c.o                        96          0         96
+10   FrameworkArduino/esp32-hal-ledc.c.o                              9         56         65
+11   libc1a/modbus-esp8266/Modbus.cpp.o                               8         40         48
+12   FrameworkArduino/esp32-hal-spi.c.o                              48          0         48
+13   FrameworkArduino/esp32-hal-sigmadelta.c.o                        0         40         40
+14   lib8a7/SPI/SPI.cpp.o                                             8         32         40
+15   FrameworkArduino/WString.cpp.o                                   8         17         25
+16   FrameworkArduino/Esp.cpp.o                                       0         25         25
+17   FrameworkArduino/esp32-hal-i2c.c.o                               0         24         24
+18   FrameworkArduino/IPAddress.cpp.o                                 4          8         12
+19   FrameworkArduino/Tone.cpp.o                                      0          9          9
+20   FrameworkArduino/esp32-hal-cpu.c.o                               0          9          9
+21   FrameworkArduino/esp32-hal-timer.c.o                             8          0          8
+22   FrameworkArduino/esp32-hal-rgb-led.c.o                           0          5          5
+23   FrameworkArduino/main.cpp.o                                      0          5          5
+24   libdbf/Unity/unity.c.o                                           0          4          4
+25   FrameworkArduino/WMath.cpp.o                                     1          0          1
 
 
 DETAILED ELF SECTIONS:
@@ -221,31 +162,31 @@ section                                                                         
 .ext_ram.bss                                                                              0   1065353216
 .dram0.bss                                                                             5024   1073486888
 .flash.appdesc                                                                          256   1061158944
-.flash.rodata                                                                         58548   1061159200
-.flash.rodata_noload                                                                      0   1061217748
-.flash.text                                                                          147859   1074593824
+.flash.rodata                                                                         58884   1061159200
+.flash.rodata_noload                                                                      0   1061218084
+.flash.text                                                                          149079   1074593824
 .iram0.text_end                                                                           1   1074324235
 .iram0.data                                                                               0   1074324236
 .iram0.bss                                                                                0   1074324236
 .dram0.heap_start                                                                         0   1073491912
-.xt.prop                                                                             163080            0
-.xt.lit                                                                                4928            0
+.xt.prop                                                                             163332            0
+.xt.lit                                                                                4952            0
 .xtensa.info                                                                             56            0
 .comment                                                                                166            0
 .xt.lit._ZNK12StubActuator7getNameEv                                                      8            0
 .xt.lit._ZN12StubActuatorD5Ev                                                             0            0
-.xt.lit._ZN15ControlMediator16registerActuatorEP9IActuator                                8            0
-.xt.lit._ZN15ControlMediator7addExprERK8RuleExpr                                          0            0
 .xt.lit._ZN15ControlMediator6_clearEv                                                     8            0
 .xt.lit._ZNK15ControlMediator11_storeIndexERK9SensorKey                                   0            0
 .xt.lit._ZNK15ControlMediator8evalExprEh                                                  8            0
+.xt.lit._ZN15ControlMediator16evaluateAllRulesEv                                          8            0
+.xt.lit._ZN15ControlMediator15onSensorReadingERK13SensorReading                           8            0
 .xt.prop._ZNK12StubActuator7getNameEv                                                    48            0
 .xt.prop._ZN12StubActuatorD5Ev                                                            0            0
-.xt.prop._ZN15ControlMediator16registerActuatorEP9IActuator                              84            0
-.xt.prop._ZN15ControlMediator7addExprERK8RuleExpr                                        60            0
 .xt.prop._ZN15ControlMediator6_clearEv                                                   72            0
 .xt.prop._ZNK15ControlMediator11_storeIndexERK9SensorKey                                 60            0
 .xt.prop._ZNK15ControlMediator8evalExprEh                                               312            0
+.xt.prop._ZN15ControlMediator16evaluateAllRulesEv                                       204            0
+.xt.prop._ZN15ControlMediator15onSensorReadingERK13SensorReading                         72            0
 .xt.prop._ZN9IActuator4tickEv                                                            36            0
 .xt.prop._ZNK12StubActuator5getIdEv                                                      36            0
 .xt.prop._ZN12StubActuator5beginEv                                                       36            0
@@ -254,10 +195,14 @@ section                                                                         
 .xt.prop._ZN12StubActuatorD2Ev                                                           36            0
 .xt.prop._ZN12StubActuatorD0Ev                                                           36            0
 .xt.prop._ZNK9SensorKey5toU32Ev                                                          36            0
-.xt.prop._ZN15ControlMediator7addRuleERK4Rule                                            48            0
 .xt.prop._ZTI9IActuator                                                                  12            0
 .xt.prop._ZTI12StubActuator                                                              12            0
 .xt.prop._ZTV12StubActuator                                                              12            0
+.xt.lit._ZN15ControlMediator16registerActuatorEP9IActuator                                8            0
+.xt.lit._ZN15ControlMediator7addExprERK8RuleExpr                                          0            0
+.xt.prop._ZN15ControlMediator16registerActuatorEP9IActuator                              84            0
+.xt.prop._ZN15ControlMediator7addExprERK8RuleExpr                                        60            0
+.xt.prop._ZN15ControlMediator7addRuleERK4Rule                                            48            0
 .xt.lit._ZN10StubSensorC5Eh                                                               8            0
 .xt.prop._ZN10StubSensorC5Eh                                                             12            0
 .xt.prop._ZNK9SensorKeyeqERKS_                                                           48            0
@@ -334,14 +279,14 @@ section                                                                         
 .xt.prop._ZTISt17bad_function_call                                                       12            0
 .xt.prop._ZTVSt17bad_function_call                                                       12            0
 .xt.prop._ZTISt9bad_alloc                                                                12            0
-.debug_frame                                                                          68688            0
-.debug_info                                                                         3816414            0
-.debug_abbrev                                                                        296541            0
-.debug_loc                                                                           498664            0
-.debug_aranges                                                                        27432            0
-.debug_ranges                                                                         69848            0
-.debug_line                                                                         1279445            0
-.debug_str                                                                           318445            0
-Total                                                                               6833201
+.debug_frame                                                                          69112            0
+.debug_info                                                                         3885359            0
+.debug_abbrev                                                                        300098            0
+.debug_loc                                                                           502639            0
+.debug_aranges                                                                        27592            0
+.debug_ranges                                                                         70368            0
+.debug_line                                                                         1287593            0
+.debug_str                                                                           318684            0
+Total                                                                               6921293
 
 

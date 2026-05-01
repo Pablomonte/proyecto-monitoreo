@@ -16,6 +16,7 @@ extern void testCheckForUpdates();
 extern void testGetLatestReleaseTag();
 extern void runRuleConditionTests();
 extern void runSensorIdentityTests();
+extern void runAutomationFlowTests();
 
 void setUp() {
 #ifndef ARDUINO
@@ -37,6 +38,7 @@ int main() {
 
     runRuleConditionTests();
     runSensorIdentityTests();
+    runAutomationFlowTests();
 
     return UNITY_END();
 }
@@ -55,6 +57,7 @@ void setup() {
 
     runRuleConditionTests();
     runSensorIdentityTests();
+    runAutomationFlowTests();
     UNITY_END();
 }
 void loop() {}

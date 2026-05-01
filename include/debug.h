@@ -24,7 +24,15 @@
 
 // ERROR level macros (Level 1+)
 #if DEBUG_LEVEL >= DEBUG_ERROR
-  #define DBG_ERROR(...)      Serial.printf(__VA_ARGS__)
+  #ifndef ARDUINO
+  // ─── ENTORNO NATIVO (Pruebas en PC) ───
+    #include <cstdio>
+    #define DBG_ERROR(...)    printf(__VA_ARGS__)
+  #else
+  // ─── ENTORNO HARDWARE (ESP32) ───
+    #include <Arduino.h>
+    #define DBG_ERROR(...)    Serial.printf(__VA_ARGS__)
+  #endif
   #define DBG_ERRORLN(x)      Serial.println(x)
 #else
   #define DBG_ERROR(...)      ((void)0)
@@ -33,6 +41,15 @@
 
 // INFO level macros (Level 2+)
 #if DEBUG_LEVEL >= DEBUG_INFO
+  #ifndef ARDUINO
+  // ─── ENTORNO NATIVO (Pruebas en PC) ───
+    #include <cstdio>
+    #define DBG_INFO(...)    printf(__VA_ARGS__)
+  #else
+  // ─── ENTORNO HARDWARE (ESP32) ───
+    #include <Arduino.h>
+    #define DBG_INFO(...)    Serial.printf(__VA_ARGS__)
+  #endif
   #define DBG_INFO(...)       Serial.printf(__VA_ARGS__)
   #define DBG_INFOLN(x)       Serial.println(x)
 #else
@@ -40,9 +57,18 @@
   #define DBG_INFOLN(x)       ((void)0)
 #endif
 
+
 // VERBOSE level macros (Level 3 only)
 #if DEBUG_LEVEL >= DEBUG_VERBOSE
-  #define DBG_VERBOSE(...)    Serial.printf(__VA_ARGS__)
+  #ifndef ARDUINO
+  // ─── ENTORNO NATIVO (Pruebas en PC) ───
+    #include <cstdio>
+    #define DBG_VERBOSE(...)    printf(__VA_ARGS__)
+  #else
+  // ─── ENTORNO HARDWARE (ESP32) ───
+    #include <Arduino.h>
+    #define DBG_VERBOSE(...)    Serial.printf(__VA_ARGS__)
+  #endif
   #define DBG_VERBOSELN(x)    Serial.println(x)
 #else
   #define DBG_VERBOSE(...)    ((void)0)
