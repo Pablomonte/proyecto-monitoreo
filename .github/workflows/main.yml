@@ -38,6 +38,9 @@ jobs:
         #endif
         EOF
 
+    - name: Run Unit Tests
+      run: pio test -e native_test
+
     - name: Build Firmware
       run: |
         mkdir -p binarios
