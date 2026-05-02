@@ -3,11 +3,12 @@
 
 #include "ISensor.h"
 #include "ITemperatureSensor.h"
+#include "SensorBase.h"
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include "../debug.h"
 
-class SensorOneWire : public ITemperatureSensor {
+class SensorOneWire : public SensorBase, public ITemperatureSensor {
 private:
     DallasTemperature* dallas;
     DeviceAddress address;
@@ -18,10 +19,9 @@ private:
 
 public:
     SensorOneWire(DallasTemperature* dt, DeviceAddress addr, int idx)
-        : dallas(dt), deviceIndex(idx), temperature(-127), active(false) {
+        : SensorBase(SensorClass::ONE_WIRE, addr[7]),   // last byte of 8-byte OneWire address = stable ID
+          dallas(dt), deviceIndex(idx), temperature(-127), active(false) {
         memcpy(address, addr, 8);
-
-        // Convert address to hex string
         addressStr = "";
         for (uint8_t i = 0; i < 8; i++) {
             if (address[i] < 16) addressStr += "0";
@@ -51,6 +51,7 @@ public:
 
         if (temp != DEVICE_DISCONNECTED_C && temp != 85.0) {
             temperature = temp;
+            DBG_VERBOSE("[OneWire] %s: %.1f\n", addressStr.c_str(), temperature);
             return true;
         }
 
@@ -77,6 +78,13 @@ public:
     }
 
     bool isActive() override { return active; }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+    SensorKey getKey() const override { return SensorBase::getKey(); }
+    void notifyMediator(ControlMediator& mediator) override {
+        if (!active) return;
+        _notify(mediator, SensorVariable::TEMPERATURE, temperature);
+    }
 };
 
 #endif // SENSOR_ONEWIRE_H

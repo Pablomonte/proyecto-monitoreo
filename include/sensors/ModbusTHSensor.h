@@ -4,6 +4,7 @@
 #include "ModbusSensorBase.h"
 #include "ITemperatureSensor.h"
 #include "IHumiditySensor.h"
+#include "SensorBase.h"
 #include "../debug.h"
 
 /**
@@ -14,7 +15,7 @@
  *   - 0 (0x00): Humidity (int16 * 10, e.g., 399 = 39.9% RH)
  *   - 1 (0x01): Temperature (int16 * 10, e.g., 282 = 28.2°C)
  */
-class ModbusTHSensor : public ModbusSensorBase<2>, public ITemperatureSensor, public IHumiditySensor {
+class ModbusTHSensor : public SensorBase, public ModbusSensorBase<2>, public ITemperatureSensor, public IHumiditySensor {
 private:
     float temperature = 999;
     float humidity = 999;
@@ -39,10 +40,9 @@ protected:
 
 public:
     ModbusTHSensor(uint8_t address = 1)
-        : ModbusSensorBase<2>(address),
-          temperature(999),
-          humidity(99) {
-    }
+        : SensorBase(SensorClass::RS485_MODBUS, address),         // Modbus address = stable sensorId
+          ModbusSensorBase<2>(address),
+          temperature(999), humidity(99) {}
 
     // ITemperatureSensor
     float getTemperature() override { return temperature; }
@@ -66,6 +66,13 @@ public:
         static char measString[32];
         snprintf(measString, sizeof(measString), "temp=%.1f,hum=%.1f", temperature, humidity);
         return measString;
+    }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+    SensorKey getKey() const override { return SensorBase::getKey(); }
+    void notifyMediator(ControlMediator& mediator) override {
+        if (temperature != 999) _notify(mediator, SensorVariable::TEMPERATURE, temperature);
+        if (humidity != 99)    _notify(mediator, SensorVariable::HUMIDITY, humidity);
     }
 };
 

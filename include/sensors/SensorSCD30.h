@@ -5,10 +5,14 @@
 #include "ITemperatureSensor.h"
 #include "IHumiditySensor.h"
 #include "ICO2Sensor.h"
+#include "SensorBase.h"
 #include <Adafruit_SCD30.h>
 #include "../debug.h"
 
-class SensorSCD30 : public ITemperatureSensor, public IHumiditySensor, public ICO2Sensor {
+class SensorSCD30 : public SensorBase, public ITemperatureSensor, public IHumiditySensor, public ICO2Sensor {
+    // sensorId = 0x61 = SCD30 default I2C address (stable)
+    // deviceId = last byte of EFuse MAC (set by SensorBase)
+
 private:
     Adafruit_SCD30 scd30;
     bool active;
@@ -17,7 +21,7 @@ private:
     float co2;
 
 public:
-    SensorSCD30() : active(false), temperature(999), humidity(100), co2(999999) {}
+    SensorSCD30() : SensorBase(SensorClass::I2C_BUS, 0x61), active(false), temperature(999), humidity(100), co2(999999) {}
 
     bool init() override {
         active = scd30.begin();
@@ -44,7 +48,7 @@ public:
         temperature = scd30.temperature;
         humidity = scd30.relative_humidity;
         co2 = scd30.CO2;
-        return true;
+        DBG_VERBOSE("[SCD30] Read: temp=%.1f hum=%.1f co2=%.0f key=%llx\n", temperature, humidity, co2, (unsigned long long)this->getKey().toU32());        return true;
     }
 
     // ITemperatureSensor
@@ -76,6 +80,16 @@ public:
     }
 
     bool isActive() override { return active; }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+public:
+    SensorKey getKey() const override { return SensorBase::getKey(); }
+    void notifyMediator(ControlMediator& mediator) override {
+        if (!active) return;
+        _notify(mediator, SensorVariable::CO2, co2);
+        _notify(mediator, SensorVariable::TEMPERATURE, temperature);
+        _notify(mediator, SensorVariable::HUMIDITY, humidity);
+    }
 };
 
 #endif // SENSOR_SCD30_H

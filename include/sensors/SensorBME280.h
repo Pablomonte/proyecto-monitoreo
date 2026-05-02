@@ -5,10 +5,11 @@
 #include "ITemperatureSensor.h"
 #include "IHumiditySensor.h"
 #include "IPressureSensor.h"
+#include "SensorBase.h"
 #include <Adafruit_BME280.h>
 #include "../debug.h"
 
-class SensorBME280 : public ITemperatureSensor, public IHumiditySensor, public IPressureSensor {
+class SensorBME280 : public SensorBase, public ITemperatureSensor, public IHumiditySensor, public IPressureSensor {
 private:
     Adafruit_BME280 bme;
     bool active;
@@ -18,16 +19,21 @@ private:
     uint8_t address = 0x76;
 
 public:
-    SensorBME280() : active(false), temperature(999), humidity(100), pressure(0) {}
-
+    SensorBME280() : SensorBase(SensorClass::I2C_BUS, 0x76), active(false), temperature(999), humidity(100), pressure(0) {}
+    //TODO: error en la clase base... no actualiza el sensor id
     bool init() override {
-        // Try I2C address 0x76 (default) or 0x77 (alternate)
-        active = bme.begin(0x76) || (bme.begin(0x77) && ((address = 0x77) || true));
-
+        active = bme.begin(0x76);
+        if (!active) {
+            active = bme.begin(0x77);
+            if (active) {
+                address = 0x77;
+                updatePhysicalId(SensorClass::I2C_BUS, 0x77);  // update stable ID to actual I2C addr
+            }
+        }
         if (!active) {
             DBG_ERROR("[BME280] Init failed\n");
         } else {
-            DBG_INFO("[BME280] OK\n");
+            DBG_INFO("[BME280] OK addr=0x%02X\n", address);
             bme.setSampling(Adafruit_BME280::MODE_NORMAL,
                           Adafruit_BME280::SAMPLING_X2,
                           Adafruit_BME280::SAMPLING_X16,
@@ -53,7 +59,7 @@ public:
             DBG_ERROR("[BME280] Read error\n");
             return false;
         }
-
+        DBG_VERBOSE("[BME280] Read: temp=%.1f hum=%.1f pres=%.1f\n", temperature, humidity, pressure);
         return true;
     }
 
@@ -81,6 +87,15 @@ public:
     }
 
     bool isActive() override { return active; }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+    SensorKey getKey() const override { return SensorBase::getKey(); }
+    void notifyMediator(ControlMediator& mediator) override {
+        if (!active) return;
+        _notify(mediator, SensorVariable::TEMPERATURE, temperature);
+        _notify(mediator, SensorVariable::HUMIDITY, humidity);
+        _notify(mediator, SensorVariable::PRESSURE, pressure);
+    }
 };
 
 #endif // SENSOR_BME280_H

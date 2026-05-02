@@ -5,6 +5,7 @@
 #include "ITemperatureSensor.h"
 #include "IMoistureSensor.h"
 #include "ISoilSensor.h"
+#include "SensorBase.h"
 #include "../debug.h"
 
 /**
@@ -21,7 +22,8 @@
  *   - 5 (0x05): Phosphorus P (int16, direct in mg/kg)
  *   - 6 (0x06): Potassium K (int16, direct in mg/kg)
  */
-class ModbusSoil7in1Sensor : public ModbusSensorBase<7>,
+class ModbusSoil7in1Sensor : public SensorBase,
+                              public ModbusSensorBase<7>,
                               public ITemperatureSensor,
                               public IMoistureSensor,
                               public ISoilSensor {
@@ -65,15 +67,10 @@ protected:
 
 public:
     ModbusSoil7in1Sensor(uint8_t address = 1)
-        : ModbusSensorBase<7>(address),
-          moisture(0),
-          temperature(999),
-          ec(0),
-          ph(0),
-          nitrogen(0),
-          phosphorus(0),
-          potassium(0) {
-    }
+        : SensorBase(SensorClass::RS485_MODBUS, address),          // Modbus address = stable sensorId
+          ModbusSensorBase<7>(address),
+          moisture(0), temperature(999), ec(0), ph(0),
+          nitrogen(0), phosphorus(0), potassium(0) {}
 
     // ITemperatureSensor
     float getTemperature() override { return temperature; }
@@ -106,6 +103,18 @@ public:
                  "temp=%.1f,moisture=%.1f,ec=%.0f,ph=%.1f,nitrogen=%d,phosphorus=%d,potassium=%d",
                  temperature, moisture, ec, ph, nitrogen, phosphorus, potassium);
         return measString;
+    }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+    SensorKey getKey() const override { return SensorBase::getKey(); }
+    void notifyMediator(ControlMediator& mediator) override {
+        if (temperature != 999) _notify(mediator, SensorVariable::TEMPERATURE, temperature);
+        if (moisture != 0)      _notify(mediator, SensorVariable::MOISTURE, moisture);
+        if (ec != 0)            _notify(mediator, SensorVariable::EC, ec);
+        if (ph != 0)            _notify(mediator, SensorVariable::PH, ph);
+        if (nitrogen != 0)      _notify(mediator, SensorVariable::NITROGEN, nitrogen);
+        if (phosphorus != 0)    _notify(mediator, SensorVariable::PHOSPHORUS, phosphorus);
+        if (potassium != 0)     _notify(mediator, SensorVariable::POTASSIUM, potassium);
     }
 };
 

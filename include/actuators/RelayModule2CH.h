@@ -2,23 +2,96 @@
 #define RELAY_MODULE_2CH_H
 
 #include "../ModbusManager.h"
+#include "../core/ActuatorBase.h"
+#include "../core/ControlMediator.h"
 #include "../debug.h"
 #include <Arduino.h>
 
 /**
  * 2-Channel RS485 Modbus Relay Module
- * 
+ *
+ * Provides two IActuator channels via getChannel(ch).
+ * actuatorId encoding: bits[7:4] = Modbus address, bits[3:0] = channel (0 or 1).
+ * Use RelayModule2CH::makeActuatorId(addr, ch) to build the ID.
+ *
  * Features:
  * - 2 Relays (NO/NC)
  * - 1 Digital Input (IN1)
  * - Modbus RTU (9600 8N1 default)
- * 
+ *
  * Addressing (Standard):
  * - Relay 0: Coil 0 (0x0000)
  * - Relay 1: Coil 1 (0x0001)
  * - Input 1: Discrete Input 0 (0x0000)
  */
 class RelayModule2CH {
+public:
+    /** Build actuatorId: high nibble = Modbus address, low nibble = channel */
+    static uint8_t makeActuatorId(uint8_t modbusAddr, uint8_t channel) {
+        return (uint8_t)((modbusAddr << 4) | (channel & 0x0F));
+    }
+
+    class ChannelActuator : public ActuatorBase {
+    private:
+        RelayModule2CH* _module;
+        uint8_t _channel;
+        String _nameCache;
+        uint32_t _startTime;
+        uint32_t _durationMs;
+        bool _inverted;
+
+    public:
+        ChannelActuator(RelayModule2CH* module, uint8_t channel)
+            : _module(module), _channel(channel), _startTime(0), _durationMs(0), _inverted(false) {}
+
+        void configure(uint32_t maxOn, uint32_t minOff, bool inverted) {
+            ActuatorBase::configure(maxOn, minOff);
+            _inverted = inverted;
+        }
+
+        void updateName() {
+            _nameCache = _module->getAlias();
+            if (_nameCache.length() == 0) {
+                _nameCache = "Relay " + String(_module->getAddress());
+            }
+            _nameCache += " CH" + String(_channel + 1);
+        }
+
+        uint8_t getId() const override {
+            return RelayModule2CH::makeActuatorId(_module->getAddress(), _channel);
+        }
+        const char* getName() const override { return _nameCache.c_str(); }
+        bool begin() override { return true; } // Init is handled centrally by the Module
+        
+        void _turnOn(uint32_t effDuration) override {
+            _durationMs = effDuration;
+            if (effDuration > 0) _startTime = millis();
+            _module->setRelay(_channel, _inverted ? false : true); 
+        }
+
+        void _turnOff() override {
+            if (getState() == true) {
+                _recordTurnOff();
+            }
+            _durationMs = 0;
+            _module->setRelay(_channel, _inverted ? true : false);
+        }
+
+        void tick() override {
+            if (_durationMs > 0 && (millis() - _startTime >= _durationMs)) {
+                _durationMs = 0;
+                if (getState() == true) { // Logically turning OFF
+                    _recordTurnOff();
+                }
+                // Send logical OFF (physical true if inverted)
+                _module->setRelay(_channel, _inverted ? true : false);
+            }
+        }
+
+        // Returns the logical state
+        bool getState() const override { return _module->getState(_channel) ^ _inverted; }
+    };
+
 private:
     uint8_t _address;
     String _alias;
@@ -41,16 +114,37 @@ private:
         return true;
     }
 
+    ChannelActuator _ch0;
+    ChannelActuator _ch1;
+
 public:
-    RelayModule2CH(uint8_t address = 1, String alias = "") 
-        : _address(address), _alias(alias), _active(false), _failureCount(0), _inactiveCheckCount(0) {
+    RelayModule2CH(uint8_t address = 1, String alias = "")
+        : _address(address), _alias(alias), _active(false), _failureCount(0), _inactiveCheckCount(0),
+          _ch0(this, 0), _ch1(this, 1) {
         _relayState[0] = false;
         _relayState[1] = false;
         _inputState[0] = false;
         _inputState[1] = false;
+        _ch0.updateName();
+        _ch1.updateName();
     }
 
-    void setAlias(String alias) { _alias = alias; }
+    IActuator* getChannel(uint8_t ch) {
+        if (ch == 0) return &_ch0;
+        if (ch == 1) return &_ch1;
+        return nullptr;
+    }
+
+    void configureChannel(uint8_t ch, uint32_t maxOn, uint32_t minOff, bool inverted) {
+        if (ch == 0) _ch0.configure(maxOn, minOff, inverted);
+        if (ch == 1) _ch1.configure(maxOn, minOff, inverted);
+    }
+
+    void setAlias(String alias) { 
+        _alias = alias; 
+        _ch0.updateName();
+        _ch1.updateName();
+    }
     String getAlias() const { return _alias; }
     uint8_t getAddress() const { return _address; }
 
@@ -190,7 +284,7 @@ public:
         return false;
     }
 
-    bool syncInputs() {
+    bool syncInputs(ControlMediator& mediator) {
         ModbusRTU* mb = ModbusManager::getInstance().getModbus();
         if (!mb) return false;
 
@@ -216,6 +310,27 @@ public:
             _inputState[1] = inputs[1];
             _failureCount = 0;
             DBG_VERBOSE("[Relay %d] IN1=%d IN2=%d\n", _address, _inputState[0], _inputState[1]);
+            
+            // Inject inputs directly into the Rules Engine
+            static uint32_t inputCounter = 1;
+            inputCounter++;
+            
+            SensorReading r0;
+            r0.key.deviceId = (uint8_t)(ESP.getEfuseMac() & 0xFF);
+            r0.key.sensorId = _address;
+            r0.key.varId    = (uint8_t)SensorVariable::DIGITAL_IN_1;
+            r0.value = _inputState[0] ? 1.0f : 0.0f;
+            r0.counter = inputCounter;
+            mediator.onSensorReading(r0);
+
+            SensorReading r1;
+            r1.key.deviceId = (uint8_t)(ESP.getEfuseMac() & 0xFF);
+            r1.key.sensorId = _address;
+            r1.key.varId    = (uint8_t)SensorVariable::DIGITAL_IN_2;
+            r1.value = _inputState[1] ? 1.0f : 0.0f;
+            r1.counter = inputCounter;
+            mediator.onSensorReading(r1);
+
             return true;
         }
 
@@ -236,16 +351,18 @@ public:
         String json = "{";
         json += "\"address\":" + String(_address) + ",";
         json += "\"alias\":\"" + _alias + "\",";
-        json += "\"r0\":" + String(_relayState[0] ? 1 : 0) + ",";
-        json += "\"r1\":" + String(_relayState[1] ? 1 : 0);
+        json += "\"r0\":" + String(_ch0.getState() ? 1 : 0) + ",";
+        json += "\"r1\":" + String(_ch1.getState() ? 1 : 0) + ",";
+        json += "\"state\":[" + String(_ch0.getState() ? "true" : "false") + "," + String(_ch1.getState() ? "true" : "false") + "],";
+        json += "\"input_state\":[" + String(_inputState[0] ? "true" : "false") + "," + String(_inputState[1] ? "true" : "false") + "]";
         json += "}";
         return json;
     }
 
     String getGrafanaString() {
         String s = "";
-        s += "relay1=" + String(_relayState[0] ? 1 : 0);
-        s += ",relay2=" + String(_relayState[1] ? 1 : 0);
+        s += "relay1=" + String(_ch0.getState() ? 1 : 0);
+        s += ",relay2=" + String(_ch1.getState() ? 1 : 0);
         s += ",in1=" + String(_inputState[0] ? 1 : 0);
         s += ",in2=" + String(_inputState[1] ? 1 : 0);
         return s;

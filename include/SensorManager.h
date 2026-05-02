@@ -9,6 +9,8 @@
 #include "sensors/SensorOneWire.h"
 #include "sensors/SensorSCD30.h"
 #include "sensors/SensorSimulated.h"
+#include "sensors/InternalTempSensor.h"
+#include "core/ControlMediator.h"
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <DallasTemperature.h>
@@ -50,8 +52,10 @@ public:
   void loadFromConfig(JsonDocument &config) {
     if (!config["sensors"].is<JsonArray>()) {
       DBG_INFO("No sensors config, using default capacitive\n");
-      sensors.push_back(new SensorCapacitive());
-      sensors[0]->init();
+      auto* s = new SensorCapacitive();
+      if (s->init()) {
+        sensors.push_back(s);
+      }
       return;
     }
 
@@ -67,8 +71,8 @@ public:
 
       if (strcmp(type, "capacitive") == 0) {
         int pin = cfg["pin"] | 34;
-        int dry = cfg["dry"] | 4095; // ADC max when dry
-        int wet = cfg["wet"] | 0;    // ADC min when wet
+        int dry = cfg["dry"] | 4095;
+        int wet = cfg["wet"] | 0;
         SensorCapacitive *s = new SensorCapacitive(pin, dry, wet);
         if (s->init()) {
           sensors.push_back(s);
@@ -80,6 +84,16 @@ public:
         if (s->init()) {
           sensors.push_back(s);
           DBG_INFO("SCD30 sensor added\n");
+        }
+
+      } else if (strcmp(type, "internal_temp") == 0) {
+        InternalTempSensor *s = new InternalTempSensor();
+        if (s->init()) {
+          sensors.push_back(s);
+          DBG_INFO("InternalTemp sensor added\n");
+        } else {
+          delete s;
+          DBG_ERROR("InternalTemp init failed\n");
         }
 
       } else if (strcmp(type, "bme280") == 0) {
@@ -169,31 +183,43 @@ public:
       else if (strcmp(type, "hd38") == 0) {
         // HD-38 Soil Moisture sensor
         // Support both 'analog_pins' array and legacy 'analog_pin' single value
+        // Per-pin calibration via dry_values[] / wet_values[] parallel arrays
         bool divider = cfg["voltage_divider"] | true;
         bool invert = cfg["invert_logic"] | false;
 
         std::vector<int> pinList;
 
         if (cfg["analog_pins"].is<JsonArray>()) {
-          // Multiple pins: [35, 34, 32]
           for (JsonVariant pin : cfg["analog_pins"].as<JsonArray>()) {
             pinList.push_back(pin.as<int>());
           }
+        } else if (cfg["pin"].is<int>()) {
+          // Unified interface: same 'pin' field as capacitive
+          pinList.push_back(cfg["pin"].as<int>());
         } else {
-          // Single pin (backwards compatible)
           pinList.push_back(cfg["analog_pin"] | 35);
         }
 
+        // Read optional per-pin calibration arrays
+        bool hasDryArr = cfg["dry_values"].is<JsonArray>();
+        bool hasWetArr = cfg["wet_values"].is<JsonArray>();
+        // Also support single sensor flat dry/wet
+        int flatDry = cfg["dry"] | 4095;
+        int flatWet = cfg["wet"] | 0;
+
         for (size_t i = 0; i < pinList.size(); i++) {
           int aPin = pinList[i];
-          // Generate name based on pin number (like modbus uses address)
+          int dry = hasDryArr ? (cfg["dry_values"][i] | flatDry) : flatDry;
+          int wet = hasWetArr ? (cfg["wet_values"][i] | flatWet) : flatWet;
+
           char sensorName[16];
           snprintf(sensorName, sizeof(sensorName), "%d", aPin);
 
-          ISensor *s = new HD38Sensor(aPin, -1, divider, invert, sensorName);
+          HD38Sensor *s = new HD38Sensor(aPin, -1, divider, invert, sensorName);
+          s->setCalibration(dry, wet);
           if (s->init()) {
             sensors.push_back(s);
-            DBG_INFO("HD38 '%s' pin %d added\n", sensorName, aPin);
+            DBG_INFO("HD38 '%s' pin %d dry=%d wet=%d added\n", sensorName, aPin, dry, wet);
           } else {
             delete s;
             DBG_ERROR("HD38 pin %d init failed\n", aPin);
@@ -210,7 +236,7 @@ public:
     DallasTemperature *dallas = new DallasTemperature(oneWire);
     dallas->begin();
 
-    dallasInstances.push_back(dallas); // Store for cleanup
+    dallasInstances.push_back(dallas);
 
     int deviceCount = dallas->getDeviceCount();
 
@@ -224,34 +250,48 @@ public:
       }
     }
 
-    // Request temperatures for all devices (async)
     dallas->requestTemperatures();
-
     return deviceCount;
   }
 
+  /**
+   * Read all active sensors.
+   * Legacy method — called from sendDataGrafana loop.
+   */
   void readAll() {
-    // Request temperatures from all OneWire sensors first (async)
     for (auto *dallas : dallasInstances) {
       dallas->requestTemperatures();
     }
+    if (!dallasInstances.empty()) delay(100);
 
-    // Small delay for OneWire conversion
-    if (!dallasInstances.empty()) {
-      delay(100);
-    }
-
-    // Read all sensors with configurable delay between readings
-    // This helps prevent bus collisions on RS485/Modbus
     bool isFirst = true;
     for (auto *s : sensors) {
       if (s->isActive() && s->dataReady()) {
-        // Add delay between sensor readings (not before first one)
-        if (!isFirst && modbusDelayMs > 0) {
-          delay(modbusDelayMs);
-        }
+        if (!isFirst && modbusDelayMs > 0) delay(modbusDelayMs);
         isFirst = false;
         s->read();
+      }
+    }
+  }
+
+  /**
+   * Read all sensors AND notify the ControlMediator with each primary value.
+   * Call this every read_interval_ms from loop().
+   */
+  void readAllAndNotify(ControlMediator& mediator) {
+    for (auto *dallas : dallasInstances) {
+      dallas->requestTemperatures();
+    }
+    if (!dallasInstances.empty()) delay(100);
+
+    bool isFirst = true;
+    for (auto *s : sensors) {
+      if (s->isActive() && s->dataReady()) {
+        if (!isFirst && modbusDelayMs > 0) delay(modbusDelayMs);
+        isFirst = false;
+          if (s->read()) {
+            s->notifyMediator(mediator);
+          }
       }
     }
   }

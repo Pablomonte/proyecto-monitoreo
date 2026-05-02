@@ -31,10 +31,10 @@ Sistema de monitoreo multi-sensor para ESP32 con transmisión a Grafana/InfluxDB
 
 **ESP32 básico:**
 ```
-3.3V → Sensores I2C (VCC)
-GND  → Sensores I2C (GND)
-21   → SDA (I2C)
-22   → SCL (I2C)
+3.3V → sdc30,capacitivo,resistivo I2C (VCC)
+GND  → sdc30 I2C (GND)
+21   → sdc30 SDA (I2C) 
+22   → sdc30 SCL (I2C) 
 34   → Sensor capacitivo (AOUT)
 4    → OneWire data (requiere pull-up 4.7kΩ a 3.3V)
 ```
@@ -43,6 +43,7 @@ GND  → Sensores I2C (GND)
 ```
 17 → DI (MAX485)
 16 → RO (MAX485)
+18 → DE//RE
 ```
 
 **ESP-NOW mesh:** Sólo requiere ESP32, sin hardware adicional.

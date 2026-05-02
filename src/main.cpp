@@ -8,6 +8,9 @@
 #include "otaUpdater.h"
 #include "sendDataGrafana.h"
 #include "version.h"
+#include "core/ControlMediator.h"
+#include "core/TimerSource.h"
+#include "core/RuleLoader.h"
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
@@ -27,12 +30,12 @@
 #include "sensors/IMoistureSensor.h"
 #include "sensors/ITemperatureSensor.h"
 SensorManager sensorMgr;
-// Wrapper function for endpoints.cpp to access sensors without including full
-// header
+// Wrapper function for endpoints.cpp to access sensors without including full header
 std::vector<ISensor *> &getSensorList() { return sensorMgr.getSensors(); }
 #else
 #include "sensors/ICO2Sensor.h"
 #include "sensors/IHumiditySensor.h"
+#include "sensors/IMoistureSensor.h"
 #include "sensors/ITemperatureSensor.h"
 #include "sensors/SensorFactory.h"
 #endif
@@ -49,12 +52,25 @@ ESPNowManager espnowMgr;
 
 RelayManager relayMgr;
 
+// ── Mediator / Timer / Rules ──────────────────────────────────────────────────
+ControlMediator mediator;
+TimerSource     timerSource;
+
 // Forward declarations for new endpoints
 void handleRelayList();
 void handleRelayToggle();
+void handleActuatorCommand();
+void handleActuatorStatus();
+void handleRulesReload();
+void handleRulesGet();
+void handleRulesSave();
+void handleRulesEditor();
 
 unsigned long lastUpdateCheck = 0;
-unsigned long lastSendTime = 0;
+unsigned long lastSendTime    = 0;
+unsigned long lastReadTime    = 0;   // ← NEW: independent read timer
+uint32_t      sendIntervalMs  = 10000;
+uint32_t      readIntervalMs  = 3000;
 
 #ifdef ENABLE_OTA
 bool otaInitialized = false;
@@ -87,16 +103,13 @@ volatile int meshBufferTail = 0;
 // functions
 void onMeshDataReceived(const uint8_t *senderMAC, float temp, float hum,
                         float co2, uint32_t seq, const char *sensorId) {
-  // Calculate next buffer position
   int nextHead = (meshBufferHead + 1) % MESH_BUFFER_SIZE;
 
-  // Check if buffer is full
   if (nextHead == meshBufferTail) {
     DBG_ERROR("[MESH] Buffer full, dropping data\n");
     return;
   }
 
-  // Store data in buffer
   memcpy(meshBuffer[meshBufferHead].senderMAC, senderMAC, 6);
 
   if (sensorId != nullptr) {
@@ -108,13 +121,30 @@ void onMeshDataReceived(const uint8_t *senderMAC, float temp, float hum,
     strcpy(meshBuffer[meshBufferHead].sensorId, "unknown");
   }
   meshBuffer[meshBufferHead].temp = temp;
-  meshBuffer[meshBufferHead].hum = hum;
-  meshBuffer[meshBufferHead].co2 = co2;
-  meshBuffer[meshBufferHead].seq = seq;
+  meshBuffer[meshBufferHead].hum  = hum;
+  meshBuffer[meshBufferHead].co2  = co2;
+  meshBuffer[meshBufferHead].seq  = seq;
   meshBuffer[meshBufferHead].valid = true;
 
-  // Update head pointer (atomic for single-writer scenario)
   meshBufferHead = nextHead;
+
+  // Feed mediator — use packet sequence as monotonic counter per remote sensor.
+  // nodeId = last byte of sender MAC (unique per board, matches SensorBase logic).
+  // sensorIds 0/1/2 are conventional for temp/hum/co2 on remote nodes.
+  uint8_t nodeId = senderMAC[5];
+
+  if (temp > -200.0f) {
+    SensorReading r; r.key = {nodeId, 0}; r.value = temp; r.counter = seq;
+    mediator.onSensorReading(r);
+  }
+  if (hum > -200.0f) {
+    SensorReading r; r.key = {nodeId, 1}; r.value = hum;  r.counter = seq;
+    mediator.onSensorReading(r);
+  }
+  if (co2 > -200.0f) {
+    SensorReading r; r.key = {nodeId, 2}; r.value = co2;  r.counter = seq;
+    mediator.onSensorReading(r);
+  }
 }
 
 String detectRole(const JsonDocument &config) {
@@ -217,10 +247,13 @@ void setup() {
 #ifdef SENSOR_MULTI
   sensorMgr.loadFromConfig(config);
 
-  // Configure delay between sensor readings (helps prevent RS485/Modbus
-  // collisions)
   uint16_t modbusDelay = config["modbus_delay_ms"] | 50;
   sensorMgr.setModbusDelay(modbusDelay);
+
+  // Read + send intervals from config
+  sendIntervalMs = config["send_interval_ms"] | 10000UL;
+  readIntervalMs = config["read_interval_ms"]  | 3000UL;
+  DBG_INFO("[OK] Timing: read=%lums send=%lums\n", readIntervalMs, sendIntervalMs);
 
   int sensorCount = sensorMgr.getSensorCount();
   DBG_INFO("[OK] Multi-sensor: %d active\n", sensorCount);
@@ -238,9 +271,25 @@ void setup() {
   relayMgr.loadFromConfig(config);
   DBG_INFO("[OK] %d relays configured\n", relayMgr.getRelays().size());
   for (auto *r : relayMgr.getRelays()) {
-    if (r)
+    if (r) {
       r->init();
+      // Register each individual relay channel as an actuator in mediator
+      mediator.registerActuator(r->getChannel(0));
+      mediator.registerActuator(r->getChannel(1));
+    }
   }
+
+  for (auto& g : relayMgr.getGpioRelays()) {
+    if (g.actuator) {
+      g.actuator->begin();
+      mediator.registerActuator(g.actuator);
+    }
+  }
+
+  // Load automation rules from SPIFFS
+  DBG_INFOLN("[INFO] Loading rules...");
+  int rulesLoaded = RuleLoader::load(mediator);
+  DBG_INFO("[OK] %d rules loaded\n", rulesLoaded);
 #else
   sensor = SensorFactory::createSensor();
   if (sensor) {
@@ -258,18 +307,26 @@ void setup() {
 
   server.on("/", HTTP_GET, handleHome);
   server.on("/actual", HTTP_GET, handleMediciones);
-  server.on("/api/status", HTTP_GET, handleStatus); // New endpoint
+  server.on("/api/status", HTTP_GET, handleStatus);
   server.on("/config", HTTP_GET, handleConfiguracion);
   server.on("/config", HTTP_POST, habldePostConfig);
   server.on("/config/reset", HTTP_POST, handleConfigReset);
-  server.on("/data", HTTP_GET, handleData); // Serves data.html
+  server.on("/data", HTTP_GET, handleData);
   server.on("/calibrate-scd30", HTTP_GET, handleSCD30Calibration);
-  server.on("/settings", HTTP_GET, handleSettings); // Serves config.html
+  server.on("/settings", HTTP_GET, handleSettings);
   server.on("/restart", HTTP_POST, handleRestart);
 
-  // Relay endpoints
+  // Relay endpoints (legacy)
   server.on("/api/relays", HTTP_GET, handleRelayList);
   server.on("/api/relay/toggle", HTTP_POST, handleRelayToggle);
+
+  // Mediator / actuator endpoints
+  server.on("/actuator/command", HTTP_POST, handleActuatorCommand);
+  server.on("/actuator/status",  HTTP_GET,  handleActuatorStatus);
+  server.on("/rules/reload",     HTTP_POST, handleRulesReload);
+  server.on("/rules",            HTTP_GET,  handleRulesGet);
+  server.on("/rules/save",       HTTP_POST, handleRulesSave);
+  server.on("/rules-editor",     HTTP_GET,  handleRulesEditor);
 
   server.on("/style.css", HTTP_GET, handleStyle);
   server.on("/config.js", HTTP_GET, handleConfigJs);
@@ -442,19 +499,31 @@ void loop() {
 
   unsigned long currentMillis = millis();
 
-  // Check for updates
+  // ── Mediator tick (auto-off, timer sources) ───────────────────────────
+  mediator.tick();
+  timerSource.tick(mediator);
+
+  // Check for firmware updates
   if (currentMillis - lastUpdateCheck >= UPDATE_INTERVAL) {
     DBG_VERBOSE("Free heap: %d bytes\n", ESP.getFreeHeap());
     checkForUpdates();
     lastUpdateCheck = currentMillis;
   }
 
-  // Send data to Grafana every 10 seconds
-  if (currentMillis - lastSendTime >= 10000) {
+  // ── Sensor READ every read_interval_ms ───────────────────────────────
+#ifdef SENSOR_MULTI
+  if (currentMillis - lastReadTime >= readIntervalMs) {
+    lastReadTime = currentMillis;
+    sensorMgr.readAllAndNotify(mediator);   // read + notify mediator
+  }
+#endif
+
+  // ── Data SEND every send_interval_ms ─────────────────────────────────
+  if (currentMillis - lastSendTime >= sendIntervalMs) {
     lastSendTime = currentMillis;
 
 #ifdef SENSOR_MULTI
-    sensorMgr.readAll();
+    sensorMgr.readAll();  // legacy read for Grafana send path
 
     for (auto *s : sensorMgr.getSensors()) {
       if (s->isActive()) {
@@ -498,12 +567,15 @@ void loop() {
       if (sensor->read()) {
         auto *tempSensor = dynamic_cast<ITemperatureSensor *>(sensor);
         auto *humSensor = dynamic_cast<IHumiditySensor *>(sensor);
+        auto *moistSensor = dynamic_cast<IMoistureSensor *>(sensor);
         auto *co2Sensor = dynamic_cast<ICO2Sensor *>(sensor);
 
         if (tempSensor)
           temperature = tempSensor->getTemperature();
         if (humSensor)
           humidity = humSensor->getHumidity();
+        if (moistSensor)
+          humidity = moistSensor->getMoisture();
         if (co2Sensor)
           co2 = co2Sensor->getCO2();
 
@@ -529,12 +601,25 @@ void loop() {
     for (auto *r : relayMgr.getRelays()) {
       if (r && r->isActive()) {
         r->syncState();
-        r->syncInputs();
+        r->syncInputs(mediator);
 
         String data = r->getGrafanaString();
         String id = r->getAlias();
         if (id.length() == 0)
           id = "relay_" + String(r->getAddress());
+        id.replace(" ", "_");
+
+        sendDataGrafana(data.c_str(), id.c_str());
+      }
+    }
+
+    // Report GPIO Relays to Grafana
+    for (auto& g : relayMgr.getGpioRelays()) {
+      if (g.actuator) {
+        String data = "relay1=" + String(g.actuator->getState() ? 1 : 0);
+        String id = g.alias;
+        if (id.length() == 0)
+          id = "gpio_" + String(g.pin);
         id.replace(" ", "_");
 
         sendDataGrafana(data.c_str(), id.c_str());

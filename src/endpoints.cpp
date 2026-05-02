@@ -14,6 +14,9 @@
 #include "sensors/ISensor.h"
 #include "sensors/ISoilSensor.h"
 #include "sensors/ITemperatureSensor.h"
+#include "sensors/SensorCapacitive.h"
+#include "sensors/HD38Sensor.h"
+#include "core/ControlMediator.h"
 #include <Arduino.h>
 #include <HTTPClient.h>
 #include <SPIFFS.h>
@@ -44,6 +47,7 @@ extern ESPNowManager espnowMgr;
 #endif
 
 extern RelayManager relayMgr;
+extern ControlMediator mediator;
 
 // Helper to get sensor icon based on capabilities
 String getSensorIcon(ISensor *s) {
@@ -108,6 +112,8 @@ void handleMediciones() {
     auto *humSensor = dynamic_cast<IHumiditySensor *>(s);
     auto *co2Sensor = dynamic_cast<ICO2Sensor *>(s);
     auto *moistSensor = dynamic_cast<IMoistureSensor *>(s);
+    auto *capSensor = dynamic_cast<SensorCapacitive *>(s);
+    auto *hd38Sensor = dynamic_cast<HD38Sensor *>(s);
     auto *presSensor = dynamic_cast<IPressureSensor *>(s);
     auto *soilSensor = dynamic_cast<ISoilSensor *>(s);
 
@@ -117,6 +123,11 @@ void handleMediciones() {
       r["value"] = String(tempSensor->getTemperature(), 1);
       r["unit"] = "°C";
       r["status"] = "ok";
+      r["id"] = tempSensor->getSensorID();
+      r["key"] = tempSensor->getKey().toU32();
+      r["key_device"] = tempSensor->getKey().deviceId;
+      r["key_sensor"] = tempSensor->getKey().sensorId;
+      r["key_var"] = (uint8_t)SensorVariable::TEMPERATURE;
     }
     if (humSensor) {
       JsonObject r = readings.add<JsonObject>();
@@ -124,12 +135,22 @@ void handleMediciones() {
       r["value"] = String(humSensor->getHumidity(), 1);
       r["unit"] = "%";
       r["status"] = "ok";
+      r["id"] = humSensor->getSensorID();
+      r["key"] = humSensor->getKey().toU32();
+      r["key_device"] = humSensor->getKey().deviceId;
+      r["key_sensor"] = humSensor->getKey().sensorId;
+      r["key_var"] = (uint8_t)SensorVariable::HUMIDITY;
     }
     if (co2Sensor) {
       JsonObject r = readings.add<JsonObject>();
       r["label"] = "CO2";
       r["value"] = String(co2Sensor->getCO2(), 0);
       r["unit"] = "ppm";
+      r["id"] = co2Sensor->getSensorID();
+      r["key"] = co2Sensor->getKey().toU32();
+      r["key_device"] = co2Sensor->getKey().deviceId;
+      r["key_sensor"] = co2Sensor->getKey().sensorId;
+      r["key_var"] = (uint8_t)SensorVariable::CO2;
 
       float val = co2Sensor->getCO2();
       if (val > 1000)
@@ -145,6 +166,31 @@ void handleMediciones() {
       r["value"] = String(moistSensor->getMoisture(), 1);
       r["unit"] = "%";
       r["status"] = "ok";
+      r["id"] = moistSensor->getSensorID();
+      r["key"] = moistSensor->getKey().toU32();
+      r["key_device"] = moistSensor->getKey().deviceId;
+      r["key_sensor"] = moistSensor->getKey().sensorId;
+      r["key_var"] = (uint8_t)SensorVariable::MOISTURE;
+    }
+    if (capSensor) {
+      JsonObject diag = sensorObj["diagnostics"].to<JsonObject>();
+      diag["raw"] = capSensor->getRawValue();
+      diag["pin"] = capSensor->getPin();
+      diag["id"] = capSensor->getSensorID();
+      diag["key"] = capSensor->getKey().toU32();
+      JsonObject cal = sensorObj["calibration"].to<JsonObject>();
+      cal["dry"] = capSensor->getDryValue();
+      cal["wet"] = capSensor->getWetValue();
+    }
+    if (hd38Sensor) {
+      JsonObject diag = sensorObj["diagnostics"].to<JsonObject>();
+      diag["raw"] = hd38Sensor->getRawValue();
+      diag["pin"] = hd38Sensor->getPin();
+      diag["id"] = hd38Sensor->getSensorID();
+      diag["key"] = hd38Sensor->getKey().toU32();
+      JsonObject cal = sensorObj["calibration"].to<JsonObject>();
+      cal["dry"] = hd38Sensor->getDryValue();
+      cal["wet"] = hd38Sensor->getWetValue();
     }
     if (presSensor) {
       JsonObject r = readings.add<JsonObject>();
@@ -152,6 +198,8 @@ void handleMediciones() {
       r["value"] = String(presSensor->getPressure(), 1);
       r["unit"] = "hPa";
       r["status"] = "ok";
+      r["id"] = presSensor->getSensorID();
+      r["key"] = presSensor->getKey().toU32();
     }
 
     // Soil Sensor specific extras (N, P, K, pH, EC) if available via generic
@@ -180,6 +228,9 @@ void handleMediciones() {
 
     auto *tempSensor = dynamic_cast<ITemperatureSensor *>(sensor);
     auto *humSensor = dynamic_cast<IHumiditySensor *>(sensor);
+    auto *moistSensor = dynamic_cast<IMoistureSensor *>(sensor);
+    auto *capSensor = dynamic_cast<SensorCapacitive *>(sensor);
+    auto *hd38Sensor = dynamic_cast<HD38Sensor *>(sensor);
     auto *co2Sensor = dynamic_cast<ICO2Sensor *>(sensor);
 
     if (tempSensor) {
@@ -196,6 +247,13 @@ void handleMediciones() {
       r["unit"] = "%";
       r["status"] = "ok";
     }
+    if (moistSensor) {
+      JsonObject r = readings.add<JsonObject>();
+      r["label"] = "Humedad";
+      r["value"] = String(moistSensor->getMoisture(), 1);
+      r["unit"] = "%";
+      r["status"] = "ok";
+    }
     if (co2Sensor) {
       JsonObject r = readings.add<JsonObject>();
       r["label"] = "CO2";
@@ -203,8 +261,58 @@ void handleMediciones() {
       r["unit"] = "ppm";
       r["status"] = "ok";
     }
+    if (capSensor) {
+      JsonObject diag = sensorObj["diagnostics"].to<JsonObject>();
+      diag["raw"] = capSensor->getRawValue();
+      diag["pin"] = capSensor->getPin();
+
+      JsonObject cal = sensorObj["calibration"].to<JsonObject>();
+      cal["dry"] = capSensor->getDryValue();
+      cal["wet"] = capSensor->getWetValue();
+    }
+    if (hd38Sensor) {
+      JsonObject diag = sensorObj["diagnostics"].to<JsonObject>();
+      diag["raw"] = hd38Sensor->getRawValue();
+      diag["pin"] = hd38Sensor->getPin();
+
+      JsonObject cal = sensorObj["calibration"].to<JsonObject>();
+      cal["dry"] = hd38Sensor->getDryValue();
+      cal["wet"] = hd38Sensor->getWetValue();
+    }
   }
 #endif
+
+  // Exponer Entradas Digitales de los reles Modbus como sensores visuales
+  for (auto *r : relayMgr.getRelays()) {
+    if (!r || !r->isActive()) continue;
+
+    JsonObject sensorObj = sensors.add<JsonObject>();
+    sensorObj["type"] = "Entradas Digitales";
+    sensorObj["id"] = "modbus_relay_" + String(r->getAddress());
+    sensorObj["icon"] = "🔌";
+    sensorObj["active"] = true;
+    sensorObj["error"] = false;
+
+    JsonArray readings = sensorObj["readings"].to<JsonArray>();
+
+    JsonObject in1 = readings.add<JsonObject>();
+    in1["label"] = "IN 1";
+    in1["value"] = String(r->getInputState(0) ? 1 : 0);
+    in1["unit"]  = "";
+    in1["status"]= r->getInputState(0) ? "ok" : "warn";
+    in1["key_device"] = (uint8_t)(ESP.getEfuseMac() & 0xFF);
+    in1["key_sensor"] = r->getAddress();
+    in1["key_var"] = (uint8_t)SensorVariable::DIGITAL_IN_1;
+
+    JsonObject in2 = readings.add<JsonObject>();
+    in2["label"] = "IN 2";
+    in2["value"] = String(r->getInputState(1) ? 1 : 0);
+    in2["unit"]  = "";
+    in2["status"]= r->getInputState(1) ? "ok" : "warn";
+    in2["key_device"] = (uint8_t)(ESP.getEfuseMac() & 0xFF);
+    in2["key_sensor"] = r->getAddress();
+    in2["key_var"] = (uint8_t)SensorVariable::DIGITAL_IN_2;
+  }
 
   // Legacy fields for backward compatibility (optional, but good practice)
   // We can populate them from the first sensor found, or leave empty.
@@ -216,6 +324,17 @@ void handleMediciones() {
                   String((uptimeSec % 3600) / 60) + "m " +
                   String(uptimeSec % 60) + "s";
   doc["uptime"] = uptime;
+
+  JsonArray actuators = doc["actuators"].to<JsonArray>();
+  for (uint8_t i = 0; i < mediator.getActuatorCount(); i++) {
+    IActuator* a = mediator.getActuator(i);
+    if (!a) continue;
+    JsonObject o = actuators.add<JsonObject>();
+    o["id"]    = a->getId();
+    o["name"]  = a->getName();
+    o["state"] = a->getState();
+    o["key_actuator"] = a->getId();
+  }
 
   String output;
   serializeJson(doc, output);
@@ -356,26 +475,39 @@ void habldePostConfig() {
 }
 
 void handleSCD30Calibration() {
-  DBG_VERBOSE("Calibration called: %s\n",
-              sensor ? sensor->getSensorType() : "NULL");
+  DBG_VERBOSE("Calibration called for SCD30\n");
 
   String response = "{";
   int httpStatus = 200;
 
-  if (!sensor || !sensor->isActive()) {
+  ISensor* scd30 = nullptr;
+#ifdef SENSOR_MULTI
+  for (auto* s : getSensorList()) {
+    if (s && s->isActive() && String(s->getSensorType()).equalsIgnoreCase("SCD30")) {
+      scd30 = s;
+      break;
+    }
+  }
+#else
+  if (sensor && sensor->isActive() && String(sensor->getSensorType()).equalsIgnoreCase("SCD30")) {
+    scd30 = sensor;
+  }
+#endif
+
+  if (!scd30) {
     response += "\"status\":\"error\",";
-    response += "\"message\":\"No sensor active\",";
+    response += "\"message\":\"SCD30 sensor not found or not active\",";
     response += "\"sensor_detected\":false,";
     response += "\"calibration_performed\":false";
     httpStatus = 503;
   } else {
-    bool calibrationSuccess = sensor->calibrate(400);
+    bool calibrationSuccess = scd30->calibrate(400);
 
     if (calibrationSuccess) {
       response += "\"status\":\"success\",";
       response += "\"message\":\"Sensor calibration completed successfully\",";
       response +=
-          "\"sensor_type\":\"" + String(sensor->getSensorType()) + "\",";
+          "\"sensor_type\":\"" + String(scd30->getSensorType()) + "\",";
       response += "\"sensor_detected\":true,";
       response += "\"calibration_performed\":true,";
       response += "\"target_co2\":400,";
@@ -385,13 +517,13 @@ void handleSCD30Calibration() {
     } else {
       response += "\"status\":\"error\",";
       response += "\"message\":\"Calibration not supported or failed for " +
-                  String(sensor->getSensorType()) + "\",";
+                  String(scd30->getSensorType()) + "\",";
       response +=
-          "\"sensor_type\":\"" + String(sensor->getSensorType()) + "\",";
+          "\"sensor_type\":\"" + String(scd30->getSensorType()) + "\",";
       response += "\"sensor_detected\":true,";
       response += "\"calibration_performed\":false";
       httpStatus = 500;
-      DBG_ERROR("Calibration failed: %s\n", sensor->getSensorType());
+      DBG_ERROR("Calibration failed: %s\n", scd30->getSensorType());
     }
   }
 
@@ -473,6 +605,17 @@ void handleRelayList() {
     }
   }
 
+  for (auto& g : relayMgr.getGpioRelays()) {
+    if (g.actuator) {
+      JsonObject obj = arr.add<JsonObject>();
+      obj["type"] = "gpio";
+      obj["address"] = g.pin;
+      obj["alias"] = g.alias;
+      JsonArray stateArr = obj["state"].to<JsonArray>();
+      stateArr.add(g.actuator->getState());
+    }
+  }
+
   String output;
   serializeJson(doc, output);
   server.send(200, "application/json", output);
@@ -489,14 +632,160 @@ void handleRelayToggle() {
 
   for (auto *r : relayMgr.getRelays()) {
     if (r->getAddress() == addr) {
-      if (r->toggleRelay(ch)) {
-        server.send(200, "text/plain", "OK");
-      } else {
-        server.send(500, "text/plain", "Failed to toggle");
-      }
+      ActuatorCommand cmd;
+      cmd.actuatorId = r->getChannel(ch)->getId();
+      cmd.state = !r->getChannel(ch)->getState(); // Commuta el estado LÓGICO
+      cmd.durationMs = 0;
+      cmd.priority = 3;
+      mediator.onManualCommand(cmd);
+      server.send(200, "text/plain", "OK");
+      return;
+    }
+  }
+
+  for (auto& g : relayMgr.getGpioRelays()) {
+    if (g.pin == addr && ch == 0) {
+      ActuatorCommand cmd;
+      cmd.actuatorId = g.actuator->getId();
+      cmd.state = !g.actuator->getState();
+      cmd.durationMs = 0;
+      cmd.priority = 3;  // Manual toggle priority
+      mediator.onManualCommand(cmd);
+      server.send(200, "text/plain", "OK");
       return;
     }
   }
 
   server.send(404, "text/plain", "Relay not found");
+}
+
+// ── Mediator / Rules endpoints ────────────────────────────────────────────────
+
+#include "core/RuleLoader.h"
+
+/**
+ * POST /actuator/command
+ * Body: { "id": <uint>, "state": <bool>, "duration": <ms>, "priority": <1-3> }
+ * Sends a manual command to the mediator.
+ */
+void handleActuatorCommand() {
+  if (!server.hasArg("plain")) {
+    server.send(400, "text/plain", "Body required");
+    return;
+  }
+
+  JsonDocument doc;
+  if (deserializeJson(doc, server.arg("plain"))) {
+    server.send(400, "text/plain", "Invalid JSON");
+    return;
+  }
+
+  ActuatorCommand cmd;
+  cmd.actuatorId = doc["id"]       | (uint8_t)0;
+  cmd.state      = doc["state"]    | false;
+  cmd.durationMs = doc["duration"] | (uint32_t)0;
+  cmd.priority   = doc["priority"] | (uint8_t)3;   // default: manual
+
+  mediator.onManualCommand(cmd);
+
+  server.send(200, "application/json",
+              "{\"ok\":true,\"id\":" + String(cmd.actuatorId) +
+              ",\"state\":" + (cmd.state ? "true" : "false") + "}");
+}
+
+/**
+ * GET /actuator/status
+ * Returns JSON array of registered actuator states.
+ */
+void handleActuatorStatus() {
+  JsonDocument doc;
+  JsonArray arr = doc.to<JsonArray>();
+
+  for (uint8_t i = 0; i < mediator.getActuatorCount(); i++) {
+    IActuator* a = mediator.getActuator(i);
+    if (!a) continue;
+    JsonObject o = arr.add<JsonObject>();
+    o["id"]    = a->getId();
+    o["name"]  = a->getName();
+    o["state"] = a->getState();
+  }
+
+  String out;
+  serializeJson(doc, out);
+  server.send(200, "application/json", out);
+}
+
+/**
+ * POST /rules/reload
+ * Re-reads /rules.json from SPIFFS and reloads mediator rules.
+ */
+void handleRulesReload() {
+  int n = RuleLoader::load(mediator, true);
+  if (n < 0) {
+    server.send(500, "application/json", "{\"ok\":false,\"error\":\"Cannot open rules.json\"}");
+    return;
+  }
+  server.send(200, "application/json",
+              "{\"ok\":true,\"rules_loaded\":" + String(n) + "}");
+}
+
+/**
+ * GET /rules
+ * Returns raw content of /rules.json from SPIFFS.
+ */
+void handleRulesGet() {
+  if (!SPIFFS.exists("/rules.json")) {
+    server.send(200, "application/json", "{\"rules\":[]}");
+    return;
+  }
+  File f = SPIFFS.open("/rules.json", "r");
+  if (!f) {
+    server.send(500, "application/json", "{\"error\":\"Cannot open file\"}");
+    return;
+  }
+  server.streamFile(f, "application/json");
+  f.close();
+}
+
+/**
+ * POST /rules/save
+ * Receives full rules JSON, writes to /rules.json, reloads mediator.
+ */
+void handleRulesSave() {
+  if (!server.hasArg("plain")) {
+    server.send(400, "text/plain", "Body required");
+    return;
+  }
+
+  // Validate JSON
+  const String& body = server.arg("plain");
+  JsonDocument doc;
+  if (deserializeJson(doc, body)) {
+    server.send(400, "text/plain", "Invalid JSON");
+    return;
+  }
+
+  // Write to SPIFFS
+  File f = SPIFFS.open("/rules.json", "w");
+  if (!f) {
+    server.send(500, "text/plain", "Cannot write file");
+    return;
+  }
+  f.print(body);
+  f.close();
+
+  // Reload mediator
+  int n = RuleLoader::load(mediator, true);
+  DBG_INFO("[Rules] Saved & reloaded: %d rules\n", n);
+
+  server.send(200, "application/json",
+              "{\"ok\":true,\"rules_loaded\":" + String(n) + "}");
+}
+
+/**
+ * GET /rules-editor
+ * Serves the rules editor SPA.
+ */
+void handleRulesEditor() {
+  server.send(200, "text/html", rules_html);
 }

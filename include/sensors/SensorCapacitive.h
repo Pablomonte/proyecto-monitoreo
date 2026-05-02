@@ -3,6 +3,7 @@
 
 #include "ISensor.h"
 #include "IMoistureSensor.h"
+#include "SensorBase.h"
 #include <Arduino.h>
 #include "../debug.h"
 
@@ -10,22 +11,25 @@
 #define ADC_MAX 4095
 #define ADC_MIN 0
 
-class SensorCapacitive : public IMoistureSensor {
+class SensorCapacitive : public SensorBase, public IMoistureSensor {
 private:
     int pin;
     float moisture;
+    int rawValue;
     bool active;
     int dryValue;
     int wetValue;
 
 public:
     SensorCapacitive(int adcPin = CAPACITIVE_PIN, int dry = ADC_MAX, int wet = ADC_MIN)
-        : pin(adcPin), moisture(0), active(false), dryValue(dry), wetValue(wet) {}
+        : SensorBase(SensorClass::ANALOG_ADC, (uint8_t)(adcPin >= 0 ? adcPin : 0xFF)), pin(adcPin), moisture(0), rawValue(0), active(false), dryValue(dry), wetValue(wet) {}
 
     bool init() override {
         pinMode(pin, INPUT);
+        analogReadResolution(12);              // 12-bit → 0-4095
+        analogSetAttenuation(ADC_ATTENDB_MAX); // full 0-3.3V range
         active = true;
-        DBG_INFO("[Capacitive] pin %d OK\n", pin);
+        DBG_INFO("[Capacitive] pin %d, 12-bit, 3.3V range OK\n", pin);
         return true;
     }
 
@@ -36,13 +40,18 @@ public:
     bool read() override {
         if (!active) return false;
 
-        int rawValue = analogRead(pin);
+        rawValue = analogRead(pin);
         moisture = map(rawValue, dryValue, wetValue, 0, 100);
         moisture = constrain(moisture, 0, 100);
 
-        DBG_VERBOSE("[Capacitive] Raw=%d M=%.1f%%\n", rawValue, moisture);
+        DBG_VERBOSE("[Capacitive] Raw=%d M=%.1f%% \tkey=0x%llx \n", rawValue, moisture, (unsigned long long)this->getKey().toU32());
         return true;
     }
+
+    int getRawValue() const { return rawValue; }
+    int getDryValue() const { return dryValue; }
+    int getWetValue() const { return wetValue; }
+    int getPin()      const { return pin; }
 
     // IMoistureSensor
     float getMoisture() override { return moisture; }
@@ -67,6 +76,14 @@ public:
         dryValue = dry;
         wetValue = wet;
         DBG_INFO("[Capacitive] Cal: dry=%d wet=%d\n", dry, wet);
+    }
+
+    // ── Mediator interface ────────────────────────────────────────────────
+    SensorKey getKey() const override { return SensorBase::getKey(); }
+    void notifyMediator(ControlMediator& mediator) override {
+        if (!active) return;
+        _notify(mediator, SensorVariable::MOISTURE, moisture);
+        _notify(mediator, SensorVariable::RAW_ADC, rawValue);
     }
 };
 
