@@ -226,9 +226,17 @@ private:
 
         if (cmd.priority >= _active[ai].priority) 
         {
-            DBG_VERBOSE("[Mediator] dispatch: Actuator ID %d command with priority %d overrides current priority %d\n", 
-                      cmd.actuatorId, cmd.priority, _active[ai].priority);
-            bool stateChanged = !_dispatched[ai] || (_active[ai].state != cmd.state);
+            bool physicalState = _actuators[ai] ? _actuators[ai]->getState() : false;
+            bool stateChanged = !_dispatched[ai] || 
+                                (_active[ai].state != cmd.state) || 
+                                (_actuators[ai] && physicalState != cmd.state);
+
+            if (stateChanged || cmd.priority > _active[ai].priority) {
+                DBG_VERBOSE("[Mediator] dispatch: Actuator %d (prio %d) applies state=%s (phys=%s, was_prio=%d)\n", 
+                          cmd.actuatorId, cmd.priority, cmd.state ? "ON" : "OFF", 
+                          physicalState ? "ON" : "OFF", _active[ai].priority);
+            }
+
             _active[ai] = cmd;
             _dispatched[ai] = true;
             _activeStartTime[ai] = millis();
