@@ -9,6 +9,7 @@
 #include "sensors/SensorOneWire.h"
 #include "sensors/SensorSCD30.h"
 #include "sensors/SensorSimulated.h"
+#include "sensors/InternalTempSensor.h"
 #include "core/ControlMediator.h"
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -83,6 +84,16 @@ public:
         if (s->init()) {
           sensors.push_back(s);
           DBG_INFO("SCD30 sensor added\n");
+        }
+
+      } else if (strcmp(type, "internal_temp") == 0) {
+        InternalTempSensor *s = new InternalTempSensor();
+        if (s->init()) {
+          sensors.push_back(s);
+          DBG_INFO("InternalTemp sensor added\n");
+        } else {
+          delete s;
+          DBG_ERROR("InternalTemp init failed\n");
         }
 
       } else if (strcmp(type, "bme280") == 0) {

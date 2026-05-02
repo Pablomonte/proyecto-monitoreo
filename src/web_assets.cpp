@@ -949,6 +949,7 @@ const DEFAULT_SENSORS = [
     { type: "modbus_soil_7in1", enabled: false, config: { addresses: [1] } },
     { type: "onewire", enabled: false, config: { pin: 4, scan: true } },
     // Sensores
+    { type: "internal_temp", enabled: false, config: {} },
     { type: "capacitive", enabled: false, config: { pin: 34, name: "Soil1" } },
     { type: "hd38", enabled: false, config: { analog_pins: [35], voltage_divider: true, invert_logic: false } }
 ];
@@ -1169,6 +1170,9 @@ function renderSensorConfig(sensor, index) {
                     <div class="info-text">Exponga el sensor al aire libre (400ppm) por 5 minutos antes de calibrar.</div>
                 </div>
             `;
+
+        case 'internal_temp':
+            return '<div class="info-text">Sensor de temperatura interna del ESP32. No requiere configuración adicional.</div>';
 
         case 'capacitive':
         case 'hd38':
