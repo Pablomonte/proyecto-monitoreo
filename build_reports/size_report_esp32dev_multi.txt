@@ -3,33 +3,33 @@
                         BUILD MEMORY REPORT
 ================================================================================
 Environment: esp32dev_multi
-Git version: df011f9995ad65f2cb916fa5695b0967f628d242
+Git version: b5b5526361358a9e7f101b3d7754708a1ee1519e
 MCU:         esp32
-Timestamp:   2026-05-02 17:39:12
+Timestamp:   2026-05-03 13:02:41
 Firmware:    firmware.elf
 Partitions:  min_spiffs.csv
 --------------------------------------------------------------------------------
 
 MEMORY USAGE (matches PlatformIO):
-  Flash: [======              ]  33.6%  (used 1,410,240 / 4,194,304 bytes)
-  RAM:   [====================] 123.5%  (used 404,525 / 327,680 bytes)
+  Flash: [======              ]  34.0%  (used 1,425,276 / 4,194,304 bytes)
+  RAM:   [====================] 125.9%  (used 412,477 / 327,680 bytes)
 
 --------------------------------------------------------------------------------
 FLASH BREAKDOWN:
-  .text (code):         1,037,492 bytes
-  .data (init vars):      372,748 bytes
+  .text (code):         1,044,592 bytes
+  .data (init vars):      380,684 bytes
   ─────────────────────────────────
-  Program size:         1,410,240 bytes
+  Program size:         1,425,276 bytes
   App partition:        4,194,304 bytes
-  Free in partition:    2,784,064 bytes
+  Free in partition:    2,769,028 bytes
 
 RAM BREAKDOWN:
-  .data (init vars):      372,748 bytes
-  .bss (zero vars):        31,777 bytes
+  .data (init vars):      380,684 bytes
+  .bss (zero vars):        31,793 bytes
   ─────────────────────────────────
-  Static RAM:             404,525 bytes
+  Static RAM:             412,477 bytes
   Total DRAM:             327,680 bytes
-  Free (static):          -76,845 bytes
+  Free (static):          -84,797 bytes
 
 --------------------------------------------------------------------------------
 FLASH CHIP LAYOUT (4MB total):
@@ -47,9 +47,9 @@ BY FLASH USAGE:
 -----------------------------------------------------------------------------------------------
 #    FILE                                                          TEXT       DATA      FLASH
 -----------------------------------------------------------------------------------------------
-1    src/web_assets.cpp.o                                       109,839         28    109,867
-2    src/main.cpp.o                                              84,163         24     84,187
-3    src/endpoints.cpp.o                                         48,294         28     48,322
+1    src/web_assets.cpp.o                                       116,211         28    116,239
+2    src/main.cpp.o                                              84,538         24     84,562
+3    src/endpoints.cpp.o                                         50,954         28     50,982
 4    lib9da/WifiManager/WiFiManager.cpp.o                        31,543          0     31,543
 5    lib2b4/WebServer/WebServer.cpp.o                            22,118          0     22,118
 6    src/configFile.cpp.o                                        20,987         28     21,015
@@ -130,9 +130,9 @@ BY FLASH USAGE:
 81   lib83a/Adafruit BusIO/Adafruit_GenericDevice.cpp.o             268          0        268
 82   FrameworkArduino/main.cpp.o                                    230          0        230
 83   src/constants.cpp.o                                            187         24        211
-84   FrameworkArduino/wiring_shift.c.o                              196          0        196
-85   FrameworkArduino/wiring_pulse.c.o                              186          0        186
-86   src/globals.cpp.o                                              148          8        156
+84   src/globals.cpp.o                                              189          8        197
+85   FrameworkArduino/wiring_shift.c.o                              196          0        196
+86   FrameworkArduino/wiring_pulse.c.o                              186          0        186
 87   FrameworkArduino/esp32-hal-matrix.c.o                          112          0        112
 88   FrameworkArduino/esp32-hal-dac.c.o                              68          0         68
 89   FrameworkArduino/esp32-hal-psram.c.o                            35          0         35
@@ -144,7 +144,7 @@ BY RAM USAGE:
 -----------------------------------------------------------------------------------------------
 1    src/main.cpp.o                                                  24      5,051      5,075
 2    lib45a/ArduinoOTA/ArduinoOTA.cpp.o                               8      1,692      1,700
-3    src/globals.cpp.o                                                8        640        648
+3    src/globals.cpp.o                                                8        652        660
 4    FrameworkArduino/esp32-hal-gpio.c.o                              0        481        481
 5    FrameworkArduino/esp32-hal-rmt.c.o                             320         36        356
 6    libbcf/WiFiClientSecure/esp_crt_bundle.c.o                       0        356        356
@@ -202,46 +202,46 @@ section                                                                         
 .rtc.force_slow                                                                                                                                                                                                                      0   1342177808
 .iram0.vectors                                                                                                                                                                                                                    1027   1074266112
 .iram0.text                                                                                                                                                                                                                      86179   1074267140
-.dram0.data                                                                                                                                                                                                                      26128   1073470304
+.dram0.data                                                                                                                                                                                                                      26124   1073470304
 .ext_ram_noinit                                                                                                                                                                                                                      0   1065353216
-.noinit                                                                                                                                                                                                                              0   1073496432
+.noinit                                                                                                                                                                                                                              0   1073496428
 .ext_ram.bss                                                                                                                                                                                                                         0   1065353216
-.dram0.bss                                                                                                                                                                                                                       31760   1073496432
+.dram0.bss                                                                                                                                                                                                                       31776   1073496432
 .flash.appdesc                                                                                                                                                                                                                     256   1061158944
-.flash.rodata                                                                                                                                                                                                                   346620   1061159200
-.flash.rodata_noload                                                                                                                                                                                                             15986   1061505820
-.flash.text                                                                                                                                                                                                                     927871   1074593824
-.phyiram.0                                                                                                                                                                                                                          43   1075521696
-.phyiram.1                                                                                                                                                                                                                         125   1075521740
-.phyiram.2                                                                                                                                                                                                                         542   1075521868
-.phyiram.3                                                                                                                                                                                                                         178   1075522412
-.phyiram.6                                                                                                                                                                                                                         222   1075522592
-.phyiram.4                                                                                                                                                                                                                         234   1075522816
-.phyiram.7                                                                                                                                                                                                                         228   1075523052
-.phyiram.8                                                                                                                                                                                                                         547   1075523280
-.phyiram.9                                                                                                                                                                                                                         387   1075523828
-.phyiram.10                                                                                                                                                                                                                        142   1075524216
-.phyiram.13                                                                                                                                                                                                                        392   1075524360
-.phyiram.15                                                                                                                                                                                                                        186   1075524752
-.phyiram.14                                                                                                                                                                                                                        239   1075524940
-.phyiram.16                                                                                                                                                                                                                        459   1075525180
-.phyiram.18                                                                                                                                                                                                                        114   1075525640
-.phyiram.12                                                                                                                                                                                                                        120   1075525756
-.phyiram.17                                                                                                                                                                                                                        238   1075525876
-.phyiram.24                                                                                                                                                                                                                         74   1075526116
-.phyiram.25                                                                                                                                                                                                                         49   1075526192
-.phyiram.26                                                                                                                                                                                                                        259   1075526244
-.phyiram.27                                                                                                                                                                                                                        135   1075526504
-.phyiram.22                                                                                                                                                                                                                         97   1075526640
-.phyiram.20                                                                                                                                                                                                                        270   1075526740
-.phyiram.21                                                                                                                                                                                                                        158   1075527012
-.phyiram.19                                                                                                                                                                                                                        735   1075527172
+.flash.rodata                                                                                                                                                                                                                   354560   1061159200
+.flash.rodata_noload                                                                                                                                                                                                             15986   1061513760
+.flash.text                                                                                                                                                                                                                     934971   1074593824
+.phyiram.0                                                                                                                                                                                                                          43   1075528796
+.phyiram.1                                                                                                                                                                                                                         125   1075528840
+.phyiram.2                                                                                                                                                                                                                         542   1075528968
+.phyiram.3                                                                                                                                                                                                                         178   1075529512
+.phyiram.6                                                                                                                                                                                                                         222   1075529692
+.phyiram.4                                                                                                                                                                                                                         234   1075529916
+.phyiram.7                                                                                                                                                                                                                         228   1075530152
+.phyiram.8                                                                                                                                                                                                                         547   1075530380
+.phyiram.9                                                                                                                                                                                                                         387   1075530928
+.phyiram.10                                                                                                                                                                                                                        142   1075531316
+.phyiram.13                                                                                                                                                                                                                        392   1075531460
+.phyiram.15                                                                                                                                                                                                                        186   1075531852
+.phyiram.14                                                                                                                                                                                                                        239   1075532040
+.phyiram.16                                                                                                                                                                                                                        459   1075532280
+.phyiram.18                                                                                                                                                                                                                        114   1075532740
+.phyiram.12                                                                                                                                                                                                                        120   1075532856
+.phyiram.17                                                                                                                                                                                                                        238   1075532976
+.phyiram.24                                                                                                                                                                                                                         74   1075533216
+.phyiram.25                                                                                                                                                                                                                         49   1075533292
+.phyiram.26                                                                                                                                                                                                                        259   1075533344
+.phyiram.27                                                                                                                                                                                                                        135   1075533604
+.phyiram.22                                                                                                                                                                                                                         97   1075533740
+.phyiram.20                                                                                                                                                                                                                        270   1075533840
+.phyiram.21                                                                                                                                                                                                                        158   1075534112
+.phyiram.19                                                                                                                                                                                                                        735   1075534272
 .iram0.text_end                                                                                                                                                                                                                      1   1074353319
 .iram0.data                                                                                                                                                                                                                          0   1074353320
 .iram0.bss                                                                                                                                                                                                                           0   1074353320
-.dram0.heap_start                                                                                                                                                                                                                    0   1073528192
-.xt.prop                                                                                                                                                                                                                        679212            0
-.xt.lit                                                                                                                                                                                                                          21272            0
+.dram0.heap_start                                                                                                                                                                                                                    0   1073528208
+.xt.prop                                                                                                                                                                                                                        683412            0
+.xt.lit                                                                                                                                                                                                                          21296            0
 .xtensa.info                                                                                                                                                                                                                        56            0
 .comment                                                                                                                                                                                                                           282            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail16DefaultAllocator10reallocateEPvj                                                                                                                                                           0            0
@@ -419,6 +419,8 @@ section                                                                         
 .xt.lit._ZN15ControlMediator8dispatchERK15ActuatorCommand                                                                                                                                                                            8            0
 .xt.lit._ZN14RelayModule2CH9syncStateEv                                                                                                                                                                                              8            0
 .xt.lit._ZN14RelayModule2CH13getStatusJSONEv                                                                                                                                                                                         8            0
+.xt.lit._ZN13SecretManager9getSecretEPKc                                                                                                                                                                                             8            0
+.xt.lit._ZN13SecretManager16hasAdminPasswordEv                                                                                                                                                                                       8            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail15ResourceManager5clearEv                                                                                                                                                                    0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail14CollectionData5clearEPNS1_15ResourceManagerE                                                                                                                                               0            0
 .xt.lit._ZNK11ArduinoJson8V741PB226detail11VariantData9asBooleanEPKNS1_15ResourceManagerE                                                                                                                                            0            0
@@ -448,8 +450,8 @@ section                                                                         
 .xt.lit._ZN11ArduinoJson8V741PB2213convertToJsonI6StringEENS0_6detail9enable_ifIXsrNS3_8IsStringIT_vEE5valueEvE4typeERKS6_NS0_11JsonVariantE                                                                                         0            0
 .xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE3setI6StringEEbRKT_                                                                                                   0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderI6StringvEEE11skipKeywordEPKc                                                                                                                                  0            0
-.xt.lit._ZN11ArduinoJson8V741PB226detailorItLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                      0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detailorIhLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                      0            0
+.xt.lit._ZN11ArduinoJson8V741PB226detailorItLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                      0            0
 .xt.lit._ZNK11ArduinoJson8V741PB226detail11MemberProxyINS0_11JsonVariantENS1_9RamStringEE7getDataEv                                                                                                                                  0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detailorERKNS1_11MemberProxyINS0_11JsonVariantENS1_9RamStringEEEPKc                                                                                                                                0            0
 .xt.lit._ZN10RuleLoader9_loadLeafER15ControlMediatorN11ArduinoJson8V741PB2211JsonVariantE                                                                                                                                            8            0
@@ -498,6 +500,8 @@ section                                                                         
 .xt.prop._ZN15ControlMediator8dispatchERK15ActuatorCommand                                                                                                                                                                         240            0
 .xt.prop._ZN14RelayModule2CH9syncStateEv                                                                                                                                                                                           204            0
 .xt.prop._ZN14RelayModule2CH13getStatusJSONEv                                                                                                                                                                                      456            0
+.xt.prop._ZN13SecretManager9getSecretEPKc                                                                                                                                                                                          120            0
+.xt.prop._ZN13SecretManager16hasAdminPasswordEv                                                                                                                                                                                     72            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail15ResourceManager5clearEv                                                                                                                                                                  60            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail14CollectionData5clearEPNS1_15ResourceManagerE                                                                                                                                             60            0
 .xt.prop._ZNK11ArduinoJson8V741PB226detail11VariantData9asBooleanEPKNS1_15ResourceManagerE                                                                                                                                         192            0
@@ -527,8 +531,8 @@ section                                                                         
 .xt.prop._ZN11ArduinoJson8V741PB2213convertToJsonI6StringEENS0_6detail9enable_ifIXsrNS3_8IsStringIT_vEE5valueEvE4typeERKS6_NS0_11JsonVariantE                                                                                       60            0
 .xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE3setI6StringEEbRKT_                                                                                                 36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderI6StringvEEE11skipKeywordEPKc                                                                                                                               108            0
-.xt.prop._ZN11ArduinoJson8V741PB226detailorItLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                   168            0
 .xt.prop._ZN11ArduinoJson8V741PB226detailorIhLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                    84            0
+.xt.prop._ZN11ArduinoJson8V741PB226detailorItLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                   168            0
 .xt.prop._ZNK11ArduinoJson8V741PB226detail11MemberProxyINS0_11JsonVariantENS1_9RamStringEE7getDataEv                                                                                                                                36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detailorERKNS1_11MemberProxyINS0_11JsonVariantENS1_9RamStringEEEPKc                                                                                                                              48            0
 .xt.prop._ZN10RuleLoader9_loadLeafER15ControlMediatorN11ArduinoJson8V741PB2211JsonVariantE                                                                                                                                          84            0
@@ -567,13 +571,13 @@ section                                                                         
 .xt.prop._ZN11ArduinoJson8V741PB226detail11deserializeINS1_16JsonDeserializerERNS0_12JsonDocumentERK6StringJELi0EEENS0_20DeserializationErrorEOT0_OT1_DpT2_                                                                        108            0
 .xt.prop._ZN10RuleLoader4loadER15ControlMediatorb                                                                                                                                                                                  156            0
 .xt.prop._ZNSt17_Function_handlerIFbN6Modbus10ResultCodeEtPvEPS3_E9_M_invokeERKSt9_Any_dataOS1_OtOS2_                                                                                                                               36            0
-.xt.prop._ZNK11ArduinoJson8V741PB226detail7pgm_ptrIdEixEi$isra$104                                                                                                                                                                  36            0
+.xt.prop._ZNK11ArduinoJson8V741PB226detail7pgm_ptrIdEixEi$isra$105                                                                                                                                                                  36            0
 .xt.prop._ZNSt14_Function_baseD2Ev                                                                                                                                                                                                  36            0
 .xt.prop._ZN11ArduinoJson8V741PB2212JsonDocumentC2EPNS0_9AllocatorE                                                                                                                                                                 36            0
 .xt.prop._ZNK9SensorKey5toU32Ev                                                                                                                                                                                                     36            0
 .xt.prop._ZNK14RelayModule2CH15ChannelActuator8getStateEv                                                                                                                                                                           36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail14MemoryPoolListINS1_15ResourceManager8SlotDataEE11shrinkToFitEPNS0_9AllocatorE                                                                                                            48            0
-.xt.prop._ZN11ArduinoJson8V741PB226detail14VisitorAdapterINS1_17JsonVariantCopierEE5visitINS0_10JsonStringEEEbRKT_$isra$133                                                                                                         36            0
+.xt.prop._ZN11ArduinoJson8V741PB226detail14VisitorAdapterINS1_17JsonVariantCopierEE5visitINS0_10JsonStringEEEbRKT_$isra$134                                                                                                         36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderI6StringvEEE7currentEv                                                                                                                                       36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail16JsonDeserializerINS1_6ReaderIK6StringvEEE7currentEv                                                                                                                                      36            0
 .xt.prop._ZTIFbN6Modbus10ResultCodeEtPvE                                                                                                                                                                                            12            0
@@ -761,8 +765,8 @@ section                                                                         
 .xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyIRNS0_12JsonDocumentENS1_9RamStringEEEE2asINS0_9JsonArrayEEET_v                                                                                           0            0
 .xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE2asIiEET_v                                                                                                            0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detailorIiLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                      0            0
-.xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE2asINS0_9JsonArrayEEET_v                                                                                              0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detailorIbLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                      0            0
+.xt.lit._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE2asINS0_9JsonArrayEEET_v                                                                                              0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail15VariantAttorney7getDataIKNS1_12ElementProxyINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEEEEEDTcldtfp_7getDataEERT_                                                                 0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detailorIiLi0EEET_RKNS1_12ElementProxyINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEEERKS3_                                                                                                 0            0
 .xt.lit._ZN11ArduinoJson8V741PB226detail13TextFormatterINS1_6WriterI6StringvEEE12writeBooleanEb                                                                                                                                      8            0
@@ -975,8 +979,8 @@ section                                                                         
 .xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyIRNS0_12JsonDocumentENS1_9RamStringEEEE2asINS0_9JsonArrayEEET_v                                                                                         36            0
 .xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE2asIiEET_v                                                                                                          36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detailorIiLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                    60            0
-.xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE2asINS0_9JsonArrayEEET_v                                                                                            36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detailorIbLi0EEET_RKNS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEERKS3_                                                                                                                    60            0
+.xt.prop._ZNK11ArduinoJson8V741PB226detail14VariantRefBaseINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEE2asINS0_9JsonArrayEEET_v                                                                                            36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail15VariantAttorney7getDataIKNS1_12ElementProxyINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEEEEEDTcldtfp_7getDataEERT_                                                               36            0
 .xt.prop._ZN11ArduinoJson8V741PB226detailorIiLi0EEET_RKNS1_12ElementProxyINS1_11MemberProxyINS0_10JsonObjectENS1_9RamStringEEEEERKS3_                                                                                               60            0
 .xt.prop._ZN11ArduinoJson8V741PB226detail13TextFormatterINS1_6WriterI6StringvEEE12writeBooleanEb                                                                                                                                    60            0
@@ -1424,7 +1428,7 @@ section                                                                         
 .xt.prop._ZTI9TLSTraits                                                                                                                                                                                                             12            0
 .xt.prop._ZTV15TransportTraits                                                                                                                                                                                                      12            0
 .xt.prop._ZTV9TLSTraits                                                                                                                                                                                                             12            0
-.xt.lit._ZN22FunctionRequestHandler9canUploadE6String                                                                                                                                                                                0            0
+.xt.lit._ZN22FunctionRequestHandler9canUploadE6String                                                                                                                                                                                8            0
 .xt.lit._ZN9WebServer21_currentClientWrite_PEPKcj                                                                                                                                                                                    8            0
 .xt.lit._ZN14RequestHandlerD5Ev                                                                                                                                                                                                      8            0
 .xt.lit._ZN9WebServer19_currentClientWriteEPKcj                                                                                                                                                                                      0            0
@@ -1438,7 +1442,7 @@ section                                                                         
 .xt.lit._ZN22FunctionRequestHandler6handleER9WebServer11http_method6String                                                                                                                                                           0            0
 .xt.lit._ZNSt10unique_ptrI10HTTPUploadSt14default_deleteIS0_EED5Ev                                                                                                                                                                   0            0
 .xt.lit._ZNSt10unique_ptrI7HTTPRawSt14default_deleteIS0_EED5Ev                                                                                                                                                                       0            0
-.xt.prop._ZN22FunctionRequestHandler9canUploadE6String                                                                                                                                                                              96            0
+.xt.prop._ZN22FunctionRequestHandler9canUploadE6String                                                                                                                                                                             108            0
 .xt.prop._ZN9WebServer21_currentClientWrite_PEPKcj                                                                                                                                                                                  48            0
 .xt.prop._ZN14RequestHandlerD5Ev                                                                                                                                                                                                    12            0
 .xt.prop._ZN9WebServer19_currentClientWriteEPKcj                                                                                                                                                                                    36            0
@@ -1621,7 +1625,7 @@ section                                                                         
 .xt.prop._ZTISt12length_error                                                                                                                                                                                                       12            0
 .xt.prop._ZTVSt11logic_error                                                                                                                                                                                                        12            0
 .xt.prop._ZTVSt12length_error                                                                                                                                                                                                       12            0
-.xt.lit._ZNSs7_M_copyEPcPKcj                                                                                                                                                                                                         0            0
+.xt.lit._ZNSs7_M_copyEPcPKcj                                                                                                                                                                                                         8            0
 .xt.lit._ZNSs13_S_copy_charsEPcPKcS1_                                                                                                                                                                                                0            0
 .xt.lit._ZNSs4_Rep26_M_set_length_and_sharableEj                                                                                                                                                                                     8            0
 .xt.lit._ZNSs4_Rep9_S_createEjjRKSaIcE                                                                                                                                                                                               8            0
@@ -1629,8 +1633,8 @@ section                                                                         
 .xt.lit._ZNSs4_Rep10_M_disposeERKSaIcE                                                                                                                                                                                               0            0
 .xt.lit._ZNSsD5Ev                                                                                                                                                                                                                    0            0
 .xt.lit._ZNSs12_S_constructIPKcEEPcT_S3_RKSaIcESt20forward_iterator_tag                                                                                                                                                              8            0
-.xt.lit._ZNSsC5EPKcRKSaIcE                                                                                                                                                                                                           0            0
-.xt.prop._ZNSs7_M_copyEPcPKcj                                                                                                                                                                                                       60            0
+.xt.lit._ZNSsC5EPKcRKSaIcE                                                                                                                                                                                                           8            0
+.xt.prop._ZNSs7_M_copyEPcPKcj                                                                                                                                                                                                       72            0
 .xt.prop._ZNSs13_S_copy_charsEPcPKcS1_                                                                                                                                                                                              36            0
 .xt.prop._ZNSs4_Rep26_M_set_length_and_sharableEj                                                                                                                                                                                   48            0
 .xt.prop._ZNSs4_Rep9_S_createEjjRKSaIcE                                                                                                                                                                                             96            0
@@ -1638,7 +1642,7 @@ section                                                                         
 .xt.prop._ZNSs4_Rep10_M_disposeERKSaIcE                                                                                                                                                                                             48            0
 .xt.prop._ZNSsD5Ev                                                                                                                                                                                                                   0            0
 .xt.prop._ZNSs12_S_constructIPKcEEPcT_S3_RKSaIcESt20forward_iterator_tag                                                                                                                                                            84            0
-.xt.prop._ZNSsC5EPKcRKSaIcE                                                                                                                                                                                                          0            0
+.xt.prop._ZNSsC5EPKcRKSaIcE                                                                                                                                                                                                         12            0
 .xt.prop._ZNSsD2Ev                                                                                                                                                                                                                  36            0
 .xt.prop._ZNSsC2EPKcRKSaIcE                                                                                                                                                                                                         36            0
 .xt.prop._ZNSs4_Rep20_S_empty_rep_storageE                                                                                                                                                                                          12            0
@@ -1675,14 +1679,14 @@ section                                                                         
 .xt.prop._ZTI3UDP                                                                                                                                                                                                                   12            0
 .xt.prop._ZTI7WiFiUDP                                                                                                                                                                                                               12            0
 .xt.prop._ZTV7WiFiUDP                                                                                                                                                                                                               12            0
-.debug_info                                                                                                                                                                                                                   11140690            0
-.debug_abbrev                                                                                                                                                                                                                   731410            0
-.debug_aranges                                                                                                                                                                                                                   80912            0
-.debug_line                                                                                                                                                                                                                    3878084            0
-.debug_str                                                                                                                                                                                                                     1139969            0
-.debug_frame                                                                                                                                                                                                                    216100            0
-.debug_loc                                                                                                                                                                                                                     2005910            0
-.debug_ranges                                                                                                                                                                                                                   291608            0
-Total                                                                                                                                                                                                                         21684166
+.debug_info                                                                                                                                                                                                                   11147693            0
+.debug_abbrev                                                                                                                                                                                                                   731537            0
+.debug_aranges                                                                                                                                                                                                                   80952            0
+.debug_line                                                                                                                                                                                                                    3881846            0
+.debug_str                                                                                                                                                                                                                     1140715            0
+.debug_frame                                                                                                                                                                                                                    216220            0
+.debug_loc                                                                                                                                                                                                                     2011850            0
+.debug_ranges                                                                                                                                                                                                                   292160            0
+Total                                                                                                                                                                                                                         21722000
 
 

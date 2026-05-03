@@ -700,6 +700,7 @@ void handleRelayToggle() {
  * Sends a manual command to the mediator.
  */
 void handleActuatorCommand() {
+  if (!requireAdminAuth()) return;
   if (!server.hasArg("plain")) {
     server.send(400, "text/plain", "Body required");
     return;
@@ -751,6 +752,7 @@ void handleActuatorStatus() {
  * Re-reads /rules.json from SPIFFS and reloads mediator rules.
  */
 void handleRulesReload() {
+  if (!requireAdminAuth()) return;
   int n = RuleLoader::load(mediator, true);
   if (n < 0) {
     server.send(500, "application/json", "{\"ok\":false,\"error\":\"Cannot open rules.json\"}");
@@ -783,6 +785,7 @@ void handleRulesGet() {
  * Receives full rules JSON, writes to /rules.json, reloads mediator.
  */
 void handleRulesSave() {
+  if (!requireAdminAuth()) return;
   if (!server.hasArg("plain")) {
     server.send(400, "text/plain", "Body required");
     return;
@@ -891,5 +894,3 @@ void handleApiAdminPassword() {
 
   server.send(200, "text/plain", "Admin password updated");
 }
-
-
