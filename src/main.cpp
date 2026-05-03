@@ -200,6 +200,8 @@ void setup() {
     DBG_INFOLN("[OK] SPIFFS mounted");
   }
 
+  secrets.begin();
+
   createConfigFile();
 
   // Load configuration ONCE for all modules
@@ -327,6 +329,8 @@ void setup() {
   server.on("/rules",            HTTP_GET,  handleRulesGet);
   server.on("/rules/save",       HTTP_POST, handleRulesSave);
   server.on("/rules-editor",     HTTP_GET,  handleRulesEditor);
+  server.on("/api/admin/info", HTTP_GET, handleApiAdminInfo);
+  server.on("/api/admin/password", HTTP_POST, handleApiAdminPassword);
 
   server.on("/style.css", HTTP_GET, handleStyle);
   server.on("/config.js", HTTP_GET, handleConfigJs);
