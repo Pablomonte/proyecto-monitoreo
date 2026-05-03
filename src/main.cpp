@@ -603,17 +603,18 @@ void loop() {
 
     // Report Relays to Grafana
     for (auto *r : relayMgr.getRelays()) {
-      if (r && r->isActive()) {
+      if (r) {
         r->syncState();
         r->syncInputs(mediator);
 
-        String data = r->getGrafanaString();
-        String id = r->getAlias();
-        if (id.length() == 0)
-          id = "relay_" + String(r->getAddress());
-        id.replace(" ", "_");
-
-        sendDataGrafana(data.c_str(), id.c_str());
+        if (r->isActive()) {
+          String data = r->getGrafanaString();
+          String id = r->getAlias();
+          if (id.length() == 0)
+            id = "relay_" + String(r->getAddress());
+          id.replace(" ", "_");
+          sendDataGrafana(data.c_str(), id.c_str());
+        }
       }
     }
 

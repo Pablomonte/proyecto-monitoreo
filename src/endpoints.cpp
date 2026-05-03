@@ -102,7 +102,7 @@ void handleMediciones() {
 
 #ifdef SENSOR_MULTI
   for (auto *s : getSensorList()) {
-    if (!s || !s->isActive())
+    if (!s)
       continue;
 
     // Read sensor (if not already read recently)
@@ -117,8 +117,8 @@ void handleMediciones() {
     sensorObj["type"] = s->getSensorType();
     sensorObj["id"] = s->getSensorID();
     sensorObj["icon"] = getSensorIcon(s);
-    sensorObj["active"] = true;
-    sensorObj["error"] = false; // TODO: Implement error checking
+    sensorObj["active"] = s->isActive();
+    sensorObj["error"] = !s->isActive();
 
     JsonArray readings = sensorObj["readings"].to<JsonArray>();
 
@@ -136,7 +136,7 @@ void handleMediciones() {
       r["label"] = "Temp";
       r["value"] = String(tempSensor->getTemperature(), 1);
       r["unit"] = "°C";
-      r["status"] = "ok";
+      r["status"] = s->isActive() ? "ok" : "warn";
       r["id"] = tempSensor->getSensorID();
       r["key"] = tempSensor->getKey().toU32();
       r["key_device"] = tempSensor->getKey().deviceId;
@@ -148,7 +148,7 @@ void handleMediciones() {
       r["label"] = "Humedad";
       r["value"] = String(humSensor->getHumidity(), 1);
       r["unit"] = "%";
-      r["status"] = "ok";
+      r["status"] = s->isActive() ? "ok" : "warn";
       r["id"] = humSensor->getSensorID();
       r["key"] = humSensor->getKey().toU32();
       r["key_device"] = humSensor->getKey().deviceId;
@@ -179,7 +179,7 @@ void handleMediciones() {
       r["label"] = "Humedad";
       r["value"] = String(moistSensor->getMoisture(), 1);
       r["unit"] = "%";
-      r["status"] = "ok";
+      r["status"] = s->isActive() ? "ok" : "warn";
       r["id"] = moistSensor->getSensorID();
       r["key"] = moistSensor->getKey().toU32();
       r["key_device"] = moistSensor->getKey().deviceId;
@@ -211,7 +211,7 @@ void handleMediciones() {
       r["label"] = "Presión";
       r["value"] = String(presSensor->getPressure(), 1);
       r["unit"] = "hPa";
-      r["status"] = "ok";
+      r["status"] = s->isActive() ? "ok" : "warn";
       r["id"] = presSensor->getSensorID();
       r["key"] = presSensor->getKey().toU32();
     }
@@ -295,17 +295,21 @@ void handleMediciones() {
     }
   }
 #endif
+  DBG_INFO("[Endpoint] entradas digitales ....... " );
 
   // Exponer Entradas Digitales de los reles Modbus como sensores visuales
   for (auto *r : relayMgr.getRelays()) {
-    if (!r || !r->isActive()) continue;
+    if (!r) continue;
+    DBG_INFO("[Endpoint] Syncing relay addr=%d inputs is active= %i\n", r->getAddress(), r->isActive() );
+
+    r->syncState();
+    r->syncInputs(mediator);
 
     JsonObject sensorObj = sensors.add<JsonObject>();
     sensorObj["type"] = "Entradas Digitales";
     sensorObj["id"] = "modbus_relay_" + String(r->getAddress());
     sensorObj["icon"] = "🔌";
-    sensorObj["active"] = true;
-    sensorObj["error"] = false;
+    sensorObj["error"] = !r->isActive();
 
     JsonArray readings = sensorObj["readings"].to<JsonArray>();
 
@@ -313,7 +317,7 @@ void handleMediciones() {
     in1["label"] = "IN 1";
     in1["value"] = String(r->getInputState(0) ? 1 : 0);
     in1["unit"]  = "";
-    in1["status"]= r->getInputState(0) ? "ok" : "warn";
+    in1["status"]= r->isActive() ? "ok" : "warn";
     in1["key_device"] = (uint8_t)(ESP.getEfuseMac() & 0xFF);
     in1["key_sensor"] = r->getAddress();
     in1["key_var"] = (uint8_t)SensorVariable::DIGITAL_IN_1;
@@ -322,7 +326,7 @@ void handleMediciones() {
     in2["label"] = "IN 2";
     in2["value"] = String(r->getInputState(1) ? 1 : 0);
     in2["unit"]  = "";
-    in2["status"]= r->getInputState(1) ? "ok" : "warn";
+    in2["status"]= r->isActive() ? "ok" : "warn";
     in2["key_device"] = (uint8_t)(ESP.getEfuseMac() & 0xFF);
     in2["key_sensor"] = r->getAddress();
     in2["key_var"] = (uint8_t)SensorVariable::DIGITAL_IN_2;
@@ -347,6 +351,7 @@ void handleMediciones() {
     o["id"]    = a->getId();
     o["name"]  = a->getName();
     o["state"] = a->getState();
+    o["status"] = a->getStatus()? "ok" : "warn";
     o["key_actuator"] = a->getId();
   }
 
@@ -397,8 +402,13 @@ void handleStatus() {
   if (sensor && sensor->isActive())
     activeSensors = 1;
 #endif
+
+
   doc["active_sensors"] = activeSensors;
   doc["total_sensors"] = totalSensors;
+  //actuators
+  doc["total_actuators"] = mediator.getActuatorCount();
+  doc["total_active_actuators"] = mediator.getActiveActuatorCount();
 
   // Uptime
   unsigned long uptimeSec = millis() / 1000;
@@ -740,6 +750,7 @@ void handleActuatorStatus() {
     o["id"]    = a->getId();
     o["name"]  = a->getName();
     o["state"] = a->getState();
+    o["status"] = a->getStatus();
   }
 
   String out;
