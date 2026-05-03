@@ -3,9 +3,7 @@
 #include "createGrafanaMessage.h"
 
 void testSendDataGrafana() {
-     //= sendDataGrafana(float temperature, float humidity, float co2);
-     TEST_ASSERT_TRUE(true);
-
+    TEST_ASSERT_TRUE(true);
 }
 
 void testCreateGrafanaMessage() {

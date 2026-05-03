@@ -79,6 +79,20 @@ void serveStaticFile(const char *path, const char *contentType) {
   server.send(404, "text/plain", "File not found");
 }
 
+// Basic Auth gate. Opt-in: returns true (authorized) when no admin password
+// is configured, so existing devices in the field keep working. Once the user
+// sets a password via /api/admin/password, every protected handler enforces it.
+bool requireAdminAuth() {
+  if (!secrets.hasAdminPassword()) {
+    return true;
+  }
+  if (server.authenticate("admin", secrets.getAdminPassword().c_str())) {
+    return true;
+  }
+  server.requestAuthentication();
+  return false;
+}
+
 void handleMediciones() {
   JsonDocument doc;
   JsonArray sensors = doc["sensors"].to<JsonArray>();
@@ -88,7 +102,7 @@ void handleMediciones() {
 
 #ifdef SENSOR_MULTI
   for (auto *s : getSensorList()) {
-    if (!s || !s->isActive())
+    if (!s)
       continue;
 
     // Read sensor (if not already read recently)
@@ -103,8 +117,8 @@ void handleMediciones() {
     sensorObj["type"] = s->getSensorType();
     sensorObj["id"] = s->getSensorID();
     sensorObj["icon"] = getSensorIcon(s);
-    sensorObj["active"] = true;
-    sensorObj["error"] = false; // TODO: Implement error checking
+    sensorObj["active"] = s->isActive();
+    sensorObj["error"] = !s->isActive();
 
     JsonArray readings = sensorObj["readings"].to<JsonArray>();
 
@@ -122,7 +136,7 @@ void handleMediciones() {
       r["label"] = "Temp";
       r["value"] = String(tempSensor->getTemperature(), 1);
       r["unit"] = "°C";
-      r["status"] = "ok";
+      r["status"] = s->isActive() ? "ok" : "warn";
       r["id"] = tempSensor->getSensorID();
       r["key"] = tempSensor->getKey().toU32();
       r["key_device"] = tempSensor->getKey().deviceId;
@@ -134,7 +148,7 @@ void handleMediciones() {
       r["label"] = "Humedad";
       r["value"] = String(humSensor->getHumidity(), 1);
       r["unit"] = "%";
-      r["status"] = "ok";
+      r["status"] = s->isActive() ? "ok" : "warn";
       r["id"] = humSensor->getSensorID();
       r["key"] = humSensor->getKey().toU32();
       r["key_device"] = humSensor->getKey().deviceId;
@@ -165,7 +179,7 @@ void handleMediciones() {
       r["label"] = "Humedad";
       r["value"] = String(moistSensor->getMoisture(), 1);
       r["unit"] = "%";
-      r["status"] = "ok";
+      r["status"] = s->isActive() ? "ok" : "warn";
       r["id"] = moistSensor->getSensorID();
       r["key"] = moistSensor->getKey().toU32();
       r["key_device"] = moistSensor->getKey().deviceId;
@@ -197,7 +211,7 @@ void handleMediciones() {
       r["label"] = "Presión";
       r["value"] = String(presSensor->getPressure(), 1);
       r["unit"] = "hPa";
-      r["status"] = "ok";
+      r["status"] = s->isActive() ? "ok" : "warn";
       r["id"] = presSensor->getSensorID();
       r["key"] = presSensor->getKey().toU32();
     }
@@ -281,17 +295,21 @@ void handleMediciones() {
     }
   }
 #endif
+  DBG_INFO("[Endpoint] entradas digitales ....... " );
 
   // Exponer Entradas Digitales de los reles Modbus como sensores visuales
   for (auto *r : relayMgr.getRelays()) {
-    if (!r || !r->isActive()) continue;
+    if (!r) continue;
+    DBG_INFO("[Endpoint] Syncing relay addr=%d inputs is active= %i\n", r->getAddress(), r->isActive() );
+
+    r->syncState();
+    r->syncInputs(mediator);
 
     JsonObject sensorObj = sensors.add<JsonObject>();
     sensorObj["type"] = "Entradas Digitales";
     sensorObj["id"] = "modbus_relay_" + String(r->getAddress());
     sensorObj["icon"] = "🔌";
-    sensorObj["active"] = true;
-    sensorObj["error"] = false;
+    sensorObj["error"] = !r->isActive();
 
     JsonArray readings = sensorObj["readings"].to<JsonArray>();
 
@@ -299,7 +317,7 @@ void handleMediciones() {
     in1["label"] = "IN 1";
     in1["value"] = String(r->getInputState(0) ? 1 : 0);
     in1["unit"]  = "";
-    in1["status"]= r->getInputState(0) ? "ok" : "warn";
+    in1["status"]= r->isActive() ? "ok" : "warn";
     in1["key_device"] = (uint8_t)(ESP.getEfuseMac() & 0xFF);
     in1["key_sensor"] = r->getAddress();
     in1["key_var"] = (uint8_t)SensorVariable::DIGITAL_IN_1;
@@ -308,7 +326,7 @@ void handleMediciones() {
     in2["label"] = "IN 2";
     in2["value"] = String(r->getInputState(1) ? 1 : 0);
     in2["unit"]  = "";
-    in2["status"]= r->getInputState(1) ? "ok" : "warn";
+    in2["status"]= r->isActive() ? "ok" : "warn";
     in2["key_device"] = (uint8_t)(ESP.getEfuseMac() & 0xFF);
     in2["key_sensor"] = r->getAddress();
     in2["key_var"] = (uint8_t)SensorVariable::DIGITAL_IN_2;
@@ -333,6 +351,7 @@ void handleMediciones() {
     o["id"]    = a->getId();
     o["name"]  = a->getName();
     o["state"] = a->getState();
+    o["status"] = a->getStatus()? "ok" : "warn";
     o["key_actuator"] = a->getId();
   }
 
@@ -383,8 +402,13 @@ void handleStatus() {
   if (sensor && sensor->isActive())
     activeSensors = 1;
 #endif
+
+
   doc["active_sensors"] = activeSensors;
   doc["total_sensors"] = totalSensors;
+  //actuators
+  doc["total_actuators"] = mediator.getActuatorCount();
+  doc["total_active_actuators"] = mediator.getActiveActuatorCount();
 
   // Uptime
   unsigned long uptimeSec = millis() / 1000;
@@ -438,6 +462,7 @@ void handleConfiguracion() {
 }
 
 void habldePostConfig() {
+  if (!requireAdminAuth()) return;
   DBG_INFO("Updating config...\n");
 
   if (!server.hasArg("plain")) {
@@ -458,6 +483,17 @@ void habldePostConfig() {
   const char *new_ssid = doc["ssid"];
   const char *new_password = doc["passwd"];
 
+  // Validate WiFi password length (WPA2: 8-63 chars). Empty is allowed for
+  // open networks or to keep the previously stored value untouched.
+  if (new_password) {
+    size_t plen = strlen(new_password);
+    if (plen > 0 && (plen < 8 || plen > 63)) {
+      server.send(400, "text/plain",
+                  "wifi password must be 8-63 characters (WPA2) or empty");
+      return;
+    }
+  }
+
   if (new_ssid && strlen(new_ssid) > 0 && strcmp(new_ssid, "ToChange") != 0) {
     wifiManager.onChange(String(new_ssid), String(new_password));
     DBG_INFO("WiFi updated: %s\n", new_ssid);
@@ -475,7 +511,9 @@ void habldePostConfig() {
 }
 
 void handleSCD30Calibration() {
-  DBG_VERBOSE("Calibration called for SCD30\n");
+  if (!requireAdminAuth()) return;
+  DBG_VERBOSE("Calibration called: %s\n",
+              sensor ? sensor->getSensorType() : "NULL");
 
   String response = "{";
   int httpStatus = 200;
@@ -532,12 +570,14 @@ void handleSCD30Calibration() {
 }
 
 void handleRestart() {
+  if (!requireAdminAuth()) return;
   server.send(200, "text/plain", "Restarting ESP32...");
   delay(1000);
   ESP.restart();
 }
 
 void handleConfigReset() {
+  if (!requireAdminAuth()) return;
   DBG_INFO("Resetting config...\n");
 
   if (SPIFFS.exists(CONFIG_FILE_PATH)) {
@@ -622,6 +662,7 @@ void handleRelayList() {
 }
 
 void handleRelayToggle() {
+  if (!requireAdminAuth()) return;
   if (!server.hasArg("addr") || !server.hasArg("ch")) {
     server.send(400, "text/plain", "Missing addr or ch param");
     return;
@@ -669,6 +710,7 @@ void handleRelayToggle() {
  * Sends a manual command to the mediator.
  */
 void handleActuatorCommand() {
+  if (!requireAdminAuth()) return;
   if (!server.hasArg("plain")) {
     server.send(400, "text/plain", "Body required");
     return;
@@ -708,6 +750,7 @@ void handleActuatorStatus() {
     o["id"]    = a->getId();
     o["name"]  = a->getName();
     o["state"] = a->getState();
+    o["status"] = a->getStatus();
   }
 
   String out;
@@ -720,6 +763,7 @@ void handleActuatorStatus() {
  * Re-reads /rules.json from SPIFFS and reloads mediator rules.
  */
 void handleRulesReload() {
+  if (!requireAdminAuth()) return;
   int n = RuleLoader::load(mediator, true);
   if (n < 0) {
     server.send(500, "application/json", "{\"ok\":false,\"error\":\"Cannot open rules.json\"}");
@@ -752,6 +796,7 @@ void handleRulesGet() {
  * Receives full rules JSON, writes to /rules.json, reloads mediator.
  */
 void handleRulesSave() {
+  if (!requireAdminAuth()) return;
   if (!server.hasArg("plain")) {
     server.send(400, "text/plain", "Body required");
     return;
@@ -788,4 +833,75 @@ void handleRulesSave() {
  */
 void handleRulesEditor() {
   server.send(200, "text/html", rules_html);
+}
+// GET /api/admin/info -> { "configured": bool }
+// Used by the UI to decide whether to show the "current password" input.
+// Public (no auth) so the unconfigured first-boot case can read it.
+void handleApiAdminInfo() {
+  JsonDocument doc;
+  doc["configured"] = secrets.hasAdminPassword();
+  String output;
+  serializeJson(doc, output);
+  server.send(200, "application/json", output);
+}
+
+// POST /api/admin/password
+// Body: { "current": "...", "new": "..." }
+// Rules:
+//   - new length in [8, 64]
+//   - new must differ from current stored value
+//   - if a password is already configured, `current` must match it
+//   - if not configured (default state), allow first-set without `current`
+void handleApiAdminPassword() {
+  if (!requireAdminAuth()) return;
+
+  if (server.method() != HTTP_POST) {
+    server.send(405, "text/plain", "Method not allowed");
+    return;
+  }
+
+  if (!server.hasArg("plain")) {
+    server.send(400, "text/plain", "No body");
+    return;
+  }
+
+  JsonDocument body;
+  DeserializationError err = deserializeJson(body, server.arg("plain"));
+  if (err) {
+    server.send(400, "text/plain", String("JSON error: ") + err.c_str());
+    return;
+  }
+
+  String current = body["current"] | "";
+  String next = body["new"] | "";
+
+  if (next.length() < 8) {
+    server.send(400, "text/plain",
+                "new password must be at least 8 characters");
+    return;
+  }
+  if (next.length() > 64) {
+    server.send(400, "text/plain",
+                "new password must be 64 characters or fewer");
+    return;
+  }
+
+  if (secrets.hasAdminPassword()) {
+    if (current != secrets.getAdminPassword()) {
+      server.send(401, "text/plain", "current password mismatch");
+      return;
+    }
+  }
+
+  if (next == secrets.getAdminPassword()) {
+    server.send(400, "text/plain", "new password must differ from current");
+    return;
+  }
+
+  if (!secrets.setAdminPassword(next)) {
+    server.send(500, "text/plain", "Failed to persist new password");
+    return;
+  }
+
+  server.send(200, "text/plain", "Admin password updated");
 }

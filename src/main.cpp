@@ -200,6 +200,8 @@ void setup() {
     DBG_INFOLN("[OK] SPIFFS mounted");
   }
 
+  secrets.begin();
+
   createConfigFile();
 
   // Load configuration ONCE for all modules
@@ -327,6 +329,8 @@ void setup() {
   server.on("/rules",            HTTP_GET,  handleRulesGet);
   server.on("/rules/save",       HTTP_POST, handleRulesSave);
   server.on("/rules-editor",     HTTP_GET,  handleRulesEditor);
+  server.on("/api/admin/info", HTTP_GET, handleApiAdminInfo);
+  server.on("/api/admin/password", HTTP_POST, handleApiAdminPassword);
 
   server.on("/style.css", HTTP_GET, handleStyle);
   server.on("/config.js", HTTP_GET, handleConfigJs);
@@ -599,17 +603,18 @@ void loop() {
 
     // Report Relays to Grafana
     for (auto *r : relayMgr.getRelays()) {
-      if (r && r->isActive()) {
+      if (r) {
         r->syncState();
         r->syncInputs(mediator);
 
-        String data = r->getGrafanaString();
-        String id = r->getAlias();
-        if (id.length() == 0)
-          id = "relay_" + String(r->getAddress());
-        id.replace(" ", "_");
-
-        sendDataGrafana(data.c_str(), id.c_str());
+        if (r->isActive()) {
+          String data = r->getGrafanaString();
+          String id = r->getAlias();
+          if (id.length() == 0)
+            id = "relay_" + String(r->getAddress());
+          id.replace(" ", "_");
+          sendDataGrafana(data.c_str(), id.c_str());
+        }
       }
     }
 

@@ -100,6 +100,15 @@ public:
     IActuator* getActuator(uint8_t idx) const {
         return idx < _actuatorCount ? _actuators[idx] : nullptr;
     }
+    // active actuators
+    uint8_t getActiveActuatorCount() const {
+        uint8_t count = 0;
+        for (uint8_t i = 0; i < _actuatorCount; i++) {
+            if (_actuators[i] && _actuators[i]->getStatus()) count++;
+        }
+        return count;
+    }   
+
     uint8_t getRuleCount() const { return _ruleCount; }
 
 private:

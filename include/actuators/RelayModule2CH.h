@@ -90,6 +90,11 @@ public:
 
         // Returns the logical state
         bool getState() const override { return _module->getState(_channel) ^ _inverted; }
+
+        // Returns the connection/health status
+        bool getStatus()const override {
+            return _module->_active;
+        }
     };
 
 private:
@@ -178,7 +183,6 @@ public:
     }
 
     bool isActive() {
-        return true;
         if (_active) {
             _inactiveCheckCount = 0;
             return true;

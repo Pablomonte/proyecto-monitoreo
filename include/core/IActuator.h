@@ -52,6 +52,9 @@ public:
     /** Retorna el estado actual (true = activo). */
     virtual bool getState() const = 0;
 
+    /** Retorna true si el actuador está operativo (opcional). */
+    virtual bool getStatus() const { return true; } 
+
     /**
      * Llamar desde loop() para procesar auto-off y otras tareas periódicas.
      * Implementación por defecto vacía (opcional sobrescribir).
