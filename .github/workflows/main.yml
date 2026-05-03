@@ -64,4 +64,5 @@ jobs:
         tag: "${{ env.version }}"
         name: Release "${{ env.version }}"
         body: "Binarios de firmware generados automáticamente"
+        generateReleaseNotes: true
         token: ${{ secrets.GITHUB_TOKEN }}
