@@ -431,12 +431,16 @@ void WiFiManager::saveCredentials()
 
 void WiFiManager::loadCredentials()
 {
-    station_cfg.ssid = preferences.getString("ssid", "");
+    // Defaults: if no saved credentials exist, the device will try to join an
+    // open network named "default" so a freshly-flashed unit comes up online
+    // without manual provisioning. Override via web UI / API to use a different
+    // SSID; saved credentials always win over defaults.
+    station_cfg.ssid = preferences.getString("ssid", "default");
     station_cfg.password = preferences.getString("password", "");
 
     if (!station_cfg.ssid.isEmpty())
     {
-        String msg = "Loaded saved credentials for: " + station_cfg.ssid;
+        String msg = "Loaded credentials for: " + station_cfg.ssid;
         LOG_TRACE(msg);
     }
 }
