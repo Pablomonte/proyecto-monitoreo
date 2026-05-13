@@ -66,7 +66,7 @@ public:
 
     const char* getMeasurementsString() override {
         static char measString[32];
-        snprintf(measString, sizeof(measString), "moisture=%.1f", moisture);
+        snprintf(measString, sizeof(measString), "moisture=%.1f,Raw=%d", moisture, rawValue);
         return measString;
     }
 

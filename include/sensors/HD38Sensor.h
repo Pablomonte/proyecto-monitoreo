@@ -135,7 +135,7 @@ public:
 
     const char* getMeasurementsString() override {
         static char measString[64];
-        snprintf(measString, sizeof(measString), "moisture=%.1f", moisture);
+        snprintf(measString, sizeof(measString), "moisture=%.1f,Raw=%d", moisture, rawValue);
         return measString;
     }
 
@@ -147,13 +147,6 @@ public:
         dryValue = dry;
         wetValue = wet;
         DBG_INFO("[HD38] Cal: dry=%d wet=%d\n", dry, wet);
-    }
-
-    int getRawValue() {
-        if (analogPin >= 0) {
-            return analogRead(analogPin);
-        }
-        return -1;
     }
 
     // ── Mediator interface ────────────────────────────────────────────────
