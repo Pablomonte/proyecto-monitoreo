@@ -84,7 +84,7 @@ void createConfigFile() {
     config["beacon_interval_ms"] = 2000;
     config["discovery_timeout_ms"] = 15000;
     config["send_interval_ms"] = 30000;
-    config["grafana_ping_url"] = "http://192.168.1.1/ping";  // URL for connectivity test
+    config["grafana_ping_url"] = "";  // Auto-derived from URL constant; set manually only if override needed
 
     if (serializeJsonPretty(config, file) == 0) {
       DBG_ERROR("Write JSON failed\n");
@@ -224,6 +224,14 @@ JsonDocument loadConfig() {
       rs485["baudrate"] = 9600;
       rs485["raw_send_enabled"] = false;
 
+      configModified = true;
+  }
+
+  // Automatic migration: clear broken grafana_ping_url default
+  String pingUrl = doc["grafana_ping_url"] | "";
+  if (pingUrl == "http://192.168.1.1/ping") {
+      DBG_INFO("Migrating: clearing broken grafana_ping_url\n");
+      doc["grafana_ping_url"] = "";
       configModified = true;
   }
 
